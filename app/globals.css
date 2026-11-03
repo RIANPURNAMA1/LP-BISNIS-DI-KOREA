@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  box-sizing: border-box;
+}
+
+body {
+  background: #ffffff;
+  color: #0c2342;
+}
+
+.hero-bg {
+  background:
+    linear-gradient(90deg, rgba(12, 35, 66, 0.55) 0%, rgba(31, 90, 142, 0.76) 55%, rgba(12, 35, 66, 0.55) 100%),
+    linear-gradient(135deg, rgba(31, 90, 142, 0.651), rgba(12, 35, 66, 0.4));
+}
+
+/* Hero satu layar penuh */
+.hero-screen {
+  min-height: 100vh; /* fallback browser lama */
+  min-height: 100svh; /* akurat di HP */
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid #3f7fb3;
+  outline-offset: 3px;
+}
+
+/* Parallax video hero */
+.hero-video {
+  top: -15%;
+  height: 130%;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-video {
+    transform: none !important;
+  }
+}
