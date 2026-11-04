@@ -82,11 +82,11 @@ export default function Hero() {
       <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
         <video
           ref={videoRef}
-          className="hero-video absolute left-0 w-full object-cover"
+          className="hero-video absolute left-0 w-full object-cover animate-hero-zoom"
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           poster="/hero.png"
         >
           <source src="/hero_vid.mp4" type="video/mp4" />
