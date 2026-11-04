@@ -1,0 +1,42 @@
+// Prisma Schema untuk Bisnis di Korea
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Tabel Pendaftaran ───────────────────────────────────────────
+model Pendaftaran {
+  id        Int      @id @default(autoincrement())
+  nama      String   @db.VarChar(255)
+  whatsapp  String   @db.VarChar(30)
+  email     String   @db.VarChar(255)
+  provinsi  String   @db.VarChar(100)
+  kabupaten String   @db.VarChar(100)
+  kecamatan String   @db.VarChar(100)
+  desa      String   @db.VarChar(100)
+  alamat    String?  @db.Text
+  status    String   @db.VarChar(100)
+  ide       String   @db.VarChar(100)
+  cerita    String?  @db.Text
+  tujuan    Json
+  sumber    String?  @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pendaftaran")
+}
+
+// ─── Tabel Admin User ────────────────────────────────────────────
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
