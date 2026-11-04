@@ -33,7 +33,7 @@ const benefits = [
 
 export default function Benefits() {
   return (
-    <section className="border-t border-gray-100 py-12 lg:py-16">
+    <section className="border-t border-gray-100 py-10 sm:py-12 lg:py-16">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* HEADER */}
         <div className="max-w-2xl">
@@ -49,11 +49,11 @@ export default function Benefits() {
         </div>
 
         {/* CARDS GRID */}
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 sm:mt-10 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((b) => (
             <div
               key={b.title}
-              className="group rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg"
+              className="group rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg"
             >
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-ocean/10 text-ocean transition-transform duration-300 group-hover:-translate-y-0.5">
                 <svg

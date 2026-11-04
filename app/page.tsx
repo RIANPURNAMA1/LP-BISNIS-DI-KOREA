@@ -26,22 +26,10 @@ export default function Home() {
       <Principle />
       <div className="bg-[#eef2f7]">
         <Testimoni />
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full border border-deep/10"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-6 -top-6 h-44 w-44 rounded-full border border-deep/10"
-          />
-          <BonusGaransi />
-          {/* <Schedule /> */}
-          {/* <Jumbotron /> */}
-        </div>
+        <BonusGaransi />
         <Cta />
       </div>
-      <Footer />
+      <Footer/>
     </>
   );
 }

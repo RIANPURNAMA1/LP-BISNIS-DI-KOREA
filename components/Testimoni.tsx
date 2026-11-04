@@ -36,20 +36,20 @@ const photos = [
 
 function TestimoniCard({ p }: { p: (typeof photos)[number] }) {
   return (
-    <figure className="mb-4 flex gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <figure className="mb-3 flex gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:mb-4 sm:gap-4 sm:p-4">
       <img
-        className="h-20 w-20 shrink-0 rounded-xl object-cover"
+        className="h-16 w-16 shrink-0 rounded-xl object-cover sm:h-20 sm:w-20"
         src={p.src}
         alt={p.alt}
         loading="lazy"
       />
       <div className="min-w-0">
-        <blockquote className="text-sm leading-6 text-gray-600">
+        <blockquote className="text-xs leading-5 text-gray-600 sm:text-sm sm:leading-6">
           “{p.quote}”
         </blockquote>
-        <figcaption className="mt-3">
-          <p className="text-sm font-bold text-deep">{p.name}</p>
-          <p className="text-xs text-gray-500">{p.note}</p>
+        <figcaption className="mt-2 sm:mt-3">
+          <p className="text-xs font-bold text-deep sm:text-sm">{p.name}</p>
+          <p className="text-[11px] text-gray-500 sm:text-xs">{p.note}</p>
         </figcaption>
       </div>
     </figure>
@@ -58,7 +58,7 @@ function TestimoniCard({ p }: { p: (typeof photos)[number] }) {
 
 export default function Testimoni() {
   return (
-    <section className="border-t border-gray-100 bg-white py-12 lg:py-16">
+    <section className="border-t border-gray-100 bg-white py-10 sm:py-12 lg:py-16">
       {/* Animasi scroll vertikal (tanpa perlu ubah tailwind.config) */}
       <style>{`
         @keyframes marquee-down {
@@ -85,10 +85,10 @@ export default function Testimoni() {
           </p>
         </div>
 
-        <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
+        <div className="mt-8 sm:mt-10 grid items-start gap-5 sm:gap-6 lg:grid-cols-12">
           {/* VIDEO TESTIMONI 1 (kiri) */}
           <div className="lg:col-span-7">
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm sm:p-2">
               <video
                 className="aspect-video h-auto w-full max-w-full rounded-xl bg-deep object-cover"
                 controls
@@ -103,9 +103,9 @@ export default function Testimoni() {
 
           {/* TESTIMONI FOTO BERGERAK (kanan) */}
           <div className="lg:col-span-5">
-            <div className="marquee-wrap relative h-[32rem] overflow-hidden  sm:h-[36rem] lg:h-[40rem]">
+            <div className="marquee-wrap relative h-[26rem] overflow-hidden sm:h-[36rem] lg:h-[40rem]">
               {/* Track: daftar digandakan agar loop mulus */}
-              <div className="absolute inset-x-0 top-0 p-4">
+              <div className="absolute inset-x-0 top-0 p-2 sm:p-4">
                 <div className="marquee-down">
                   {photos.map((p, i) => (
                     <TestimoniCard key={`a-${i}`} p={p} />
