@@ -59,7 +59,7 @@ export default function Hero() {
 
         <div className="fade-up d3 mt-8 sm:mt-9">
           <a
-            href="#sesi"
+            href="/daftar"
             className="group flex w-full items-center justify-between gap-3 rounded-full bg-[#FB3F11] pl-5 pr-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#d6350f] focus-ring sm:inline-flex sm:w-auto sm:justify-start sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
           >
             DAFTAR PROGRAM SEKARANG
