@@ -40,3 +40,7 @@ body {
     transform: none !important;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}

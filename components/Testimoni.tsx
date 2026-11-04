@@ -58,7 +58,7 @@ function TestimoniCard({ p }: { p: (typeof photos)[number] }) {
 
 export default function Testimoni() {
   return (
-    <section className="border-t border-gray-100 bg-white py-10 sm:py-12 lg:py-16">
+    <section className="border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2">
       {/* Animasi scroll vertikal (tanpa perlu ubah tailwind.config) */}
       <style>{`
         @keyframes marquee-down {
@@ -73,60 +73,64 @@ export default function Testimoni() {
         }
       `}</style>
 
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* HEADER */}
-        <div className="max-w-2xl">
-          <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
-            Mereka Sudah Memulai Langkahnya. Sekarang Giliran Anda!
-          </h2>
-          <p className="mt-4 text-base leading-7 text-gray-500">
-            Lihat pengalaman peserta yang telah mengikuti pendampingan dan
-            berhasil melangkah menuju impian membangun bisnis di Korea.
-          </p>
-        </div>
-
-        <div className="mt-8 sm:mt-10 grid items-start gap-5 sm:gap-6 lg:grid-cols-12">
-          {/* VIDEO TESTIMONI 1 (kiri) */}
-          <div className="lg:col-span-7">
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm sm:p-2">
-              <video
-                className="aspect-video h-auto w-full max-w-full rounded-xl bg-deep object-cover"
-                controls
-                preload="metadata"
-                poster="/images/testimoni-1-poster.jpg"
-                aria-label="Video testimoni peserta 1"
-              >
-                <source src="/videos/testimoni-1.mp4" type="video/mp4" />
-              </video>
+      <div className="mx-auto max-w-[1200px]">
+        <div className="relative overflow-hidden">
+          <div className="relative p-6 sm:p-10 lg:p-14">
+            {/* HEADER */}
+            <div className="max-w-2xl">
+              <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
+                Mereka Sudah Memulai Langkahnya. <span className=" text-ocean">Sekarang Giliran Anda!</span>
+              </h2>
+              <p className="mt-4 text-base leading-7 text-gray-500">
+                Lihat pengalaman peserta yang telah mengikuti pendampingan dan
+                berhasil melangkah menuju impian membangun bisnis di Korea.
+              </p>
             </div>
-          </div>
 
-          {/* TESTIMONI FOTO BERGERAK (kanan) */}
-          <div className="lg:col-span-5">
-            <div className="marquee-wrap relative h-[26rem] overflow-hidden sm:h-[36rem] lg:h-[40rem]">
-              {/* Track: daftar digandakan agar loop mulus */}
-              <div className="absolute inset-x-0 top-0 p-2 sm:p-4">
-                <div className="marquee-down">
-                  {photos.map((p, i) => (
-                    <TestimoniCard key={`a-${i}`} p={p} />
-                  ))}
-                  <div aria-hidden="true">
-                    {photos.map((p, i) => (
-                      <TestimoniCard key={`b-${i}`} p={p} />
-                    ))}
-                  </div>
+            <div className="mt-8 grid items-start gap-5 sm:mt-10 sm:gap-6 lg:grid-cols-12">
+              {/* VIDEO TESTIMONI 1 (kiri) */}
+              <div className="lg:col-span-7">
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm sm:p-2">
+                  <video
+                    className="aspect-video h-auto w-full max-w-full rounded-xl bg-deep object-cover"
+                    controls
+                    preload="metadata"
+                    poster="/images/testimoni-1-poster.jpg"
+                    aria-label="Video testimoni peserta 1"
+                  >
+                    <source src="/videos/testimoni-1.mp4" type="video/mp4" />
+                  </video>
                 </div>
               </div>
 
-              {/* Gradasi atas & bawah */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white via-white/80 to-transparent"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent"
-              />
+              {/* TESTIMONI FOTO BERGERAK (kanan) */}
+              <div className="lg:col-span-5">
+                <div className="marquee-wrap relative h-[26rem] overflow-hidden sm:h-[36rem] lg:h-[40rem]">
+                  {/* Track: daftar digandakan agar loop mulus */}
+                  <div className="absolute inset-x-0 top-0 p-2 sm:p-4">
+                    <div className="marquee-down">
+                      {photos.map((p, i) => (
+                        <TestimoniCard key={`a-${i}`} p={p} />
+                      ))}
+                      <div aria-hidden="true">
+                        {photos.map((p, i) => (
+                          <TestimoniCard key={`b-${i}`} p={p} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gradasi atas & bawah */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white via-white/80 to-transparent"
+                  />
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

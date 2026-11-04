@@ -1,8 +1,10 @@
 export default function Cta() {
+
+  const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
   return (
     <section
       id="cta"
-      className="border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8"
+      className="border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2"
     >
       <div className="mx-auto max-w-[1200px]">
         <div className="relative overflow-hidden ">
@@ -16,13 +18,13 @@ export default function Cta() {
           <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-12 lg:items-center lg:gap-12 lg:p-14">
             {/* Content */}
             <div className="lg:col-span-7">
-              <span className="inline-flex items-center gap-2 py-1.5 text-xs font-semibold tracking-wide text-[#FB3F11]">
+              <span className="inline-flex items-center gap-2 py-1.5 text-xs font-semibold tracking-wide text-ocean">
                 #BisnisdiKorea #StartupKorea
               </span>
 
-              <h2 className="max-w-2xl text-3xl font-bold leading-[1.15] tracking-tight text-deep sm:text-4xl lg:text-[44px]">
+              <h2 className="max-w-2xl text-[24px] font-bold leading-[1.15] tracking-tight text-deep sm:text-4xl lg:text-[44px]">
                 Kesempatan Membangun Bisnis di Korea{" "}
-                <span className="text-[#FB3F11]">
+                 <span className=" text-ocean">
                   Tidak Harus Menunggu Sampai Nanti!
                 </span>
               </h2>

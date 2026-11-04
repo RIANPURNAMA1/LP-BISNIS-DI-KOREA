@@ -31,15 +31,18 @@ const benefits = [
   },
 ];
 
+const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
 export default function Benefits() {
   return (
     <section className="border-t border-gray-100 py-10 sm:py-12 lg:py-16">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={container}>
         {/* HEADER */}
         <div className="max-w-2xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
-            Apa yang Anda dapatkan?
+          <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
+            <span aria-hidden className="h-px w-8 bg-ocean" />
+             Apa yang Anda dapatkan?
           </p>
+          
           <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
             Dari Ide Menjadi Startup yang Siap Dirintis di Korea!
           </h2>

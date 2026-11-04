@@ -249,7 +249,7 @@ export default function PendaftaranList() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {total > 0 && (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}

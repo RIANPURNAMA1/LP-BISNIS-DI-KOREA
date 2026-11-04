@@ -2,10 +2,11 @@ import { ReactNode } from "react";
 
 /* ───────────── Konstanta ───────────── */
 
-const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
+// Padding dalam disamakan dengan CTA (p-6 sm:p-10 lg:p-14)
+const container = "mx-auto w-full max-w-[1200px] px-6 sm:px-10 lg:px-14";
 
 // Jarak vertikal section + offset agar tidak tertutup navbar fixed saat anchor-scroll
-const section = "scroll-mt-20 border-t border-gray-100 bg-white py-12 sm:py-16 lg:py-20";
+const section = "scroll-mt-20 border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2";
 
 /* ───────────── Ikon ───────────── */
 
@@ -85,7 +86,7 @@ export default function BisnisKorea() {
       {/* HERO */}
       <section
         id="beranda"
-        className="relative scroll-mt-20 overflow-hidden bg-white"
+        className="relative scroll-mt-20 overflow-hidden bg-white px-4 sm:px-6 lg:px-2"
       >
         {/* Lingkaran dekoratif: kecil & tipis di mobile, penuh di layar besar */}
         <div
@@ -103,7 +104,7 @@ export default function BisnisKorea() {
             <span aria-hidden="true" className="h-px w-8 shrink-0 bg-ocean" />
             Bangun Keinginan
           </p>
-          <h1 className="max-w-3xl text-balance break-words text-[1.75rem] font-bold leading-tight tracking-tight text-deep sm:text-4xl lg:text-5xl">
+          <h1 className="max-w-3xl text-balance break-words text-[1.75rem] font-bold leading-tight tracking-tight text-deep sm:text-4xl lg:text-[38px]">
             Korea Bukan Hanya Tempat untuk Bekerja.
             <span className="mt-2 block text-ocean">
               Korea Juga Tempat untuk Membangun Bisnis!

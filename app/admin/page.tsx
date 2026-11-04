@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  Users,
+  CalendarCheck,
+  CalendarRange,
+  TrendingUp,
+  MapPin,
+  UserCheck,
+  Lightbulb,
+  Megaphone,
+  ClipboardList,
+  ArrowRight,
+  AlertCircle,
+  Loader2,
+  type LucideIcon,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -30,7 +45,7 @@ type Stats = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Chart Components                                                    */
+/* Shared                                                              */
 /* ------------------------------------------------------------------ */
 
 const COLORS = [
@@ -38,12 +53,33 @@ const COLORS = [
   "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#6366f1",
 ];
 
-function BarChart({ data, title }: { data: ChartItem[]; title: string }) {
+function CardTitle({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
+  return (
+    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-gray-900">
+      <Icon className="h-4 w-4 text-[#0052A4]" strokeWidth={2.25} />
+      {title}
+    </h3>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Chart Components                                                    */
+/* ------------------------------------------------------------------ */
+
+function BarChart({
+  data,
+  title,
+  icon,
+}: {
+  data: ChartItem[];
+  title: string;
+  icon: LucideIcon;
+}) {
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h3 className="mb-4 text-sm font-bold text-gray-900">{title}</h3>
+      <CardTitle icon={icon} title={title} />
       {data.length === 0 ? (
         <p className="py-6 text-center text-sm text-gray-400">Belum ada data</p>
       ) : (
@@ -74,7 +110,15 @@ function BarChart({ data, title }: { data: ChartItem[]; title: string }) {
   );
 }
 
-function PieChart({ data, title }: { data: ChartItem[]; title: string }) {
+function PieChart({
+  data,
+  title,
+  icon,
+}: {
+  data: ChartItem[];
+  title: string;
+  icon: LucideIcon;
+}) {
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
 
   // Compute SVG pie slices
@@ -105,7 +149,7 @@ function PieChart({ data, title }: { data: ChartItem[]; title: string }) {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h3 className="mb-4 text-sm font-bold text-gray-900">{title}</h3>
+      <CardTitle icon={icon} title={title} />
       {data.length === 0 ? (
         <p className="py-6 text-center text-sm text-gray-400">Belum ada data</p>
       ) : (
@@ -140,12 +184,12 @@ function PieChart({ data, title }: { data: ChartItem[]; title: string }) {
 /* ------------------------------------------------------------------ */
 
 function StatCard({
-  icon,
+  icon: Icon,
   label,
   value,
   color,
 }: {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   value: number;
   color: string;
@@ -154,10 +198,10 @@ function StatCard({
     <div className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="flex items-center gap-3">
         <span
-          className="grid h-10 w-10 place-items-center rounded-lg text-lg"
+          className="grid h-10 w-10 place-items-center rounded-lg"
           style={{ backgroundColor: color + "15", color }}
         >
-          {icon}
+          <Icon className="h-5 w-5" strokeWidth={2} />
         </span>
         <div>
           <p className="text-xs text-gray-500">{label}</p>
@@ -192,7 +236,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#0052A4]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#0052A4]" />
           <p className="mt-3 text-sm text-gray-500">Memuat statistik...</p>
         </div>
       </div>
@@ -203,6 +247,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="rounded-xl border border-red-200 bg-red-50 px-8 py-6 text-center">
+          <AlertCircle className="mx-auto mb-2 h-6 w-6 text-red-500" />
           <p className="text-sm font-medium text-red-700">{error || "Gagal memuat data."}</p>
           <button
             onClick={() => window.location.reload()}
@@ -219,33 +264,37 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon="👥" label="Total Pendaftar" value={stats.total} color="#0052A4" />
-        <StatCard icon="📅" label="Hari Ini" value={stats.today} color="#16a34a" />
-        <StatCard icon="📆" label="Minggu Ini" value={stats.week} color="#2563eb" />
-        <StatCard icon="📈" label="Bulan Ini" value={stats.month} color="#8b5cf6" />
+        <StatCard icon={Users} label="Total Pendaftar" value={stats.total} color="#0052A4" />
+        <StatCard icon={CalendarCheck} label="Hari Ini" value={stats.today} color="#16a34a" />
+        <StatCard icon={CalendarRange} label="Minggu Ini" value={stats.week} color="#2563eb" />
+        <StatCard icon={TrendingUp} label="Bulan Ini" value={stats.month} color="#8b5cf6" />
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <BarChart data={stats.byProvinsi} title="🗺️ Top Provinsi Pendaftar" />
-        <PieChart data={stats.byStatus} title="👤 Distribusi Status" />
+        <BarChart data={stats.byProvinsi} title="Top Provinsi Pendaftar" icon={MapPin} />
+        <PieChart data={stats.byStatus} title="Distribusi Status" icon={UserCheck} />
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <PieChart data={stats.byIde} title="💡 Kesiapan Bisnis" />
-        <BarChart data={stats.bySumber} title="📣 Sumber Informasi" />
+        <PieChart data={stats.byIde} title="Kesiapan Bisnis" icon={Lightbulb} />
+        <BarChart data={stats.bySumber} title="Sumber Informasi" icon={Megaphone} />
       </div>
 
       {/* Recent Registrations */}
       <div className="rounded-xl border border-gray-200 bg-white">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h3 className="text-sm font-bold text-gray-900">📋 Pendaftar Terbaru</h3>
+          <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900">
+            <ClipboardList className="h-4 w-4 text-[#0052A4]" strokeWidth={2.25} />
+            Pendaftar Terbaru
+          </h3>
           <Link
             href="/admin/pendaftaran"
-            className="text-xs font-medium text-[#0052A4] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#0052A4] hover:underline"
           >
-            Lihat Semua →
+            Lihat Semua
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
         {stats.recent.length === 0 ? (
@@ -280,7 +329,7 @@ export default function AdminDashboard() {
                         {r.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-500 text-xs">
+                    <td className="px-5 py-3 text-xs text-gray-500">
                       {new Date(r.createdAt || r.created_at || "").toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "short",

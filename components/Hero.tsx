@@ -1,12 +1,73 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useHeroVideo } from "@/hooks/useHeroVideo";
 
 const facts = [
-  { value: "120+", label: "Pemimpin korporasi" },
-  { value: "3", label: "Ruang seminar paralel" },
-  { value: "40 mnt", label: "Janji temu B2B per meja" },
+  { value: 120, suffix: "+", label: "Pemimpin korporasi" },
+  { value: 3, suffix: "", label: "Ruang seminar paralel" },
+  { value: 40, suffix: " mnt", label: "Janji temu B2B per meja" },
 ];
+
+/* Hitung naik dari 0 ke target saat elemen terlihat (sekali saja) */
+function CountUp({
+  to,
+  suffix = "",
+  duration = 1800,
+}: {
+  to: number;
+  suffix?: string;
+  duration?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [n, setN] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    // Hormati preferensi reduced motion
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setN(to);
+      return;
+    }
+
+    let raf = 0;
+    const run = () => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        setN(Math.round(eased * to));
+        if (t < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          run();
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(el);
+
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [to, duration]);
+
+  return (
+    <span ref={ref} className="tabular-nums">
+      {n}
+      {suffix}
+    </span>
+  );
+}
 
 export default function Hero() {
   const { heroRef, videoRef } = useHeroVideo();
@@ -35,7 +96,7 @@ export default function Hero() {
 
       <div
         id="beranda"
-        className="relative z-10 my-auto w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-6"
+        className="relative z-10 my-auto w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-30 pb-6"
       >
         <p className="fade-up flex items-center gap-3 text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-white/80 mb-5 sm:mb-6">
           <span className="block w-8 h-px bg-white/60" />
@@ -69,7 +130,7 @@ export default function Hero() {
           </a>
         </div>
 
-        {/* Fakta singkat: teks biasa dengan garis tipis, tanpa card */}
+        {/* Fakta singkat dengan animasi count-up */}
         <dl className="fade-up d4 mt-10 sm:mt-14 pt-6 border-t border-white/25 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl">
           {facts.map((f) => (
             <div key={f.label} className="flex flex-col">
@@ -77,7 +138,7 @@ export default function Hero() {
                 {f.label}
               </dt>
               <dd className="text-lg sm:text-2xl font-semibold tracking-tight mb-1">
-                {f.value}
+                <CountUp to={f.value} suffix={f.suffix} />
               </dd>
             </div>
           ))}
