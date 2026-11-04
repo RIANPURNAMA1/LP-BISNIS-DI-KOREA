@@ -8,7 +8,6 @@ import Navbar from "@/components/Navbar";
 import Testimoni from "@/components/Testimoni";
 import BonusGaransi from "@/components/BonusGaransi";
 import Faq from "@/components/Faq";
-import ScrollReveal from "@/components/ScrollReveal";
 import {
   FAQ_ITEMS,
   SITE_DESCRIPTION,
@@ -72,32 +71,18 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <ScrollReveal>
-          <FilterSesi />
-        </ScrollReveal>
+        <FilterSesi />
         <div className="bg-[#eef2f7]">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-            <ScrollReveal delay={100}>
-              <Pillars />
-            </ScrollReveal>
+            <Pillars />
           </div>
         </div>
-        <ScrollReveal delay={100}>
-          <Principle />
-        </ScrollReveal>
+        <Principle />
         <div className="bg-[#eef2f7]">
-          <ScrollReveal delay={100}>
-            <Testimoni />
-          </ScrollReveal>
-          <ScrollReveal delay={100}>
-            <BonusGaransi />
-          </ScrollReveal>
-          <ScrollReveal delay={100}>
-            <Faq />
-          </ScrollReveal>
-          <ScrollReveal delay={100}>
-            <Cta />
-          </ScrollReveal>
+          <Testimoni />
+          <BonusGaransi />
+          {/* <Faq /> */}
+          <Cta />
         </div>
       </main>
       <Footer />

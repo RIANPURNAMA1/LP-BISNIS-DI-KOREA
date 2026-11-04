@@ -467,7 +467,7 @@ export default function DaftarPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="page-enter mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <a
           href={homeHref}
           className="inline-flex items-center gap-2 rounded text-sm font-medium text-gray-500 transition-colors hover:text-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4]"
@@ -557,7 +557,7 @@ export default function DaftarPage({
               </div>
 
               {/* Isi */}
-              <div className="px-5 py-6 sm:px-8">
+              <div key={step} className="animate-fade-up px-5 py-6 sm:px-8">
                 <h2 className="text-base font-bold text-deep">
                   {STEPS[step].title}
                 </h2>

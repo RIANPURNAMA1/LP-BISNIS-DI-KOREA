@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Users,
   CalendarCheck,
@@ -217,6 +218,7 @@ function StatCard({
 /* ------------------------------------------------------------------ */
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -224,13 +226,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetch("/api/pendaftaran/stats")
       .then((r) => {
+        if (r.status === 401) {
+          router.replace("/admin/login");
+          throw new Error("Sesi berakhir. Silakan login kembali.");
+        }
         if (!r.ok) throw new Error("Gagal memuat statistik");
         return r.json();
       })
       .then((json) => setStats(json.data))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ScrollReveal from "@/components/ScrollReveal";
 import {
   Award,
   BadgeCheck,
@@ -77,7 +78,10 @@ export default function Mentor() {
       */}
       <div className="relative mx-auto grid w-full max-w-[1200px] gap-x-14 gap-y-14 px-4 sm:px-6 lg:grid-cols-12 lg:gap-y-10 lg:px-8">
         {/* ============ FOTO ============ */}
-        <div className="min-w-0 pb-6 lg:col-span-5 lg:col-start-1 lg:row-start-1">
+        <ScrollReveal
+          direction="left"
+          className="min-w-0 pb-6 lg:col-span-5 lg:col-start-1 lg:row-start-1"
+        >
           <div className="relative">
             {/* Bingkai offset */}
             <div
@@ -125,10 +129,14 @@ export default function Mentor() {
               </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* ============ PENJELASAN ============ */}
-        <div className="min-w-0 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:self-center">
+        <ScrollReveal
+          direction="right"
+          delay={80}
+          className="min-w-0 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:self-center"
+        >
           <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
             <span aria-hidden className="h-px w-8 bg-ocean" />
             Bangun Kepercayaan
@@ -175,10 +183,13 @@ export default function Mentor() {
               Gilar Budi Raharja
             </footer>
           </blockquote>
-        </div>
+        </ScrollReveal>
 
         {/* ============ DOKUMENTASI ============ */}
-        <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-2">
+        <ScrollReveal
+          delay={120}
+          className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-2"
+        >
           <p className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <Camera className="h-4 w-4 text-ocean" />
             Dokumentasi Kegiatan
@@ -201,7 +212,7 @@ export default function Mentor() {
               </figure>
             ))}
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

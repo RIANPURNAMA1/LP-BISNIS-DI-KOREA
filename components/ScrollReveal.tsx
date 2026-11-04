@@ -1,19 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState, ReactNode } from "react";
+import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
+
+type Direction = "up" | "down" | "left" | "right" | "fade" | "zoom";
 
 interface ScrollRevealProps {
   children: ReactNode;
   className?: string;
   delay?: number;
-  direction?: "up" | "down" | "left" | "right" | "fade";
+  duration?: number;
+  direction?: Direction;
+  threshold?: number;
+  once?: boolean;
 }
+
+const transforms: Record<Direction, string> = {
+  up: "translate3d(0, 36px, 0)",
+  down: "translate3d(0, -36px, 0)",
+  left: "translate3d(-36px, 0, 0)",
+  right: "translate3d(36px, 0, 0)",
+  fade: "translate3d(0, 0, 0)",
+  zoom: "scale(0.96)",
+};
 
 export default function ScrollReveal({
   children,
   className = "",
   delay = 0,
+  duration = 900,
   direction = "up",
+  threshold = 0.05,
+  once = true,
 }: ScrollRevealProps) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -22,7 +39,11 @@ export default function ScrollReveal({
     const el = ref.current;
     if (!el) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (reduceMotion || !("IntersectionObserver" in window)) {
       setIsVisible(true);
       return;
     }
@@ -31,43 +52,33 @@ export default function ScrollReveal({
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.unobserve(el);
+          if (once) observer.unobserve(el);
+        } else if (!once) {
+          setIsVisible(false);
         }
       },
       {
-        threshold: 0.12,
-        rootMargin: "0px 0px -40px 0px",
+        threshold,
+        rootMargin: "0px 0px -8% 0px",
       }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [once, threshold]);
 
-  const getTransform = () => {
-    if (isVisible) return "translate-x-0 translate-y-0 opacity-100 scale-100";
-    switch (direction) {
-      case "up":
-        return "translate-y-10 opacity-0";
-      case "down":
-        return "-translate-y-10 opacity-0";
-      case "left":
-        return "-translate-x-10 opacity-0";
-      case "right":
-        return "translate-x-10 opacity-0";
-      case "fade":
-        return "opacity-0 scale-95";
-      default:
-        return "translate-y-10 opacity-0";
-    }
+  const style: CSSProperties = {
+    opacity: isVisible ? 1 : 0,
+    transform: isVisible ? "none" : transforms[direction],
+    transitionProperty: "opacity, transform",
+    transitionDuration: `${duration}ms`,
+    transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+    transitionDelay: `${delay}ms`,
+    willChange: isVisible ? "auto" : "opacity, transform",
   };
 
   return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${getTransform()} ${className}`}
-    >
+    <div ref={ref} style={style} className={className}>
       {children}
     </div>
   );

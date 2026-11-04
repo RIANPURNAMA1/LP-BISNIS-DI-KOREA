@@ -1,3 +1,5 @@
+import ScrollReveal from "@/components/ScrollReveal";
+
 const bonuses = [
   "Bonus konsultasi awal pengembangan ide bisnis.",
   "Template Business Model Canvas.",
@@ -32,7 +34,7 @@ export default function BonusGaransi() {
         <div className="relative overflow-hidden">
           <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-12 lg:gap-16 lg:p-14">
             {/* BONUS PESERTA */}
-            <div className="lg:col-span-7">
+            <ScrollReveal className="lg:col-span-7">
               <h2 className="max-w-xl text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
                 Bergabunglah dan Dapatkan Lebih dari  <span className=" text-ocean">Sekadar Pembelajaran!</span>
               </h2>
@@ -49,10 +51,13 @@ export default function BonusGaransi() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </ScrollReveal>
 
             {/* KOMITMEN PENDAMPINGAN */}
-            <div className="lg:col-span-5 lg:border-l lg:border-gray-200 lg:pl-12">
+            <ScrollReveal
+              delay={120}
+              className="lg:col-span-5 lg:border-l lg:border-gray-200 lg:pl-12"
+            >
               <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
                 <span aria-hidden className="h-px w-8 bg-ocean" />
                 Komitmen Pendampingan
@@ -68,7 +73,7 @@ export default function BonusGaransi() {
                 Program ini tidak menjamin persetujuan visa maupun keberhasilan
                 bisnis.
               </p>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>

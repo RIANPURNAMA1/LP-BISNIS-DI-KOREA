@@ -1,3 +1,4 @@
+import ScrollReveal from "@/components/ScrollReveal";
 import { FAQ_ITEMS } from "@/lib/site";
 
 export default function Faq() {
@@ -7,7 +8,7 @@ export default function Faq() {
       className="scroll-mt-20 border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2"
     >
       <div className="mx-auto w-full max-w-[1200px]">
-        <div className="max-w-2xl">
+        <ScrollReveal className="max-w-2xl">
           <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
             <span aria-hidden className="h-px w-8 bg-ocean" />
             Pertanyaan Umum
@@ -19,23 +20,22 @@ export default function Faq() {
             Hal yang sering ditanyakan sebelum memulai program inkubasi bisnis
             dan pendirian perusahaan di Korea.
           </p>
-        </div>
+        </ScrollReveal>
 
-        <dl className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4">
-          {FAQ_ITEMS.map((item) => (
-            <div
-              key={item.question}
-              className="rounded-2xl border border-gray-200 bg-white p-5 transition-colors duration-300 hover:border-ocean/40 sm:p-6"
-            >
-              <dt className="text-base font-bold leading-snug text-deep">
-                {item.question}
-              </dt>
-              <dd className="mt-2 text-sm leading-6 text-gray-500">
-                {item.answer}
-              </dd>
-            </div>
+        <div className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4">
+          {FAQ_ITEMS.map((item, i) => (
+            <ScrollReveal key={item.question} delay={i * 70}>
+              <dl className="h-full rounded-2xl border border-gray-200 bg-white p-5 transition-colors duration-300 hover:border-ocean/40 sm:p-6">
+                <dt className="text-base font-bold leading-snug text-deep">
+                  {item.question}
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-gray-500">
+                  {item.answer}
+                </dd>
+              </dl>
+            </ScrollReveal>
           ))}
-        </dl>
+        </div>
       </div>
     </section>
   );

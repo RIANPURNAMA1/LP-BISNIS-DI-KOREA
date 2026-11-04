@@ -80,17 +80,12 @@ export default function Hero() {
     >
       {/* Layer video parallax */}
       <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <video
-          ref={videoRef}
-          className="hero-video absolute left-0 w-full object-cover animate-hero-zoom"
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/hero.png"
-        >
-          <source src="/hero_vid.mp4" type="video/mp4" />
-        </video>
+        <img
+  src="/hero.png"
+  alt=""
+  aria-hidden="true"
+  className="hero-video absolute left-0 w-full object-cover animate-hero-zoom"
+/>
       </div>
       <div className="absolute inset-0 z-0 hero-bg" aria-hidden="true" />
 
@@ -119,16 +114,16 @@ export default function Hero() {
         </p>
 
         <div className="fade-up d3 mt-8 sm:mt-9">
-          <a
-            href="/daftar"
-            className="group flex w-full items-center justify-between gap-3 rounded-full bg-[#FB3F11] pl-5 pr-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#d6350f] focus-ring sm:inline-flex sm:w-auto sm:justify-start sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
-          >
-            DAFTAR PROGRAM SEKARANG
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0052A4] text-white transition-transform group-hover:translate-x-1">
-              →
-            </span>
-          </a>
-        </div>
+  <a
+    href="/daftar"
+    className="group inline-flex items-center gap-3 rounded-full bg-[#FB3F11] pl-5 pr-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#d6350f] focus-ring sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
+  >
+    DAFTAR PROGRAM SEKARANG
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0052A4] text-white transition-transform group-hover:translate-x-1">
+      →
+    </span>
+  </a>
+</div>
 
         {/* Fakta singkat dengan animasi count-up */}
         <dl className="fade-up d4 mt-10 sm:mt-14 pt-6 border-t border-white/25 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl">

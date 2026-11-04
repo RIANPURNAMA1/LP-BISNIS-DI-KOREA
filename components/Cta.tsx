@@ -1,3 +1,5 @@
+import ScrollReveal from "@/components/ScrollReveal";
+
 export default function Cta() {
 
   const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
@@ -17,7 +19,7 @@ export default function Cta() {
 
           <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-12 lg:items-center lg:gap-12 lg:p-14">
             {/* Content */}
-            <div className="lg:col-span-7">
+            <ScrollReveal className="lg:col-span-7">
               <span className="inline-flex items-center gap-2 py-1.5 text-xs font-semibold tracking-wide text-ocean">
                 #BisnisdiKorea #StartupKorea
               </span>
@@ -43,10 +45,10 @@ export default function Cta() {
                 Jangan hanya menjadi penonton kesuksesan orang lain. Mulailah
                 membangun bisnis Anda sendiri!
               </p>
-            </div>
+            </ScrollReveal>
 
             {/* CTA card */}
-            <div className="lg:col-span-5">
+            <ScrollReveal delay={140} className="lg:col-span-5">
               <div className="rounded-xl border border-gray-200/80 bg-white p-6 shadow-sm sm:p-8">
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-400">
                   BISNIS DI KOREA
@@ -96,7 +98,7 @@ export default function Cta() {
                   Rintis dan Kembangkan Bisnis di Korea.
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>

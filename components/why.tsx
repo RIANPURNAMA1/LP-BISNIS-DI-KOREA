@@ -1,3 +1,5 @@
+import ScrollReveal from "@/components/ScrollReveal";
+
 const benefits = [
   {
     title: "Business Opportunity",
@@ -37,7 +39,7 @@ export default function Benefits() {
     <section className="border-t border-gray-100 py-10 sm:py-12 lg:py-16">
       <div className={container}>
         {/* HEADER */}
-        <div className="max-w-2xl">
+        <ScrollReveal className="max-w-2xl">
           <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
             <span aria-hidden className="h-px w-8 bg-ocean" />
              Apa yang Anda dapatkan?
@@ -49,52 +51,53 @@ export default function Benefits() {
           <p className="mt-4 text-base leading-7 text-gray-500">
             Melalui Program Inkubasi Bisnis Startup, Anda akan mendapatkan:
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* CARDS GRID */}
         <div className="mt-8 sm:mt-10 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {benefits.map((b) => (
-            <div
-              key={b.title}
-              className="group rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg"
-            >
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-ocean/10 text-ocean transition-transform duration-300 group-hover:-translate-y-0.5">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d={b.icon} />
-                </svg>
+          {benefits.map((b, i) => (
+            <ScrollReveal key={b.title} delay={i * 80}>
+              <div className="group h-full rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-ocean/10 text-ocean transition-transform duration-300 group-hover:-translate-y-0.5">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d={b.icon} />
+                  </svg>
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-deep">{b.title}</h3>
+                <p className="text-sm leading-6 text-gray-500">{b.desc}</p>
               </div>
-              <h3 className="mb-2 text-lg font-bold text-deep">{b.title}</h3>
-              <p className="text-sm leading-6 text-gray-500">{b.desc}</p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
 
         {/* PENUTUP */}
-        <div className="mt-8 flex items-start gap-4 rounded-2xl border border-ocean/20 bg-ocean/5 p-5 sm:items-center sm:p-6">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ocean text-white">
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
-            </svg>
-          </span>
-          <p className="text-sm font-semibold leading-6 text-deep sm:text-base">
-            Bukan sekadar belajar teori. Anda akan diarahkan untuk mempersiapkan
-            rencana bisnis yang bisa dikembangkan secara nyata.
-          </p>
-        </div>
+        <ScrollReveal delay={120}>
+          <div className="mt-8 flex items-start gap-4 rounded-2xl border border-ocean/20 bg-ocean/5 p-5 sm:items-center sm:p-6">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ocean text-white">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
+              </svg>
+            </span>
+            <p className="text-sm font-semibold leading-6 text-deep sm:text-base">
+              Bukan sekadar belajar teori. Anda akan diarahkan untuk mempersiapkan
+              rencana bisnis yang bisa dikembangkan secara nyata.
+            </p>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

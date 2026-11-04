@@ -29,7 +29,14 @@ export default function AdminLogin() {
       if (result?.error) {
         setError("Email atau password salah.");
       } else {
-        router.push("/admin");
+        const callbackUrl = new URLSearchParams(window.location.search).get(
+          "callbackUrl"
+        );
+        const destination =
+          callbackUrl && callbackUrl.startsWith("/admin")
+            ? callbackUrl
+            : "/admin";
+        router.push(destination);
         router.refresh();
       }
     } catch {

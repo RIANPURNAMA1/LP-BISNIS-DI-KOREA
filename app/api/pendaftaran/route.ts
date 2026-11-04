@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { pendaftaranSchema, listQuerySchema } from "@/lib/validations";
 
@@ -38,6 +39,14 @@ export async function POST(req: NextRequest) {
 // ─── GET — Daftar pendaftar dengan pagination ────────────────────
 export async function GET(req: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Tidak terautentikasi." },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const query = listQuerySchema.parse(Object.fromEntries(searchParams));
 

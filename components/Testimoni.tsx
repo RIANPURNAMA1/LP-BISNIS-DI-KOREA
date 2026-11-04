@@ -1,3 +1,5 @@
+import ScrollReveal from "@/components/ScrollReveal";
+
 // GANTI kutipan, nama, dan keterangan dengan ucapan asli peserta.
 const photos = [
   {
@@ -77,7 +79,7 @@ export default function Testimoni() {
         <div className="relative overflow-hidden">
           <div className="relative p-6 sm:p-10 lg:p-14">
             {/* HEADER */}
-            <div className="max-w-2xl">
+            <ScrollReveal className="max-w-2xl">
               <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
                 Mereka Sudah Memulai Langkahnya. <span className=" text-ocean">Sekarang Giliran Anda!</span>
               </h2>
@@ -85,11 +87,11 @@ export default function Testimoni() {
                 Lihat pengalaman peserta yang telah mengikuti pendampingan dan
                 berhasil melangkah menuju impian membangun bisnis di Korea.
               </p>
-            </div>
+            </ScrollReveal>
 
             <div className="mt-8 grid items-start gap-5 sm:mt-10 sm:gap-6 lg:grid-cols-12">
               {/* VIDEO TESTIMONI 1 (kiri) */}
-              <div className="lg:col-span-7">
+              <ScrollReveal delay={100} className="lg:col-span-7">
                 <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm sm:p-2">
                   <video
                     className="aspect-video h-auto w-full max-w-full rounded-xl bg-deep object-cover"
@@ -101,10 +103,10 @@ export default function Testimoni() {
                     <source src="/videos/testimoni-1.mp4" type="video/mp4" />
                   </video>
                 </div>
-              </div>
+              </ScrollReveal>
 
               {/* TESTIMONI FOTO BERGERAK (kanan) */}
-              <div className="lg:col-span-5">
+              <ScrollReveal delay={180} className="lg:col-span-5">
                 <div className="marquee-wrap relative h-[26rem] overflow-hidden sm:h-[36rem] lg:h-[40rem]">
                   {/* Track: daftar digandakan agar loop mulus */}
                   <div className="absolute inset-x-0 top-0 p-2 sm:p-4">
@@ -130,7 +132,7 @@ export default function Testimoni() {
                     className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent"
                   />
                 </div>
-              </div>
+              </ScrollReveal>
             </div>
           </div>
         </div>

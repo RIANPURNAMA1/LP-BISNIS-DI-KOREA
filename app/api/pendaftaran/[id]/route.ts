@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
+
+async function unauthorized() {
+  return NextResponse.json(
+    { success: false, error: "Tidak terautentikasi." },
+    { status: 401 }
+  );
+}
 
 // ─── GET — Detail pendaftar ──────────────────────────────────────
 export async function GET(
@@ -7,6 +15,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    if (!session?.user) return unauthorized();
+
     const id = parseInt(params.id, 10);
     if (isNaN(id)) {
       return NextResponse.json(
@@ -40,6 +51,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await auth();
+    if (!session?.user) return unauthorized();
+
     const id = parseInt(params.id, 10);
     if (isNaN(id)) {
       return NextResponse.json(

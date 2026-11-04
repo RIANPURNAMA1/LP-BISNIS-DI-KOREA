@@ -2,6 +2,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import ScrollReveal from "@/components/ScrollReveal";
 
 /* ───────────── Konstanta ───────────── */
 
@@ -25,12 +26,9 @@ function AnimatedText({
   delay?: number;
 }) {
   return (
-    <div
-      className={`animate-fade-up ${className}`}
-      style={{ animationDelay: `${delay}ms` }}
-    >
+    <ScrollReveal className={className} delay={delay}>
       {children}
-    </div>
+    </ScrollReveal>
   );
 }
 
