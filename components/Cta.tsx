@@ -1,7 +1,6 @@
 import ScrollReveal from "@/components/ScrollReveal";
 
 export default function Cta() {
-
   const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
   return (
     <section
@@ -26,7 +25,7 @@ export default function Cta() {
 
               <h2 className="max-w-2xl text-[24px] font-bold leading-[1.15] tracking-tight text-deep sm:text-4xl lg:text-[44px]">
                 Kesempatan Membangun Bisnis di Korea{" "}
-                 <span className=" text-ocean">
+                <span className=" text-ocean">
                   Tidak Harus Menunggu Sampai Nanti!
                 </span>
               </h2>
@@ -64,11 +63,11 @@ export default function Cta() {
 
                 <div className="fade-up d3 mt-8 sm:mt-9">
                   <a
-                    href="#sesi"
-                    className="group flex w-full items-center justify-between gap-3 rounded-full bg-[#FB3F11] pl-5 pr-2 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#d6350f] focus-ring sm:inline-flex sm:w-auto sm:justify-start sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
+                    href="/daftar"
+                    className="group flex w-full items-center justify-between gap-3 rounded-full bg-[#FB3F11] pl-6 pr-2 py-3 text-base font-bold text-white transition-colors hover:bg-[#d6350f] focus-ring sm:inline-flex sm:w-auto sm:justify-start sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
                   >
                     JOIN SEKARANG
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0052A4] text-white transition-transform group-hover:translate-x-1">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0052A4] text-lg text-white transition-transform group-hover:translate-x-1 sm:h-9 sm:w-9 sm:text-base">
                       →
                     </span>
                   </a>
