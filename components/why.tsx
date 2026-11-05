@@ -13,7 +13,7 @@ const benefits = [
   },
   {
     title: "Startup Development",
-    desc: "Menyusun Business Model Canvas dan Business Plan.",
+    desc: "Menyusun Business Plan.",
     icon: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5zM14 3v5h5M9 13h6M9 17h6",
   },
   {
@@ -23,41 +23,37 @@ const benefits = [
   },
   {
     title: "Business Establishment",
-    desc: "Arahan persiapan pendirian perusahaan.",
+    desc: "Arahan aspek legal dan hukum di Korea.",
     icon: "M4 21V4h10v17M14 9h6v12M2 21h20M8 8h2M8 12h2M8 16h2",
   },
   {
     title: "Business Visa Guidance",
-    desc: "Bimbingan persiapan jalur visa bisnis yang relevan.",
+    desc: "Bimbingan visa bisnis yang relevan.",
     icon: "M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM15 10h3M15 14h3M6 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M9 11h.01",
   },
 ];
 
 const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
+
 export default function Benefits() {
   return (
     <section className="border-t border-gray-100 py-10 sm:py-12 lg:py-16">
       <div className={container}>
         {/* HEADER */}
         <ScrollReveal className="max-w-2xl">
-          <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ocean sm:text-sm">
-            <span aria-hidden className="h-px w-8 bg-ocean" />
-             Apa yang Anda dapatkan?
-          </p>
-          
           <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
             Dari Ide Menjadi Startup yang Siap Dirintis di Korea!
           </h2>
           <p className="mt-4 text-base leading-7 text-gray-500">
-            Melalui Program Inkubasi Bisnis Startup, Anda akan mendapatkan:
+            Bersama bisnisdikorea.com, Anda akan mendapatkan:
           </p>
         </ScrollReveal>
 
         {/* CARDS GRID */}
-        <div className="mt-8 sm:mt-10 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {benefits.map((b, i) => (
             <ScrollReveal key={b.title} delay={i * 80}>
-              <div className="group h-full rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg">
+              <div className="group h-full rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg sm:p-6">
                 <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-ocean/10 text-ocean transition-transform duration-300 group-hover:-translate-y-0.5">
                   <svg
                     className="h-5 w-5"

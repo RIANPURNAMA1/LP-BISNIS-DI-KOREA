@@ -466,7 +466,7 @@ export default function DaftarPage({
     r.items.map((x) => ({ value: x.id, label: toTitle(x.name) }));
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-white">
       <div className="page-enter mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <a
           href={homeHref}
