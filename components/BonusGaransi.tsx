@@ -29,7 +29,7 @@ function CheckIcon() {
 
 export default function BonusGaransi() {
   return (
-    <section className="border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2">
+    <section className="border-t border-gray-100  px-4 py-16 sm:px-6 sm:py-20 lg:px-2">
       <div className="mx-auto max-w-[1200px]">
         <div className="relative overflow-hidden">
           <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-12 lg:gap-16 lg:p-14">

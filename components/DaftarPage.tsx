@@ -206,7 +206,7 @@ function Field({
         className="mb-1.5 block text-sm font-semibold text-deep"
       >
         {label}
-        {required && <span className="ml-0.5 text-[#FB3F11]">*</span>}
+        {required && <span className="ml-0.5 text-[#E3081C]">*</span>}
       </label>
       {children}
       {hint && !error && <p className="mt-1.5 text-xs text-gray-500">{hint}</p>}
@@ -509,7 +509,7 @@ export default function DaftarPage({
               </p>
               <a
                 href={homeHref}
-                className="mt-8 inline-block rounded-full bg-[#FB3F11] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d6350f] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FB3F11] focus-visible:ring-offset-2"
+                className="mt-8 inline-block rounded-full bg-[#E3081C] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#B30616] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E3081C] focus-visible:ring-offset-2"
               >
                 Kembali ke beranda
               </a>
@@ -518,7 +518,7 @@ export default function DaftarPage({
             <form noValidate onSubmit={handleSubmit}>
               {/* Header */}
               <div className="border-b border-gray-100 px-5 pb-5 pt-6 sm:px-8">
-                <p className="text-xs font-semibold tracking-wide text-[#FB3F11]">
+                <p className="text-xs font-semibold tracking-wide text-[#E3081C]">
                   Indonesia-Korea Business Project
                 </p>
                 <h1
@@ -741,7 +741,7 @@ export default function DaftarPage({
                     <fieldset>
                       <legend className="mb-2 text-sm font-semibold text-deep">
                         Status Anda saat ini
-                        <span className="ml-0.5 text-[#FB3F11]">*</span>
+                        <span className="ml-0.5 text-[#E3081C]">*</span>
                       </legend>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {STATUS.map((o) => (
@@ -786,7 +786,7 @@ export default function DaftarPage({
                     <fieldset>
                       <legend className="mb-2 text-sm font-semibold text-deep">
                         Apakah Anda sudah memiliki bisnis atau ide bisnis?
-                        <span className="ml-0.5 text-[#FB3F11]">*</span>
+                        <span className="ml-0.5 text-[#E3081C]">*</span>
                       </legend>
                       <div className="grid gap-2">
                         {IDE.map((o) => (
@@ -832,7 +832,7 @@ export default function DaftarPage({
                     <fieldset>
                       <legend className="mb-2 text-sm font-semibold text-deep">
                         Apa tujuan utama Anda mengikuti program ini?
-                        <span className="ml-0.5 text-[#FB3F11]">*</span>
+                        <span className="ml-0.5 text-[#E3081C]">*</span>
                       </legend>
                       <div className="grid gap-2">
                         {TUJUAN.map((o) => (
@@ -914,7 +914,7 @@ export default function DaftarPage({
                         <span className="text-gray-700">
                           <span className="font-semibold text-deep">
                             Persetujuan penggunaan data
-                            <span className="ml-0.5 text-[#FB3F11]">*</span>
+                            <span className="ml-0.5 text-[#E3081C]">*</span>
                           </span>
                           <br />
                           Saya menyetujui penggunaan data yang saya berikan
@@ -956,14 +956,14 @@ export default function DaftarPage({
                   </button>
                 ) : (
                   <span className="text-xs text-gray-400">
-                    <span className="text-[#FB3F11]">*</span> wajib diisi
+                    <span className="text-[#E3081C]">*</span> wajib diisi
                   </span>
                 )}
 
                 <button
                   type="submit"
                   disabled={sending}
-                  className="rounded-full bg-[#FB3F11] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d6350f] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FB3F11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full bg-[#E3081C] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#B30616] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E3081C] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {step < STEPS.length - 1
                     ? "Lanjut"

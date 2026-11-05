@@ -76,16 +76,16 @@ export default function Home() {
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
             <Pillars />
           </div>
-        </div>
         <Principle />
+        </div>
         <div className="bg-[#eef2f7]">
           <Testimoni />
           <BonusGaransi />
           {/* <Faq /> */}
           <Cta />
         </div>
-      </main>
       <Footer />
+      </main>
     </>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-const LOGO_LIGHT = "/logo2.png";
-const LOGO_DARK = "/logo.avif";
+const LOGO_LIGHT = "/logo/2.png";
+const LOGO_DARK = "/logo/1.png";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);

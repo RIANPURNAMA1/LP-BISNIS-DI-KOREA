@@ -35,7 +35,7 @@ export default function Hero() {
         </p>
         <h1 className="fade-up max-w-3xl text-3xl font-bold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1] lg:text-6xl">
           Ingin Punya Bisnis di{" "}
-          <span className="bg-gradient-to-r from-white via-white to-[#FB3F11] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-white via-white to-[#E3081C] bg-clip-text text-transparent">
             Korea Selatan?
           </span>
         </h1>
@@ -54,7 +54,7 @@ export default function Hero() {
         <div className="fade-up d3 mt-8 sm:mt-9">
           <a
             href="/daftar"
-            className="group focus-ring inline-flex items-center gap-3 rounded-full bg-[#FB3F11] py-2 pl-5 pr-2 text-xs font-semibold text-white transition-colors hover:bg-[#d6350f] sm:py-2.5 sm:pl-7 sm:pr-2.5 sm:text-sm"
+            className="group focus-ring inline-flex items-center gap-3 rounded-full bg-[#E3081C] py-2 pl-5 pr-2 text-xs font-semibold text-white transition-colors hover:bg-[#B30616] sm:py-2.5 sm:pl-7 sm:pr-2.5 sm:text-sm"
           >
             DAFTAR SEKARANG
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0052A4] transition-transform group-hover:translate-x-1">

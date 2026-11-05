@@ -11,10 +11,7 @@ export default function Cta() {
         <div className="relative overflow-hidden ">
           {/* Decorative accents */}
 
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-32 -left-20 h-64 w-64 rounded-full bg-blue-500/[0.04] blur-3xl"
-          />
+        
 
           <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-12 lg:items-center lg:gap-12 lg:p-14">
             {/* Content */}
@@ -64,7 +61,7 @@ export default function Cta() {
                 <div className="fade-up d3 mt-8 sm:mt-9">
                   <a
                     href="/daftar"
-                    className="group flex w-full items-center justify-between gap-3 rounded-full bg-[#FB3F11] pl-6 pr-2 py-3 text-base font-bold text-white transition-colors hover:bg-[#d6350f] focus-ring sm:inline-flex sm:w-auto sm:justify-start sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
+                    className="group flex w-full items-center justify-between gap-3 rounded-full bg-[#E3081C] pl-6 pr-2 py-3 text-base font-bold text-white transition-colors hover:bg-[#B30616] focus-ring sm:inline-flex sm:w-auto sm:justify-start sm:pl-7 sm:pr-2.5 sm:py-2.5 sm:text-sm"
                   >
                     JOIN SEKARANG
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0052A4] text-lg text-white transition-transform group-hover:translate-x-1 sm:h-9 sm:w-9 sm:text-base">

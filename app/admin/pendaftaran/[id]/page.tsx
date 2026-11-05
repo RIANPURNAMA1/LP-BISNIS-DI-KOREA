@@ -232,7 +232,7 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
 
       {/* Profile Header */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="h-1.5 bg-gradient-to-r from-[#0052A4] via-[#0a6bd1] to-[#FB3F11]" />
+        <div className="h-1.5 bg-gradient-to-r from-[#0052A4] via-[#0a6bd1] to-[#E3081C]" />
         <div className="flex flex-col gap-5 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#0052A4] text-lg font-bold text-white shadow-md shadow-[#0052A4]/25">

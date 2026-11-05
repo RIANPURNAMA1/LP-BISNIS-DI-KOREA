@@ -89,7 +89,7 @@ export default function WebsiteIntro() {
         style={{ animationDuration: "3s" }}
       />
       <div
-        className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-[#FB3F11]/20 blur-3xl animate-pulse"
+        className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-[#E3081C]/20 blur-3xl animate-pulse"
         style={{ animationDuration: "4s" }}
       />
       <div
@@ -105,7 +105,7 @@ export default function WebsiteIntro() {
             <span className="text-white/70">IDN</span>
           </span>
           <span className="h-3 w-px bg-white/25" />
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FB3F11] animate-ping" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#E3081C] animate-ping" />
           <span className="text-[10px] tracking-wider text-sky-200">
             FORUM BILATERAL 2025
           </span>
@@ -118,7 +118,7 @@ export default function WebsiteIntro() {
 
         {/* Logo Brand dengan Efek Cahaya */}
         <div className="relative mb-6 group">
-          <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-[#0052A4]/30 via-sky-400/20 to-[#FB3F11]/30 blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-[#0052A4]/30 via-sky-400/20 to-[#E3081C]/30 blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-500" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo2.png"
@@ -136,7 +136,7 @@ export default function WebsiteIntro() {
         <div className="w-full max-w-xs sm:max-w-sm mb-4">
           <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/10 p-[1px] backdrop-blur">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#0052A4] via-[#3f7fb3] via-50% to-[#FB3F11] transition-all duration-150 ease-out shadow-[0_0_12px_rgba(251,63,17,0.8)]"
+              className="h-full rounded-full bg-gradient-to-r from-[#0052A4] via-[#3f7fb3] via-50% to-[#E3081C] transition-all duration-150 ease-out shadow-[0_0_12px_rgba(227,8,28,0.8)]"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -162,7 +162,7 @@ export default function WebsiteIntro() {
       </div>
 
       {/* Decorative Bottom Accents */}
-      <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-[#0052A4] via-sky-400 to-[#FB3F11] opacity-70" />
+      <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-[#0052A4] via-sky-400 to-[#E3081C] opacity-70" />
     </aside>
   );
 }

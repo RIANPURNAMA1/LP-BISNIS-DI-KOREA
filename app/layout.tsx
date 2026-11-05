@@ -129,8 +129,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id" className="scroll-smooth">
-      <body className={`${manrope.variable} font-sans antialiased`}>
+    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
+      <body className={`${manrope.variable} font-sans antialiased`} suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

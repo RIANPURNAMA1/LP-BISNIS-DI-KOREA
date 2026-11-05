@@ -37,63 +37,94 @@ const container = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8";
 
 export default function Benefits() {
   return (
-    <section className="border-t border-gray-100 py-10 sm:py-12 lg:py-16">
+    <section className="border-t border-gray-100 py-16 sm:py-20">
       <div className={container}>
-        {/* HEADER */}
-        <ScrollReveal className="max-w-2xl">
-          <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
-            Dari Ide Menjadi Startup yang Siap Dirintis di Korea!
-          </h2>
-          <p className="mt-4 text-base leading-7 text-gray-500">
-            Bersama bisnisdikorea.com, Anda akan mendapatkan:
-          </p>
-        </ScrollReveal>
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+          {/* ============ KIRI: HEADER (sticky di desktop) ============ */}
+          <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-5 lg:self-start">
+            <ScrollReveal>
+              <h2 className="text-balance text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
+                Dari Ide Menjadi Startup yang Siap Dirintis di Korea!
+              </h2>
+              <p className="mt-4 text-base leading-7 text-gray-600">
+                Bersama bisnisdikorea.com, Anda akan mendapatkan:
+              </p>
 
-        {/* CARDS GRID */}
-        <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {benefits.map((b, i) => (
-            <ScrollReveal key={b.title} delay={i * 80}>
-              <div className="group h-full rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:border-ocean/40 hover:shadow-lg sm:p-6">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-ocean/10 text-ocean transition-transform duration-300 group-hover:-translate-y-0.5">
+              {/* Penutup: ikut menempel bersama header, jadi selalu terlihat */}
+              <div className="mt-8 flex items-start gap-4 rounded-2xl border border-ocean/20 bg-ocean/5 p-5 sm:p-6">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ocean text-white">
                   <svg
                     className="h-5 w-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth="1.8"
+                    strokeWidth="2"
                     aria-hidden="true"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d={b.icon} />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m5 13 4 4L19 7"
+                    />
                   </svg>
-                </div>
-                <h3 className="mb-2 text-lg font-bold text-deep">{b.title}</h3>
-                <p className="text-sm leading-6 text-gray-500">{b.desc}</p>
+                </span>
+                <p className="text-sm font-semibold leading-6 text-deep sm:text-base">
+                  Bukan sekadar belajar teori. Anda akan diarahkan untuk
+                  mempersiapkan rencana bisnis yang bisa dikembangkan secara
+                  nyata.
+                </p>
               </div>
             </ScrollReveal>
-          ))}
-        </div>
-
-        {/* PENUTUP */}
-        <ScrollReveal delay={120}>
-          <div className="mt-8 flex items-start gap-4 rounded-2xl border border-ocean/20 bg-ocean/5 p-5 sm:items-center sm:p-6">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ocean text-white">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
-              </svg>
-            </span>
-            <p className="text-sm font-semibold leading-6 text-deep sm:text-base">
-              Bukan sekadar belajar teori. Anda akan diarahkan untuk mempersiapkan
-              rencana bisnis yang bisa dikembangkan secara nyata.
-            </p>
           </div>
-        </ScrollReveal>
+
+          {/* ============ KANAN: JALUR 6 LAYANAN ============ */}
+          <ol className="min-w-0 lg:col-span-7">
+            {benefits.map((b, i) => (
+              <li key={b.title} className="relative pb-8 last:pb-0">
+                {/* Garis penghubung dari node ini ke node berikutnya */}
+                {i < benefits.length - 1 && (
+                  <span
+                    aria-hidden
+                    className="absolute left-6 top-6 h-full w-px -translate-x-1/2 bg-gray-200"
+                  />
+                )}
+
+                <ScrollReveal delay={i * 80}>
+                  <div className="group flex gap-5">
+                    <span className="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-full border border-gray-200 bg-white text-ocean transition-colors duration-300 group-hover:border-ocean group-hover:bg-ocean group-hover:text-white">
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d={b.icon}
+                        />
+                      </svg>
+                    </span>
+
+                    <div className="min-w-0 pt-0.5">
+                      <span className="text-xs font-semibold tabular-nums text-ocean">
+                        0{i + 1}
+                      </span>
+                      <h3 className="mt-0.5 text-lg font-bold leading-tight text-deep">
+                        {b.title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-6 text-gray-600 sm:text-base sm:leading-7">
+                        {b.desc}
+                      </p>
+                    </div>
+                  </div>
+                </ScrollReveal>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );
