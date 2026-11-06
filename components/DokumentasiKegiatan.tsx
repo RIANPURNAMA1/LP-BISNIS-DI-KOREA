@@ -97,15 +97,6 @@ export default function DokumentasiKegiatan() {
     [aktif],
   );
 
-  const jumlah = useMemo(
-    () => ({
-      Semua: semuaFoto.length,
-      Startup: semuaFoto.filter((f) => f.label === "Startup").length,
-      Seminar: semuaFoto.filter((f) => f.label === "Seminar").length,
-    }),
-    [],
-  );
-
   const buka = (i: number) => {
     pemicu.current = document.activeElement as HTMLElement;
     setTerbuka(i);
@@ -178,13 +169,6 @@ export default function DokumentasiKegiatan() {
                 }`}
               >
                 {f}
-                <span
-                  className={`ml-1.5 text-xs font-medium ${
-                    dipilih ? "text-ocean" : "text-gray-400"
-                  }`}
-                >
-                  {jumlah[f]}
-                </span>
               </button>
             );
           })}

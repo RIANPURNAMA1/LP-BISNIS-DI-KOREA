@@ -2,240 +2,334 @@
 
 import { useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
-import { BadgeCheck, Quote } from "lucide-react";
+import { BriefcaseBusiness, Building2, Globe2, User } from "lucide-react";
 
-/*
-  GANTI kutipan, nama, dan keterangan dengan ucapan asli peserta.
-  Semua testimoni bergiliran tampil di kartu besar.
-*/
-const photos = [
+const experts = [
   {
-    src: "https://glints.com/id/lowongan/wp-content/uploads/2023/01/testimoni-adalah-glints.jpg",
-    alt: "Peserta yang lolos seleksi program startup",
-    quote:
-      "Dulu saya hanya berpikir untuk bekerja. Setelah ikut pendampingan, saya punya rencana bisnis yang jelas.",
-    name: "Nama Peserta 1",
-    note: "Lolos seleksi program startup",
+    src: "https://images.openai.com/static-rsc-4/zrpTegMUk3r9qUyp1zBjvsK-47e86yDv6dPa4icWNLwXVQyRXhuWm8U8eG1jXaBq6IUmfKLCxEyFuWAE7aOW7Y5OekVjPIrNXmuCPeFFRhmQsTjEOTdKQeayTu7OZs2JivGqojwWYkFPdbvFy3iCshbyMkYuWohP5eNwmkFOe0xh1N3bbtZRyJmsDjO0ISxu?purpose=fullsize",
+    alt: "Profil praktisi bisnis internasional",
+    name: "Nama Narasumber 1",
+    role: "Praktisi Bisnis Internasional",
+    organization: "Nama Perusahaan / Institusi",
+    expertise: "Pengembangan Bisnis",
+    description:
+      "Memiliki pengalaman dalam pengembangan usaha, strategi bisnis, serta membangun peluang kerja sama antara Indonesia dan Korea Selatan.",
   },
   {
-    src: "https://glints.com/id/lowongan/wp-content/uploads/2023/01/testimoni-adalah-glints.jpg",
-    alt: "Dokumentasi peserta yang lolos seleksi",
-    quote:
-      "Mentornya benar-benar praktisi. Saya dibantu menyusun Business Model Canvas sampai siap dipresentasikan.",
-    name: "Nama Peserta 2",
-    note: "Lolos seleksi program startup",
+    src: "https://images.openai.com/static-rsc-4/CyKn6hYd21nfIsDku3LeRe-SujJuxx2BaJ2c8atmtqS8Ar5DkJGnOs6FvYE8dkXct528vY6-qLw3uiD1dhkG3Tj7oIPnthnrFTUv0wYwsQ2Y4mYfchC0_BsuGt1p5A1HGzrNi-8pYBt-ImY3tYvOMNg5l9lVIiyV08FPR9W5XozmzxTiUByujyW3MopK_ORh?purpose=fullsize",
+    alt: "Profil ahli pengembangan startup",
+    name: "Nama Narasumber 2",
+    role: "Startup Development Expert",
+    organization: "Nama Perusahaan / Institusi",
+    expertise: "Pengembangan Startup",
+    description:
+      "Berfokus pada pengembangan model bisnis, validasi ide usaha, strategi startup, dan persiapan pengembangan bisnis yang berkelanjutan.",
   },
   {
-    src: "https://glints.com/id/lowongan/wp-content/uploads/2023/01/testimoni-adalah-glints.jpg",
-    alt: "Dokumentasi peserta yang lolos seleksi",
-    quote:
-      "Saya tidak lagi bingung soal legalitas dan visa bisnis. Semua diarahkan tahap demi tahap.",
-    name: "Nama Peserta 3",
-    note: "Lolos seleksi program startup",
+    src: "https://images.openai.com/static-rsc-4/9Xul4up-QDJMjJpctO___hEdLR9npRLcFARgr6eafOpeMhFae2ozh5Sp05C4_l2fKCn1MaTWzmDz5BYJrpPQXfdIHUwHHgin-DZsqJ1mtIt6pzamp0zjSjC6MuFkO1qy_Okx_-OrLvL7oXjTYtrIwE5f7dYe9W1lalH7YwcZZgjZRjHjWo6KBiB5n7twp1VH?purpose=fullsize",
+    alt: "Profil praktisi investasi dan bisnis Korea",
+    name: "Nama Narasumber 3",
+    role: "Business & Investment Practitioner",
+    organization: "Nama Perusahaan / Institusi",
+    expertise: "Investasi dan Ekspansi Pasar",
+    description:
+      "Memahami peluang investasi, strategi memasuki pasar Korea Selatan, serta potensi kolaborasi bisnis lintas negara.",
   },
   {
-    src: "https://glints.com/id/lowongan/wp-content/uploads/2023/01/testimoni-adalah-glints.jpg",
-    alt: "Dokumentasi peserta yang lolos seleksi",
-    quote:
-      "Bukan sekadar teori. Saya langsung diarahkan menyiapkan rencana bisnis yang bisa dijalankan.",
-    name: "Nama Peserta 4",
-    note: "Lolos seleksi program startup",
+    src: "https://images.openai.com/static-rsc-4/DAoK4SsYTKKYnZaxWoK2-idFCl6F0r28Yr01_LmFZI2BwgfNjQcKlfnTK87UwiAV4uuUAC4Dak924M0Tv6MqbwM4rqokBKnZ5FUlyH5pT6lPm30qER_soOnGEQvrTrwIH6DixPmFOoRRqoGmp6pKAETZ3do9PLS5Cntmvw1aVdE5MgGDXe7mgjBjEwOyLrpC?purpose=fullsize",
+    alt: "Profil ahli ekosistem bisnis Korea Selatan",
+    name: "Nama Narasumber 4",
+    role: "Korea Business Consultant",
+    organization: "Nama Perusahaan / Institusi",
+    expertise: "Ekosistem Bisnis Korea",
+    description:
+      "Memiliki wawasan mengenai lingkungan bisnis Korea Selatan, regulasi usaha, serta berbagai aspek yang perlu dipahami dalam membangun bisnis di Korea.",
   },
 ];
 
-type Testimoni = (typeof photos)[number];
+type Expert = (typeof experts)[number];
 
-/* Durasi tiap testimoni tampil di kartu besar (detik) */
 const DURASI = 7;
+const pad = (n: number) => String(n).padStart(2, "0");
 
-/* Kartu besar untuk testimoni yang sedang aktif */
-function KartuUnggulan({ p }: { p: Testimoni }) {
+/* Satu komponen foto dengan rasio tetap (16:9) untuk semua gambar */
+function FotoNarasumber({
+  p,
+  className = "",
+  decorative = false,
+}: {
+  p: Expert;
+  className?: string;
+  decorative?: boolean;
+}) {
+  const [gagal, setGagal] = useState(false);
+
   return (
-    <figure className="flex h-full flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-      <div className="aspect-[16/10] w-full overflow-hidden bg-gray-100">
+    <div
+      className={`relative aspect-[16/9] overflow-hidden bg-gray-100 ${className}`}
+    >
+      {gagal ? (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+          <User className="h-1/2 w-1/2" strokeWidth={1.2} />
+        </div>
+      ) : (
         <img
           src={p.src}
-          alt={p.alt}
+          alt={decorative ? "" : p.alt}
+          width={800}
+          height={450}
           loading="lazy"
-          className="h-full w-full object-cover"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setGagal(true)}
+          className="absolute inset-0 h-full w-full object-cover object-top"
         />
-      </div>
+      )}
+    </div>
+  );
+}
 
-      <div className="flex flex-1 flex-col p-6 sm:p-8">
-        <Quote aria-hidden className="h-8 w-8 text-ocean/30" strokeWidth={1.5} />
-        <blockquote className="mt-3 text-balance text-lg font-semibold leading-snug tracking-tight text-deep sm:text-xl lg:text-2xl">
-          “{p.quote}”
-        </blockquote>
+function PanelProfil({
+  p,
+  index,
+  total,
+}: {
+  p: Expert;
+  index: number;
+  total: number;
+}) {
+  return (
+    <figure className="flex h-full flex-col overflow-hidden rounded-md border border-gray-200 bg-white">
+      <FotoNarasumber p={p} className="w-full" />
 
-        <figcaption className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ocean/10 text-ocean">
-            <BadgeCheck className="h-5 w-5" strokeWidth={2} />
-          </span>
-          <div className="min-w-0">
-            <p className="break-words text-sm font-bold text-deep sm:text-base">
-              {p.name}
-            </p>
-            <p className="text-xs text-gray-600 sm:text-sm">{p.note}</p>
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-ocean">
+            <BriefcaseBusiness className="h-4 w-4" strokeWidth={1.8} />
+            <span className="text-xs font-semibold uppercase tracking-wider">
+              {p.expertise}
+            </span>
           </div>
-        </figcaption>
+          <span className="text-xs font-medium tabular-nums text-gray-400">
+            {pad(index + 1)} / {pad(total)}
+          </span>
+        </div>
+
+        <h3 className="mt-3 text-balance text-xl font-bold leading-tight tracking-tight text-deep sm:text-2xl">
+          {p.name}
+        </h3>
+        <p className="mt-1 text-sm font-semibold text-ocean">{p.role}</p>
+
+        <p className="mt-3 text-sm leading-6 text-gray-600">
+          {p.description}
+        </p>
+
+        <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-4 text-gray-500">
+          <Building2
+            className="h-4 w-4 shrink-0 text-gray-400"
+            strokeWidth={1.8}
+          />
+          <span className="text-sm">{p.organization}</span>
+        </div>
       </div>
     </figure>
   );
 }
 
-/* Kartu ringkas: bisa diklik untuk dijadikan kartu besar */
-function KartuRingkas({
+function BarisNarasumber({
   p,
+  index,
+  aktif,
   onPilih,
+  onSelesai,
 }: {
-  p: Testimoni;
+  p: Expert;
+  index: number;
+  aktif: boolean;
   onPilih: () => void;
+  onSelesai: () => void;
 }) {
   return (
-    <div className="group relative">
-      <figure className="flex gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-300 group-hover:border-ocean/40 sm:p-5">
-        <img
-          className="h-16 w-16 shrink-0 rounded-xl object-cover sm:h-20 sm:w-20"
-          src={p.src}
-          alt=""
-          loading="lazy"
-        />
-        <div className="min-w-0">
-          <blockquote className="text-sm leading-6 text-gray-600">
-            “{p.quote}”
-          </blockquote>
-          <figcaption className="mt-3">
-            <p className="text-sm font-bold text-deep">{p.name}</p>
-            <p className="text-xs text-gray-500">{p.note}</p>
-          </figcaption>
-        </div>
-      </figure>
-
-      {/* Tombol transparan menutupi seluruh kartu */}
-      <button
-        type="button"
-        onClick={onPilih}
-        aria-label={`Tampilkan testimoni ${p.name}`}
-        className="absolute inset-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ocean focus-visible:ring-offset-2"
+    <button
+      type="button"
+      onClick={onPilih}
+      aria-current={aktif}
+      aria-label={`Tampilkan profil ${p.name}`}
+      className={`relative flex w-full items-center gap-4 border-b border-gray-200 py-4 pl-5 pr-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ocean ${
+        aktif ? "bg-ocean/5" : "hover:bg-gray-50"
+      }`}
+    >
+      <span
+        className={`absolute left-0 top-0 h-full w-0.5 bg-ocean transition-opacity ${
+          aktif ? "opacity-100" : "opacity-0"
+        }`}
       />
-    </div>
+
+      <span
+        className={`w-6 shrink-0 text-xs font-semibold tabular-nums ${
+          aktif ? "text-ocean" : "text-gray-400"
+        }`}
+      >
+        {pad(index + 1)}
+      </span>
+
+      <FotoNarasumber
+        p={p}
+        decorative
+        className={`w-20 shrink-0 rounded-md transition-opacity sm:w-24 ${
+          aktif ? "opacity-100" : "opacity-70"
+        }`}
+      />
+
+      <span className="min-w-0 flex-1">
+        <span
+          className={`block truncate text-sm font-bold sm:text-base ${
+            aktif ? "text-deep" : "text-gray-700"
+          }`}
+        >
+          {p.name}
+        </span>
+        <span className="mt-0.5 block truncate text-xs text-gray-500 sm:text-sm">
+          {p.role}
+        </span>
+      </span>
+
+      {aktif && (
+        <span
+          key={index}
+          aria-hidden="true"
+          className="expert-progress absolute bottom-0 left-0 h-0.5 w-full origin-left bg-ocean"
+          onAnimationEnd={(e) => {
+            if (e.animationName === "expert-progress") onSelesai();
+          }}
+        />
+      )}
+    </button>
   );
 }
 
 export default function Testimoni() {
   const [aktif, setAktif] = useState(0);
-  const n = photos.length;
+  const n = experts.length;
 
   const berikutnya = () => setAktif((a) => (a + 1) % n);
 
-  // Kartu kecil = sisanya, urut mulai dari setelah yang aktif (efek "berputar")
-  const urutanKecil = Array.from({ length: n - 1 }, (_, k) => (aktif + 1 + k) % n);
-
   return (
-    <section className="border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2">
-      {/*
-        Timer digerakkan oleh animasi progress itu sendiri (onAnimationEnd),
-        jadi saat di-hover atau fokus keyboard, animasi dan rotasi berhenti bersama.
-      */}
+    <section
+      id="experts"
+      className="border-t border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-2"
+    >
       <style>{`
-        @keyframes testi-progress {
+        @keyframes expert-progress {
           from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
+          to { transform: scaleX(1); }
         }
-        @keyframes testi-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: none; }
+
+        .expert-progress {
+          animation: expert-progress ${DURASI}s linear forwards;
         }
-        .testi-progress { animation: testi-progress ${DURASI}s linear forwards; }
-        .testi-in { animation: testi-in 500ms ease-out both; }
+
         @media (hover: hover) {
-          .testi-wrap:hover .testi-progress { animation-play-state: paused; }
+          .expert-wrap:hover .expert-progress {
+            animation-play-state: paused;
+          }
         }
-        .testi-wrap:has(:focus-visible) .testi-progress { animation-play-state: paused; }
+
+        .expert-wrap:has(:focus-visible) .expert-progress {
+          animation-play-state: paused;
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          .testi-progress { animation: none; transform: none; }
-          .testi-in { animation: none; }
+          .expert-progress {
+            animation: none;
+            transform: none;
+          }
         }
       `}</style>
 
       <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
         {/* HEADER */}
-        <ScrollReveal className="max-w-2xl">
+        <ScrollReveal className="max-w-3xl">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="h-px w-8 bg-ocean" />
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-ocean">
+              Our Experts
+            </span>
+          </div>
+
           <h2 className="text-balance text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
-            Mereka Sudah Memulai Langkahnya.{" "}
-            <span className="text-ocean">Sekarang Giliran Anda!</span>
+            Mengenal Para Profesional di Balik{" "}
+            <span className="text-ocean">Peluang Bisnis Indonesia–Korea</span>
           </h2>
-          <p className="mt-4 text-base leading-7 text-gray-600">
-            Lihat pengalaman peserta yang telah mengikuti pendampingan dan
-            berhasil melangkah menuju impian membangun bisnis di Korea.
+
+          <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600">
+            Kenali para praktisi, profesional, dan ahli dari berbagai bidang
+            yang memiliki wawasan serta pengalaman dalam dunia bisnis,
+            investasi, dan pengembangan usaha Indonesia–Korea.
           </p>
         </ScrollReveal>
 
-        <div className="testi-wrap mt-10 grid gap-5 sm:mt-12 sm:gap-6 lg:grid-cols-12">
-          {/* ============ KARTU BESAR (berganti otomatis) ============ */}
-          <ScrollReveal delay={100} className="min-w-0 lg:col-span-7">
-            {/*
-              Semua kartu ditumpuk di satu sel grid supaya tinggi area selalu
-              mengikuti kartu tertinggi → layout tidak melompat saat berganti.
-            */}
+        <div className="expert-wrap mt-10 grid gap-6 sm:mt-12 lg:grid-cols-12 lg:items-start lg:gap-10">
+          {/* PANEL PROFIL */}
+          <ScrollReveal
+            delay={100}
+            className="min-w-0 lg:order-2 lg:col-span-7"
+          >
             <div className="grid">
-              {photos.map((p, i) => (
+              {experts.map((p, i) => (
                 <div
                   key={p.name}
                   aria-hidden={i !== aktif}
                   className={`col-start-1 row-start-1 motion-safe:transition-opacity motion-safe:duration-500 ${
-                    i === aktif ? "opacity-100" : "pointer-events-none opacity-0"
+                    i === aktif
+                      ? "opacity-100"
+                      : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <KartuUnggulan p={p} />
+                  <PanelProfil p={p} index={i} total={n} />
                 </div>
-              ))}
-            </div>
-
-            {/* Indikator: tiap segmen = 1 testimoni, segmen aktif terisi sebagai timer */}
-            <div
-              role="group"
-              aria-label="Pilih testimoni"
-              className="mt-3 flex gap-2"
-            >
-              {photos.map((p, i) => (
-                <button
-                  key={p.name}
-                  type="button"
-                  onClick={() => setAktif(i)}
-                  aria-label={`Tampilkan testimoni ${i + 1} dari ${n}: ${p.name}`}
-                  aria-current={i === aktif}
-                  className="group flex-1 py-2 focus-visible:outline-none"
-                >
-                  <span className="relative block h-1.5 overflow-hidden rounded-full bg-gray-200 group-focus-visible:ring-2 group-focus-visible:ring-ocean group-focus-visible:ring-offset-2">
-                    {i === aktif && (
-                      <span
-                        key={aktif}
-                        className="testi-progress absolute inset-0 origin-left rounded-full bg-ocean"
-                        onAnimationEnd={(e) => {
-                          if (e.animationName === "testi-progress") berikutnya();
-                        }}
-                      />
-                    )}
-                  </span>
-                </button>
               ))}
             </div>
           </ScrollReveal>
 
-          {/* ============ KARTU KECIL (berputar bersama) ============ */}
-          <div className="grid min-w-0 content-start gap-4 sm:gap-5 lg:col-span-5">
-            {urutanKecil.map((idx, pos) => (
-              <div
-                key={`${aktif}-${photos[idx].name}`}
-                className="testi-in"
-                style={{ animationDelay: `${pos * 70}ms` }}
-              >
-                <KartuRingkas p={photos[idx]} onPilih={() => setAktif(idx)} />
-              </div>
-            ))}
-          </div>
+          {/* DAFTAR NARASUMBER */}
+          <ScrollReveal
+            delay={150}
+            className="min-w-0 lg:order-1 lg:col-span-5"
+          >
+            <div
+              role="group"
+              aria-label="Pilih profil narasumber"
+              className="border-t border-gray-200"
+            >
+              {experts.map((p, i) => (
+                <BarisNarasumber
+                  key={p.name}
+                  p={p}
+                  index={i}
+                  aktif={i === aktif}
+                  onPilih={() => setAktif(i)}
+                  onSelesai={berikutnya}
+                />
+              ))}
+            </div>
+          </ScrollReveal>
         </div>
+
+        {/* FOOTER SECTION */}
+        <ScrollReveal delay={200}>
+          <div className="mt-10 flex items-start gap-3 border-t border-gray-200 pt-6 sm:mt-12">
+            <Globe2
+              className="mt-0.5 h-5 w-5 shrink-0 text-ocean"
+              strokeWidth={1.8}
+            />
+            <p className="max-w-2xl text-sm leading-6 text-gray-600">
+              Menghubungkan wawasan, pengalaman, dan peluang kolaborasi untuk
+              mendukung pengembangan bisnis antara Indonesia dan Korea
+              Selatan.
+            </p>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );
