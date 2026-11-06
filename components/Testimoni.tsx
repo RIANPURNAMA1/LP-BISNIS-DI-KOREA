@@ -99,7 +99,7 @@ function PanelProfil({
   total: number;
 }) {
   return (
-    <figure className="flex h-full flex-col overflow-hidden rounded-md border border-gray-200 bg-white">
+    <figure className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white">
       <FotoNarasumber p={p} className="w-full" />
 
       <div className="flex flex-1 flex-col p-5 sm:p-6">
