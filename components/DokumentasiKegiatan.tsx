@@ -10,8 +10,20 @@ type Foto = {
   id: string;
   label: Kategori;
   src: string;
+  srcSet: string;
   alt: string;
 };
+
+/*
+  Versi gambar sudah dioptimasi di /kegiatan/optimized:
+  - 640w untuk thumbnail grid
+  - 1280w untuk lightbox
+  Ukuran asli (2-3 MB/foto) tidak dipakai lagi agar section cepat tampil.
+*/
+const gambar = (nama: string): Pick<Foto, "src" | "srcSet"> => ({
+  src: `/kegiatan/optimized/${nama}-1280.jpg`,
+  srcSet: `/kegiatan/optimized/${nama}-640.jpg 640w, /kegiatan/optimized/${nama}-1280.jpg 1280w`,
+});
 
 /*
   URUTAN PENTING: foto pertama tampil paling besar (featured).
@@ -21,49 +33,49 @@ const semuaFoto: Foto[] = [
   {
     id: "startup-1",
     label: "Startup",
-    src: "/kegiatan/starup.jfif",
+    ...gambar("startup-1"),
     alt: "Peserta program startup berfoto bersama mentor",
   },
   {
     id: "seminar-1",
     label: "Seminar",
-    src: "/kegiatan/seminar/Foto%20Grup%20di%20Auditorium%20Berpanggung.jfif",
+    ...gambar("seminar-1"),
     alt: "Foto grup peserta seminar di auditorium",
   },
   {
     id: "seminar-2",
     label: "Seminar",
-    src: "/kegiatan/seminar/Konferensi%20Teknologi%20di%20Aula%20Modern.png",
+    ...gambar("seminar-2"),
     alt: "Sesi seminar di aula modern",
   },
   {
     id: "startup-2",
     label: "Startup",
-    src: "/kegiatan/starup1.jfif",
+    ...gambar("startup-2"),
     alt: "Kegiatan program startup",
   },
   {
     id: "startup-3",
     label: "Startup",
-    src: "/kegiatan/starup2.jfif",
+    ...gambar("startup-3"),
     alt: "Sesi pendampingan program startup",
   },
   {
     id: "seminar-3",
     label: "Seminar",
-    src: "/kegiatan/seminar/Seminar%20Modern%20di%20Ruang%20Kreatif.png",
+    ...gambar("seminar-3"),
     alt: "Seminar di ruang kreatif",
   },
   {
     id: "startup-4",
     label: "Startup",
-    src: "/kegiatan/starup3.jfif",
+    ...gambar("startup-4"),
     alt: "Peserta program startup berdiskusi",
   },
   {
     id: "seminar-4",
     label: "Seminar",
-    src: "/kegiatan/seminar/Swafoto%20Ceria%20di%20Restoran%20Korea.png",
+    ...gambar("seminar-4"),
     alt: "Swafoto peserta di restoran Korea",
   },
 ];
@@ -203,8 +215,16 @@ export default function DokumentasiKegiatan() {
             >
               <img
                 src={f.src}
+                srcSet={f.srcSet}
+                sizes={
+                  besar
+                    ? "(max-width: 1023px) 100vw, 50vw"
+                    : "(max-width: 1023px) 50vw, 25vw"
+                }
                 alt={f.alt}
-                loading="lazy"
+                loading={i === 0 ? "eager" : "lazy"}
+                fetchPriority={i === 0 ? "high" : "auto"}
+                decoding="async"
                 className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105"
               />
 
@@ -268,7 +288,10 @@ export default function DokumentasiKegiatan() {
           >
             <img
               src={fotoAktif.src}
+              srcSet={fotoAktif.srcSet}
+              sizes="(max-width: 1023px) 100vw, 90vw"
               alt={fotoAktif.alt}
+              decoding="async"
               className="max-h-full max-w-full rounded-xl object-contain"
             />
 
