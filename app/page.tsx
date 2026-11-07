@@ -79,7 +79,7 @@ export default function Home() {
         <Principle />
         </div>
         <div className="bg-[#eef2f7]">
-          <Testimoni />
+          {/* <Testimoni /> */}
           <BonusGaransi />
           {/* <Faq /> */}
           <Cta />
