@@ -13,7 +13,7 @@ const experts = [
     organization: "Nama Perusahaan / Institusi",
     expertise: "Pengembangan Bisnis",
     description:
-      "Memiliki pengalaman dalam pengembangan usaha, strategi bisnis, serta membangun peluang kerja sama antara Indonesia dan Korea Selatan.",
+      "Memiliki pengalaman dalam pengembangan usaha, strategi bisnis, serta membangun peluang kerja sama antara Indonesia dan Korea.",
   },
   {
     src: "https://images.openai.com/static-rsc-4/CyKn6hYd21nfIsDku3LeRe-SujJuxx2BaJ2c8atmtqS8Ar5DkJGnOs6FvYE8dkXct528vY6-qLw3uiD1dhkG3Tj7oIPnthnrFTUv0wYwsQ2Y4mYfchC0_BsuGt1p5A1HGzrNi-8pYBt-ImY3tYvOMNg5l9lVIiyV08FPR9W5XozmzxTiUByujyW3MopK_ORh?purpose=fullsize",
@@ -33,17 +33,17 @@ const experts = [
     organization: "Nama Perusahaan / Institusi",
     expertise: "Investasi dan Ekspansi Pasar",
     description:
-      "Memahami peluang investasi, strategi memasuki pasar Korea Selatan, serta potensi kolaborasi bisnis lintas negara.",
+      "Memahami peluang investasi, strategi memasuki pasar Korea, serta potensi kolaborasi bisnis lintas negara.",
   },
   {
     src: "https://images.openai.com/static-rsc-4/DAoK4SsYTKKYnZaxWoK2-idFCl6F0r28Yr01_LmFZI2BwgfNjQcKlfnTK87UwiAV4uuUAC4Dak924M0Tv6MqbwM4rqokBKnZ5FUlyH5pT6lPm30qER_soOnGEQvrTrwIH6DixPmFOoRRqoGmp6pKAETZ3do9PLS5Cntmvw1aVdE5MgGDXe7mgjBjEwOyLrpC?purpose=fullsize",
-    alt: "Profil ahli ekosistem bisnis Korea Selatan",
+    alt: "Profil ahli ekosistem bisnis Korea",
     name: "Nama Narasumber 4",
     role: "Korea Business Consultant",
     organization: "Nama Perusahaan / Institusi",
     expertise: "Ekosistem Bisnis Korea",
     description:
-      "Memiliki wawasan mengenai lingkungan bisnis Korea Selatan, regulasi usaha, serta berbagai aspek yang perlu dipahami dalam membangun bisnis di Korea.",
+      "Memiliki wawasan mengenai lingkungan bisnis Korea, regulasi usaha, serta berbagai aspek yang perlu dipahami dalam membangun bisnis di Korea.",
   },
 ];
 
@@ -325,8 +325,7 @@ export default function Testimoni() {
             />
             <p className="max-w-2xl text-sm leading-6 text-gray-600">
               Menghubungkan wawasan, pengalaman, dan peluang kolaborasi untuk
-              mendukung pengembangan bisnis antara Indonesia dan Korea
-              Selatan.
+              mendukung pengembangan bisnis antara Indonesia dan Korea.
             </p>
           </div>
         </ScrollReveal>

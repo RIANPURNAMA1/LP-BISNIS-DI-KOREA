@@ -14,7 +14,7 @@ export default function Faq() {
             Pertanyaan Umum
           </p>
           <h2 className="text-2xl font-bold leading-tight tracking-tight text-deep sm:text-3xl lg:text-4xl">
-            Pertanyaan Seputar Bisnis di Korea Selatan
+            Pertanyaan Seputar Bisnis di Korea
           </h2>
           <p className="mt-4 text-base leading-7 text-gray-500">
             Hal yang sering ditanyakan sebelum memulai program inkubasi bisnis

@@ -29,14 +29,11 @@ export default function Hero() {
         id="beranda"
         className="relative z-10 mx-auto my-auto w-full max-w-[1280px] px-4 pb-6 pt-28 sm:px-6 sm:pt-32 lg:px-8"
       >
-        <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/60 sm:text-sm">
-          <span aria-hidden className="h-px w-8 bg-white/60" />
-          Forum Bilateral 2026
-        </p>
+     
         <h1 className="fade-up max-w-3xl text-3xl font-bold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1] lg:text-6xl">
           Ingin Punya Bisnis di{" "}
           <span className="bg-gradient-to-r from-white via-white to-[#E3081C] bg-clip-text text-transparent">
-            Korea Selatan?
+            Korea?
           </span>
         </h1>
 

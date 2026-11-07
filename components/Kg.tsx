@@ -20,7 +20,7 @@ const credentials: {
     icon: Building2,
     before: "Mengelola ",
     strong: "4 bisnis",
-    after: " di Korea Selatan.",
+    after: " di Korea.",
   },
   {
     icon: Users,

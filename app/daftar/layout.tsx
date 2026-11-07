@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 
-const title = "Pendaftaran Program Bisnis di Korea Selatan";
+const title = "Pendaftaran Program Bisnis di Korea";
 const description =
-  "Daftar Program Inkubasi Bisnis Startup Indonesia-Korea. Isi formulir pendaftaran untuk mendapatkan pendampingan bisnis, mentoring praktisi, dan panduan pendirian perusahaan di Korea Selatan.";
+  "Daftar Program Inkubasi Bisnis Startup Indonesia-Korea. Isi formulir pendaftaran untuk mendapatkan pendampingan bisnis, mentoring praktisi, dan panduan pendirian perusahaan di Korea.";
 
 export const metadata: Metadata = {
   title,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         url: "/hero.png",
         width: 1200,
         height: 630,
-        alt: "Formulir pendaftaran program bisnis di Korea Selatan",
+        alt: "Formulir pendaftaran program bisnis di Korea",
       },
     ],
   },

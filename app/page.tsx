@@ -20,7 +20,7 @@ const serviceSchema = {
   "@type": "Service",
   name: "Program Inkubasi Bisnis Startup Indonesia-Korea",
   serviceType:
-    "Pendampingan bisnis, mentoring startup, dan panduan pendirian perusahaan di Korea Selatan",
+    "Pendampingan bisnis, mentoring startup, dan panduan pendirian perusahaan di Korea",
   description: SITE_DESCRIPTION,
   url: `${SITE_URL}/daftar`,
   provider: {
@@ -35,7 +35,7 @@ const serviceSchema = {
   audience: {
     "@type": "Audience",
     audienceType:
-      "Wirausaha dan pekerja Indonesia yang ingin membangun bisnis di Korea Selatan",
+      "Wirausaha dan pekerja Indonesia yang ingin membangun bisnis di Korea",
   },
 };
 

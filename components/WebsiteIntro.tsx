@@ -129,7 +129,7 @@ export default function WebsiteIntro() {
 
         {/* Subtitle / Program Info */}
         <h2 className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-white/85 mb-8 max-w-xs sm:max-w-md">
-          Inkubasi Startup & Kemitraan Bisnis Korea Selatan
+          Inkubasi Startup & Kemitraan Bisnis Korea
         </h2>
 
         {/* Progress Bar Mewah */}

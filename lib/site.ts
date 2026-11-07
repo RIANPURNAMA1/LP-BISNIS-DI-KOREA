@@ -5,16 +5,15 @@ export const SITE_URL = (
 export const SITE_NAME = "Indonesia-Korea Business Project";
 
 export const SITE_TITLE =
-  "Bisnis di Korea | Program Inkubasi & Pendirian Perusahaan Korea Selatan";
+  "Bisnis di Korea | Program Inkubasi & Pendirian Perusahaan Korea";
 
 export const SITE_SHORT_TITLE = "Bisnis di Korea";
 
 export const SITE_DESCRIPTION =
-  "Ingin punya bisnis sendiri di Korea Selatan? Ikuti Program Inkubasi Bisnis Startup: mengenali peluang usaha, mentoring praktisi, menyusun business plan, pendirian perusahaan, legalitas, dan panduan visa bisnis di Korea.";
+  "Ingin punya bisnis sendiri di Korea? Ikuti Program Inkubasi Bisnis Startup: mengenali peluang usaha, mentoring praktisi, menyusun business plan, pendirian perusahaan, legalitas, dan panduan visa bisnis di Korea.";
 
 export const SITE_KEYWORDS = [
   "bisnis di korea",
-  "bisnis di korea selatan",
   "cara memulai bisnis di korea",
   "pendirian perusahaan di korea",
   "startup korea",
@@ -31,12 +30,12 @@ export const FAQ_ITEMS = [
   {
     question: "Apa itu Program Inkubasi Bisnis Startup Indonesia-Korea?",
     answer:
-      "Program pendampingan untuk orang Indonesia yang ingin memulai atau mengembangkan bisnis di Korea Selatan, mulai dari mengenali peluang usaha, mengembangkan ide, menyusun Business Model Canvas dan business plan, hingga persiapan pendirian perusahaan serta panduan visa bisnis.",
+      "Program pendampingan untuk orang Indonesia yang ingin memulai atau mengembangkan bisnis di Korea, mulai dari mengenali peluang usaha, mengembangkan ide, menyusun Business Model Canvas dan business plan, hingga persiapan pendirian perusahaan serta panduan visa bisnis.",
   },
   {
     question: "Siapa yang cocok mengikuti program bisnis di Korea ini?",
     answer:
-      "Program ini cocok untuk pekerja migran Indonesia di Korea, profesional, calon wirausaha, dan siapa pun yang serius ingin membangun atau mengembangkan bisnis di Korea Selatan bersama mentor praktisi.",
+      "Program ini cocok untuk pekerja migran Indonesia di Korea, profesional, calon wirausaha, dan siapa pun yang serius ingin membangun atau mengembangkan bisnis di Korea bersama mentor praktisi.",
   },
   {
     question: "Apa saja yang saya dapatkan dari program ini?",
