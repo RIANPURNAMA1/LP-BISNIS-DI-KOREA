@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { SITE_NAME } from "@/lib/site";
 import "./seminar-cianjur.css";
 
-const poppins = Poppins({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -51,6 +51,6 @@ export default function SeminarCianjurLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`${poppins.className} seminar-cianjur`}>{children}</div>
+    <div className={`${plusJakartaSans.className} seminar-cianjur`}>{children}</div>
   );
 }

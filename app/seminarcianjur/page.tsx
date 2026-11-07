@@ -1,4 +1,6 @@
 import Cta from "./Cta";
+import Image from "next/image";
+import poster from "@/public/poster.png";
 
 const MENTORS = [
   {
@@ -67,7 +69,7 @@ export default function SeminarCianjurPage() {
       {/* ===== 1. HERO ===== */}
       <section className="bg-white px-5 pb-8 pt-10 text-center text-slate-900">
         {/* Judul */}
-        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight">
+        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight">
           Seret bin Mandeg Bisnis di Cianjur?
           <span className="block text-red-600">
             Coba Indonesia-Korea Business Project
@@ -102,11 +104,14 @@ export default function SeminarCianjurPage() {
             Indonesia-Korea Business Project
           </Badge>
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/poster.png"
+          <Image
+            src={poster}
             alt="Poster Indonesia-Korea Business Project"
-            className="w-full rounded-xl shadow-lg shadow-black/10"
+            priority // preload, tidak di-lazy-load
+            placeholder="blur" // blur-up selama gambar dimuat
+            sizes="(max-width: 768px) 100vw, 480px"
+            quality={80}
+            className="h-auto w-full rounded-xl shadow-lg shadow-black/10"
           />
         </div>
       </section>
@@ -122,12 +127,14 @@ export default function SeminarCianjurPage() {
               </p>
 
               {/* Foto besar, memudar ke putih di bagian bawah */}
-              <div className="relative mx-auto mt-6 w-full max-w-[320px]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative mx-auto mt-6 aspect-[4/5] w-full max-w-[320px] overflow-hidden">
+                <Image
                   src={m.img}
                   alt={m.name}
-                  className="aspect-[4/5] w-full object-cover object-top"
+                  fill
+                  sizes="(max-width: 320px) 100vw, 320px"
+                  quality={75}
+                  className="object-cover object-top"
                 />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white via-white/80 to-transparent" />
               </div>
@@ -166,45 +173,46 @@ export default function SeminarCianjurPage() {
         </div>
       </section>
 
-      {/* ===== 4. GRATIS + CTA ===== */}
-      <section className="bg-white px-5 py-10 text-left text-slate-900">
-        <div className="mx-auto w-full rounded-xl border border-slate-200 bg-white px-4 py-5 shadow-sm">
-          {/* Judul */}
-          <h2 className="text-2xl font-extrabold leading-tight tracking-tight text-[#0C2342]">
-            <span className="text-red-600">Gratis</span>, tapi hanya untuk yang
-            terpilih:
-          </h2>
+{/* ===== 4. JADWAL + GRATIS-TERPILIH ===== */}
+<section className="bg-white px-5 py-10 text-slate-900">
+  <div className="mx-auto w-full overflow-hidden rounded-2xl bg-white text-center shadow-[0_8px_30px_rgba(12,35,66,0.08)] ring-1 ring-slate-100">
+    {/* Jadwal */}
+    <div className="px-5 py-7">
+      <p className="text-[14px] font-semibold uppercase tracking-[0.18em] text-red-500">
+        Rabu
+      </p>
+      <p className="mt-1 text-[28px] font-extrabold leading-tight tracking-tight text-[#0C2342]">
+        11 November 2026
+      </p>
+      <p className="mt-3 inline-block rounded-full bg-[#0C2342]/10 px-4 py-1.5 text-[15px] font-bold text-[#0C2342]">
+        9:00 WIB
+      </p>
+    </div>
 
-          {/* Daftar ceklis */}
-          <ul className="mt-5 space-y-3 text-[15px] leading-snug text-slate-700">
-            <li className="flex items-start gap-3">
-              <span className="mt-0.5 font-black text-red-600">✓</span>
-              <p>
-                Karena <b className="text-[#0C2342]">tempat terbatas</b>.
-              </p>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-0.5 font-black text-red-600">✓</span>
-              <p>
-                Hanya yang <b className="text-[#0C2342]">serius</b> yang boleh
-                ikut!
-              </p>
-            </li>
-          </ul>
+    {/* Lokasi */}
+    <div className="mx-5 border-t border-dashed border-slate-200 py-5">
+      <p className="text-[18px] font-bold leading-tight text-[#0C2342]">
+        Seminar Room
+      </p>
+      <p className="mt-1 text-[15px] leading-snug text-slate-500">
+        Bumi Marhamah, Cianjur
+      </p>
+    </div>
 
-          {/* Catatan border putus-putus */}
-          <div className="mt-5 rounded-lg border border-dashed border-slate-300 px-4 py-3 text-[14px] leading-snug text-slate-600">
-            <b className="text-[#0C2342]">Kurang cocok</b> untuk yang hanya
-            ingin coba-coba. Prioritas diberikan kepada yang siap menjalankan
-            bisnisnya.
-          </div>
-
-          {/* Kotak sorotan */}
-          <div className="mt-5 rounded-lg bg-[#0C2342]/5 px-4 py-4 text-[15px] font-extrabold text-[#0C2342]">
-            Daftar sekarang sebelum kuota habis.
-          </div>
-        </div>
-      </section>
+    {/* Gratis-Terpilih */}
+    <div className="bg-gradient-to-b from-red-50/70 to-white px-5 py-7">
+      <h2 className="text-balance text-3xl font-extrabold leading-tight tracking-tight text-red-500">
+        Gratis-Terpilih!
+      </h2>
+      <p className="mt-3 text-[15px] leading-snug text-slate-600">
+        Karena <b className="font-semibold text-[#0C2342]">tempat terbatas</b>
+        <br />
+        dan hanya yang <b className="font-semibold text-[#0C2342]">serius</b>{" "}
+        boleh ikut!
+      </p>
+    </div>
+  </div>
+</section>
       <Cta id="daftar-form" />
     </main>
   );
