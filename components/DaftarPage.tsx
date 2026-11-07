@@ -25,6 +25,7 @@ export type RegistrationPayload = {
   status: string;
   ide: string;
   cerita: string;
+  pendapatan: string;
   tujuan: string[];
   sumber: string;
 };
@@ -42,6 +43,7 @@ type FormState = {
   statusLain: string;
   ide: string;
   cerita: string;
+  pendapatan: string;
   tujuan: string[];
   tujuanLainOn: boolean;
   tujuanLain: string;
@@ -62,6 +64,7 @@ const initialForm: FormState = {
   statusLain: "",
   ide: "",
   cerita: "",
+  pendapatan: "",
   tujuan: [],
   tujuanLainOn: false,
   tujuanLain: "",
@@ -76,6 +79,13 @@ const IDE = [
   "Sudah memiliki ide bisnis",
   "Sudah menjalankan bisnis",
   "Belum memiliki bisnis",
+];
+
+const PENDAPATAN = [
+  "Under 5jt",
+  "5 – 10jt",
+  "10 – 20jt",
+  "Di atas 20jt",
 ];
 
 const TUJUAN = [
@@ -443,6 +453,7 @@ export default function DaftarPage({
         form.status === STATUS_LAIN ? form.statusLain.trim() : form.status,
       ide: form.ide,
       cerita: form.cerita.trim(),
+      pendapatan: form.pendapatan,
       tujuan: tujuanLain ? [...form.tujuan, tujuanLain] : form.tujuan,
       sumber: form.sumber,
     };
@@ -810,6 +821,25 @@ export default function DaftarPage({
                       )}
                     </fieldset>
 
+                      <fieldset>
+                      <legend className="mb-2 text-sm font-semibold text-deep">
+                        Berapa kisaran personal income (pendapatan pribadi) Anda
+                        per bulan?
+                      </legend>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {PENDAPATAN.map((o) => (
+                          <Choice
+                            key={o}
+                            type="radio"
+                            name="pendapatan"
+                            label={o}
+                            checked={form.pendapatan === o}
+                            onChange={() => set("pendapatan", o)}
+                          />
+                        ))}
+                      </div>
+                    </fieldset>
+
                     <Field
                       id="cerita"
                       label="Ceritakan singkat ide atau rencana bisnis Anda"
@@ -823,6 +853,8 @@ export default function DaftarPage({
                         className={cls()}
                       />
                     </Field>
+
+                  
                   </div>
                 )}
 

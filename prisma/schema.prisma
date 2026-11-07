@@ -22,6 +22,7 @@ model Pendaftaran {
   status    String   @db.VarChar(100)
   ide       String   @db.VarChar(100)
   cerita    String?  @db.Text
+  pendapatan String? @db.VarChar(50)
   tujuan    Json
   sumber    String?  @db.VarChar(100)
   createdAt DateTime @default(now()) @map("created_at")

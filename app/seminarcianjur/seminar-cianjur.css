@@ -1,0 +1,23 @@
+.seminar-cianjur details > summary {
+  list-style: none;
+}
+
+.seminar-cianjur details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.seminar-cianjur details[open] .chev {
+  transform: rotate(180deg);
+}
+
+.seminar-cianjur .mentor-a {
+  background-image: url("/poster.jpg");
+  background-size: 230%;
+  background-position: 62% 63%;
+}
+
+.seminar-cianjur .mentor-b {
+  background-image: url("/poster.jpg");
+  background-size: 230%;
+  background-position: 98% 63%;
+}

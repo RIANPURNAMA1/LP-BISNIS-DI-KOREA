@@ -17,6 +17,8 @@ const config: Config = {
         ocean: "#1f5a8e",
         sky: "#3f7fb3",
         soft: "#f3f6fa",
+        navy: "#0C2242",
+        brand: "#E3081C",
       },
       boxShadow: {
         float: "0 18px 50px -12px rgba(12,35,66,.28)",

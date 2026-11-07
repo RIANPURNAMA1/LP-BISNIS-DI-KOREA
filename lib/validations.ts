@@ -25,6 +25,7 @@ export const pendaftaranSchema = z.object({
   status: z.string().min(1, "Status wajib dipilih."),
   ide: z.string().min(1, "Kesiapan bisnis wajib dipilih."),
   cerita: z.string().optional().default(""),
+  pendapatan: z.string().optional().default(""),
   tujuan: z
     .array(z.string())
     .min(1, "Pilih minimal satu tujuan."),

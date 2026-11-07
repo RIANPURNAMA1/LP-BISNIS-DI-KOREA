@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-const LOGO_LIGHT = "/logo/2.png";
-const LOGO_DARK = "/logo/1.png";
+const LOGO = "/logo/3.webp";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const solid = scrolled;
 
   useEffect(() => {
     const img = new Image();
-    img.src = LOGO_DARK;
+    img.src = LOGO;
   }, []);
 
   useEffect(() => {
@@ -26,46 +24,42 @@ export default function Navbar() {
   return (
     <nav
       aria-label="Navigasi utama"
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 animate-fade-down ${
-        solid
-          ? "border-b border-gray-200/70 bg-white/95 py-3 shadow-sm backdrop-blur-xl"
+      className={`fixed inset-x-0 top-0 z-50 animate-fade-down transition-all duration-300 ${
+        scrolled
+          ? "border-b border-white/10 bg-[#0C2342] py-3 shadow-lg shadow-black/20"
           : "border-b border-transparent bg-transparent py-4 sm:py-6"
       }`}
     >
-      <div
-        className={`mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 transition-colors duration-300 sm:px-6 lg:px-8 ${
-          solid ? "text-deep" : "text-white"
-        }`}
-      >
+      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 text-white sm:px-6 lg:px-8">
         {/* Logo */}
         <a
           href="#beranda"
-          className="flex shrink-0 items-center rounded-md focus-ring z-10"
+          className="focus-ring z-10 flex shrink-0 items-center rounded-md"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={solid ? LOGO_DARK : LOGO_LIGHT}
-            alt="Indonesia-Korea Business Project"
-            className={`w-auto max-w-[140px] object-contain transition-all duration-300 sm:max-w-none ${
-              scrolled ? "h-7 sm:h-8" : "h-8 sm:h-10"
-            }`}
-          />
+  src={LOGO}
+  alt="Indonesia-Korea Business Project"
+  className={`w-auto max-w-[240px] object-contain transition-all duration-300 sm:max-w-none ${
+    scrolled ? "h-14 sm:h-16" : "h-16 sm:h-24"
+  }`}
+/>
         </a>
 
-        {/* Tagline di Tengah */}
+        {/* Tagline di tengah */}
         <div className="hidden flex-1 items-center justify-center md:flex">
-          <p className="text-sm font-semibold tracking-wide md:text-base opacity-95">
-           Buka Peluang Bisnismu di Korea Sekarang!
+          <p className="text-sm font-semibold tracking-wide opacity-95 md:text-base">
+            Buka Peluang Bisnismu di Korea Sekarang!
           </p>
         </div>
 
         {/* CTA */}
         <a
           href="/daftar"
-          className={`z-10 inline-block whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition-colors focus-ring sm:px-6 sm:py-2.5 sm:text-sm ${
-            solid
-              ? "bg-deep text-white hover:bg-ocean"
-              : "bg-white text-deep hover:bg-soft"
+          className={`focus-ring z-10 inline-block whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors sm:px-6 sm:py-2.5 sm:text-sm ${
+            scrolled
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-white text-[#0C2342] hover:bg-slate-100"
           }`}
         >
           Daftar Program

@@ -37,6 +37,7 @@ type Pendaftar = {
   status: string;
   ide: string;
   cerita: string;
+  pendapatan: string;
   tujuan: string[];
   sumber: string;
   createdAt?: string;
@@ -356,6 +357,10 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
               <InfoRow
                 label="Kesiapan Bisnis"
                 value={data.ide ? <Badge tone="green">{data.ide}</Badge> : null}
+              />
+              <InfoRow
+                label="Personal Income"
+                value={data.pendapatan ? <Badge tone="gray">{data.pendapatan}</Badge> : null}
               />
               <InfoRow label="Lokasi" value={lokasi} />
             </dl>

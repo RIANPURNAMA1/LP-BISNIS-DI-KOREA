@@ -11,6 +11,7 @@ export type Pendaftaran = {
   status: string;
   ide: string;
   cerita: string;
+  pendapatan: string;
   tujuan: string[];
   sumber: string;
   created_at: string;

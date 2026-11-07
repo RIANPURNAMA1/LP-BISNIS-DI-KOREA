@@ -170,3 +170,91 @@ html {
     animation: none;
   }
 }
+
+
+/* Border gradasi bergerak + glow */
+.badge-glow {
+  background: linear-gradient(90deg, #0c2342, #dc2626, #0c2342);
+  background-size: 200% 100%;
+  animation: badge-border 4s linear infinite;
+  box-shadow:
+    0 0 12px rgba(12, 35, 66, 0.45),
+    0 0 22px rgba(220, 38, 38, 0.35);
+}
+
+@keyframes badge-border {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* Kilau diagonal */
+.badge-shine {
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: badge-shine 3s ease-in-out infinite;
+}
+
+@keyframes badge-shine {
+  0% {
+    left: -60%;
+  }
+  60%,
+  100% {
+    left: 130%;
+  }
+}
+
+/* Border gradasi bergerak + glow */
+.badge-glow {
+  background: linear-gradient(90deg, #0c2342, #dc2626, #0c2342);
+  background-size: 200% 100%;
+  animation: badge-border 4s linear infinite;
+  box-shadow:
+    0 0 12px rgba(12, 35, 66, 0.45),
+    0 0 22px rgba(220, 38, 38, 0.35);
+}
+
+@keyframes badge-border {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* Kilau diagonal */
+.badge-shine {
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: badge-shine 3s ease-in-out infinite;
+}
+
+@keyframes badge-shine {
+  0% {
+    left: -60%;
+  }
+  60%,
+  100% {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-glow,
+  .badge-shine {
+    animation: none;
+  }
+}
+
+.card-soft {
+  box-shadow: 0 0 10px rgba(12, 35, 66, 0.18);
+}
