@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { Download, FileSpreadsheet, Loader2 } from "lucide-react";
 
 type PendaftarRow = {
   id: number;
@@ -10,8 +11,15 @@ type PendaftarRow = {
   email: string;
   provinsi: string;
   kabupaten: string;
+  kecamatan: string;
+  desa: string;
+  alamat: string;
   status: string;
   ide: string;
+  pendapatan: string;
+  tujuan: string[] | string;
+  cerita: string;
+  sumber: string;
   createdAt?: string;
   created_at?: string;
 };
@@ -24,6 +32,29 @@ type ApiResp = {
   totalPages: number;
 };
 
+// Bungkus nilai dalam tanda kutip dan escape tanda kutip ganda sesuai RFC 4180,
+// supaya karakter koma, kutip, atau baris baru tidak merusak kolom CSV.
+function csvCell(value: unknown) {
+  const text =
+    value === null || value === undefined
+      ? ""
+      : Array.isArray(value)
+        ? value.join("; ")
+        : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export default function PendaftaranList() {
   const [data, setData] = useState<PendaftarRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -34,6 +65,7 @@ export default function PendaftaranList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [exporting, setExporting] = useState<"csv" | "excel" | null>(null);
 
   const limit = 20;
 
@@ -86,34 +118,114 @@ export default function PendaftaranList() {
     }
   }
 
-  async function handleExport() {
+  async function handleExportCsv() {
+    setExporting("csv");
     try {
-      const res = await fetch(`/api/pendaftaran?page=1&limit=10000&sort=created_at&order=desc${search ? `&search=${encodeURIComponent(search)}` : ""}`);
+      const params = new URLSearchParams({
+        page: "1",
+        limit: "10000",
+        sort: "created_at",
+        order: "desc",
+      });
+      if (search) params.set("search", search);
+
+      const res = await fetch(`/api/pendaftaran?${params}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
-      const json = await res.json() as ApiResp;
+      const json = (await res.json()) as ApiResp;
 
-      const headers = ["No", "Nama", "WhatsApp", "Email", "Provinsi/Negara", "Status", "Ide Bisnis", "Tanggal Daftar"];
-      const rows = json.data.map((r, i) => [
-        i + 1,
-        `"${r.nama}"`,
-        `"${r.whatsapp}"`,
-        `"${r.email}"`,
-        `"${r.provinsi === "Luar Negeri" ? `Luar Negeri - ${r.kabupaten}` : r.provinsi}"`,
-        `"${r.status}"`,
-        `"${r.ide}"`,
-        `"${new Date(r.createdAt || r.created_at || "").toLocaleDateString("id-ID")}"`,
-      ]);
+      const headers = [
+        "No",
+        "Nama",
+        "WhatsApp",
+        "Email",
+        "Domisili",
+        "Negara",
+        "Provinsi/State",
+        "Kota/Kabupaten",
+        "Kecamatan",
+        "Desa/Kelurahan",
+        "Alamat Lengkap",
+        "Status",
+        "Ide Bisnis",
+        "Personal Income",
+        "Tujuan Program",
+        "Cerita Bisnis",
+        "Sumber Informasi",
+        "Tanggal Daftar",
+      ];
 
-      const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `pendaftar-bisnis-korea-${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const rows = json.data.map((r, i) => {
+        const isLuar = r.provinsi === "Luar Negeri";
+        const tanggal = new Date(r.createdAt || r.created_at || "");
+        const tanggalText = isNaN(tanggal.getTime())
+          ? ""
+          : tanggal.toLocaleString("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+        return [
+          i + 1,
+          r.nama,
+          r.whatsapp,
+          r.email,
+          isLuar ? "Luar Negeri" : "Indonesia",
+          isLuar ? r.kabupaten : "",
+          isLuar ? r.kecamatan : r.provinsi,
+          isLuar ? r.desa : r.kabupaten,
+          isLuar ? "" : r.kecamatan,
+          isLuar ? "" : r.desa,
+          r.alamat,
+          r.status,
+          r.ide,
+          r.pendapatan,
+          r.tujuan,
+          r.cerita,
+          r.sumber,
+          tanggalText,
+        ].map(csvCell);
+      });
+
+      const csv = [headers.map(csvCell).join(","), ...rows.map((r) => r.join(","))].join(
+        "\r\n",
+      );
+
+      // BOM UTF-8 + CRLF supaya aman dibuka/diimpor di Excel, Google Sheets, dll.
+      const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;",
+      });
+      triggerDownload(
+        blob,
+        `pendaftar-bisnis-korea-${new Date().toISOString().slice(0, 10)}.csv`,
+      );
     } catch {
-      alert("Gagal mengexport data.");
+      alert("Gagal mengexport CSV.");
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  async function handleExportExcel() {
+    setExporting("excel");
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+
+      const res = await fetch(`/api/pendaftaran/export?${params}`);
+      if (!res.ok) throw new Error("Gagal membuat file Excel");
+
+      const blob = await res.blob();
+      triggerDownload(
+        blob,
+        `pendaftar-bisnis-korea-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    } catch {
+      alert("Gagal mengexport Excel.");
+    } finally {
+      setExporting(null);
     }
   }
 
@@ -127,12 +239,32 @@ export default function PendaftaranList() {
             Total: <span className="font-semibold text-gray-700">{total}</span> pendaftar
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
-          📥 Export CSV
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleExportExcel}
+            disabled={exporting !== null}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {exporting === "excel" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="h-4 w-4" />
+            )}
+            {exporting === "excel" ? "Menyiapkan Excel..." : "Export Excel"}
+          </button>
+          <button
+            onClick={handleExportCsv}
+            disabled={exporting !== null}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {exporting === "csv" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {exporting === "csv" ? "Menyiapkan CSV..." : "Export CSV"}
+          </button>
+        </div>
       </div>
 
       {/* Search */}

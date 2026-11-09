@@ -45,7 +45,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 // ─── Validasi Query Params ───────────────────────────────────────
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(10000).default(20),
   search: z.string().optional().default(""),
   sort: z
     .enum(["id", "nama", "email", "provinsi", "status", "createdAt", "created_at"])

@@ -39,6 +39,7 @@ type Stats = {
     nama: string;
     email: string;
     provinsi: string;
+    kabupaten: string;
     status: string;
     createdAt?: string;
     created_at?: string;
@@ -278,7 +279,7 @@ export default function AdminDashboard() {
 
       {/* Charts Row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <BarChart data={stats.byProvinsi} title="Top Provinsi Pendaftar" icon={MapPin} />
+        <BarChart data={stats.byProvinsi} title="Top Provinsi/Negara Pendaftar" icon={MapPin} />
         <PieChart data={stats.byStatus} title="Distribusi Status" icon={UserCheck} />
       </div>
 
@@ -312,7 +313,7 @@ export default function AdminDashboard() {
                 <tr className="border-b border-gray-100 bg-gray-50/50">
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Nama</th>
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Email</th>
-                  <th className="px-5 py-2.5 font-semibold text-gray-500">Provinsi</th>
+                  <th className="px-5 py-2.5 font-semibold text-gray-500">Provinsi/Negara</th>
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Status</th>
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Tanggal</th>
                 </tr>
@@ -329,7 +330,9 @@ export default function AdminDashboard() {
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{r.email}</td>
-                    <td className="px-5 py-3 text-gray-600">{r.provinsi}</td>
+                    <td className="px-5 py-3 text-gray-600">
+                      {r.provinsi === "Luar Negeri" ? r.kabupaten : r.provinsi}
+                    </td>
                     <td className="px-5 py-3">
                       <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                         {r.status}

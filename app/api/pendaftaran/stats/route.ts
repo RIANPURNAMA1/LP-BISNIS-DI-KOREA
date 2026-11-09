@@ -35,9 +35,9 @@ export async function GET() {
       prisma.pendaftaran.count({ where: { createdAt: { gte: monthStart } } }),
     ]);
 
-    // Breakdown per provinsi (top 10)
+    // Breakdown per provinsi/negara (top 10)
     const byProvinsi = await prisma.pendaftaran.groupBy({
-      by: ["provinsi"],
+      by: ["provinsi", "kabupaten"],
       _count: { id: true },
       orderBy: { _count: { id: "desc" } },
       take: 10,
@@ -71,6 +71,7 @@ export async function GET() {
         nama: true,
         email: true,
         provinsi: true,
+        kabupaten: true,
         status: true,
         createdAt: true,
       },
@@ -92,7 +93,13 @@ export async function GET() {
         today,
         week,
         month,
-        byProvinsi: formatGroup(byProvinsi, "provinsi"),
+        byProvinsi: byProvinsi.map((item) => ({
+          label:
+            item.provinsi === "Luar Negeri"
+              ? `Luar Negeri - ${item.kabupaten}`
+              : item.provinsi || "(kosong)",
+          value: item._count.id,
+        })),
         byStatus: formatGroup(byStatus, "status"),
         byIde: formatGroup(byIde, "ide"),
         bySumber: formatGroup(bySumber, "sumber"),
