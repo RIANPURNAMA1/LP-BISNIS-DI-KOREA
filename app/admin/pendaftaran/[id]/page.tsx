@@ -216,6 +216,8 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
     .filter(Boolean)
     .join(", ");
 
+  const isLuarNegeri = data.provinsi === "Luar Negeri";
+
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
@@ -325,10 +327,22 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
 
           <SectionCard icon={MapPin} title="Alamat">
             <dl>
-              <InfoRow label="Provinsi" value={data.provinsi} />
-              <InfoRow label="Kabupaten/Kota" value={data.kabupaten} />
-              <InfoRow label="Kecamatan" value={data.kecamatan} />
-              <InfoRow label="Desa/Kelurahan" value={data.desa} />
+              <InfoRow
+                label={isLuarNegeri ? "Domisili" : "Provinsi"}
+                value={data.provinsi}
+              />
+              <InfoRow
+                label={isLuarNegeri ? "Negara" : "Kabupaten/Kota"}
+                value={data.kabupaten}
+              />
+              <InfoRow
+                label={isLuarNegeri ? "Provinsi/State" : "Kecamatan"}
+                value={data.kecamatan}
+              />
+              <InfoRow
+                label={isLuarNegeri ? "Kota" : "Desa/Kelurahan"}
+                value={data.desa}
+              />
               <InfoRow label="Alamat Lengkap" value={data.alamat} />
             </dl>
           </SectionCard>

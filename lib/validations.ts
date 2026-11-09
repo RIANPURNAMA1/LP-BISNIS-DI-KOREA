@@ -10,7 +10,7 @@ export const pendaftaranSchema = z.object({
     .string()
     .min(1, "Nomor WhatsApp wajib diisi.")
     .regex(
-      /^\+?[0-9][0-9\s-]{7,17}$/,
+      /^\+?[0-9][0-9\s-]{6,24}$/,
       "Masukkan nomor WhatsApp yang valid, contoh +62 812 3456 7890."
     ),
   email: z

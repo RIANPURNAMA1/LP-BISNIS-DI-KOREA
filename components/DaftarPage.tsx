@@ -30,14 +30,21 @@ export type RegistrationPayload = {
   sumber: string;
 };
 
+type Domisili = "indonesia" | "luar";
+
 type FormState = {
+  domisili: Domisili;
   nama: string;
   whatsapp: string;
+  kodeWhatsapp: string; // kode negara, tanpa "+"
   email: string;
-  provinsi: string; // id wilayah
+  provinsi: string; // id wilayah (Indonesia)
   kabupaten: string;
   kecamatan: string;
   desa: string;
+  negara: string; // manual, luar negeri
+  provinsiLuar: string;
+  kotaLuar: string;
   alamat: string;
   status: string;
   statusLain: string;
@@ -52,13 +59,18 @@ type FormState = {
 };
 
 const initialForm: FormState = {
+  domisili: "indonesia",
   nama: "",
   whatsapp: "",
+  kodeWhatsapp: "",
   email: "",
   provinsi: "",
   kabupaten: "",
   kecamatan: "",
   desa: "",
+  negara: "",
+  provinsiLuar: "",
+  kotaLuar: "",
   alamat: "",
   status: "",
   statusLain: "",
@@ -105,6 +117,230 @@ const SUMBER = [
   "Website",
   "Lainnya",
 ];
+
+// Daftar kode negara (dial code) untuk WhatsApp.
+// Beberapa negara berbagi kode yang sama, jadi digabung dalam satu opsi.
+const KODE_NEGARA_SEMUA: { kode: string; negara: string }[] = [
+  { kode: "93", negara: "Afghanistan" },
+  { kode: "27", negara: "Afrika Selatan" },
+  { kode: "355", negara: "Albania" },
+  { kode: "213", negara: "Aljazair" },
+  { kode: "1", negara: "Amerika Serikat / Kanada" },
+  { kode: "376", negara: "Andorra" },
+  { kode: "244", negara: "Angola" },
+  { kode: "1268", negara: "Antigua dan Barbuda" },
+  { kode: "966", negara: "Arab Saudi" },
+  { kode: "54", negara: "Argentina" },
+  { kode: "374", negara: "Armenia" },
+  { kode: "61", negara: "Australia" },
+  { kode: "43", negara: "Austria" },
+  { kode: "994", negara: "Azerbaijan" },
+  { kode: "1242", negara: "Bahama" },
+  { kode: "973", negara: "Bahrain" },
+  { kode: "880", negara: "Bangladesh" },
+  { kode: "1246", negara: "Barbados" },
+  { kode: "31", negara: "Belanda" },
+  { kode: "375", negara: "Belarus" },
+  { kode: "32", negara: "Belgia" },
+  { kode: "501", negara: "Belize" },
+  { kode: "229", negara: "Benin" },
+  { kode: "975", negara: "Bhutan" },
+  { kode: "591", negara: "Bolivia" },
+  { kode: "387", negara: "Bosnia dan Herzegovina" },
+  { kode: "267", negara: "Botswana" },
+  { kode: "55", negara: "Brasil" },
+  { kode: "673", negara: "Brunei Darussalam" },
+  { kode: "359", negara: "Bulgaria" },
+  { kode: "226", negara: "Burkina Faso" },
+  { kode: "257", negara: "Burundi" },
+  { kode: "235", negara: "Chad" },
+  { kode: "56", negara: "Chili" },
+  { kode: "420", negara: "Ceko" },
+  { kode: "45", negara: "Denmark" },
+  { kode: "253", negara: "Djibouti" },
+  { kode: "1767", negara: "Dominika" },
+  { kode: "593", negara: "Ekuador" },
+  { kode: "503", negara: "El Salvador" },
+  { kode: "291", negara: "Eritrea" },
+  { kode: "372", negara: "Estonia" },
+  { kode: "268", negara: "Eswatini" },
+  { kode: "251", negara: "Etiopia" },
+  { kode: "679", negara: "Fiji" },
+  { kode: "63", negara: "Filipina" },
+  { kode: "358", negara: "Finlandia" },
+  { kode: "241", negara: "Gabon" },
+  { kode: "220", negara: "Gambia" },
+  { kode: "995", negara: "Georgia" },
+  { kode: "233", negara: "Ghana" },
+  { kode: "1473", negara: "Grenada" },
+  { kode: "502", negara: "Guatemala" },
+  { kode: "224", negara: "Guinea" },
+  { kode: "245", negara: "Guinea Bissau" },
+  { kode: "240", negara: "Guinea Khatulistiwa" },
+  { kode: "592", negara: "Guyana" },
+  { kode: "509", negara: "Haiti" },
+  { kode: "504", negara: "Honduras" },
+  { kode: "852", negara: "Hong Kong" },
+  { kode: "36", negara: "Hungaria" },
+  { kode: "91", negara: "India" },
+  { kode: "62", negara: "Indonesia" },
+  { kode: "44", negara: "Inggris (Britania Raya)" },
+  { kode: "964", negara: "Irak" },
+  { kode: "98", negara: "Iran" },
+  { kode: "353", negara: "Irlandia" },
+  { kode: "354", negara: "Islandia" },
+  { kode: "972", negara: "Israel" },
+  { kode: "39", negara: "Italia" },
+  { kode: "1876", negara: "Jamaika" },
+  { kode: "81", negara: "Jepang" },
+  { kode: "49", negara: "Jerman" },
+  { kode: "855", negara: "Kamboja" },
+  { kode: "237", negara: "Kamerun" },
+  { kode: "254", negara: "Kenya" },
+  { kode: "996", negara: "Kirgizstan" },
+  { kode: "686", negara: "Kiribati" },
+  { kode: "57", negara: "Kolombia" },
+  { kode: "269", negara: "Komoro" },
+  { kode: "242", negara: "Kongo" },
+  { kode: "243", negara: "Kongo (RDK)" },
+  { kode: "82", negara: "Korea Selatan" },
+  { kode: "850", negara: "Korea Utara" },
+  { kode: "383", negara: "Kosovo" },
+  { kode: "506", negara: "Kosta Rika" },
+  { kode: "385", negara: "Kroasia" },
+  { kode: "53", negara: "Kuba" },
+  { kode: "965", negara: "Kuwait" },
+  { kode: "856", negara: "Laos" },
+  { kode: "371", negara: "Latvia" },
+  { kode: "961", negara: "Lebanon" },
+  { kode: "266", negara: "Lesotho" },
+  { kode: "231", negara: "Liberia" },
+  { kode: "218", negara: "Libya" },
+  { kode: "423", negara: "Liechtenstein" },
+  { kode: "370", negara: "Lituania" },
+  { kode: "352", negara: "Luksemburg" },
+  { kode: "261", negara: "Madagaskar" },
+  { kode: "853", negara: "Makau" },
+  { kode: "389", negara: "Makedonia Utara" },
+  { kode: "960", negara: "Maladewa" },
+  { kode: "265", negara: "Malawi" },
+  { kode: "60", negara: "Malaysia" },
+  { kode: "223", negara: "Mali" },
+  { kode: "356", negara: "Malta" },
+  { kode: "212", negara: "Maroko" },
+  { kode: "692", negara: "Marshall" },
+  { kode: "222", negara: "Mauritania" },
+  { kode: "230", negara: "Mauritius" },
+  { kode: "52", negara: "Meksiko" },
+  { kode: "20", negara: "Mesir" },
+  { kode: "691", negara: "Mikronesia" },
+  { kode: "373", negara: "Moldova" },
+  { kode: "377", negara: "Monako" },
+  { kode: "976", negara: "Mongolia" },
+  { kode: "382", negara: "Montenegro" },
+  { kode: "258", negara: "Mozambik" },
+  { kode: "95", negara: "Myanmar" },
+  { kode: "264", negara: "Namibia" },
+  { kode: "674", negara: "Nauru" },
+  { kode: "977", negara: "Nepal" },
+  { kode: "227", negara: "Niger" },
+  { kode: "234", negara: "Nigeria" },
+  { kode: "505", negara: "Nikaragua" },
+  { kode: "47", negara: "Norwegia" },
+  { kode: "968", negara: "Oman" },
+  { kode: "92", negara: "Pakistan" },
+  { kode: "680", negara: "Palau" },
+  { kode: "970", negara: "Palestina" },
+  { kode: "507", negara: "Panama" },
+  { kode: "225", negara: "Pantai Gading" },
+  { kode: "675", negara: "Papua Nugini" },
+  { kode: "595", negara: "Paraguay" },
+  { kode: "51", negara: "Peru" },
+  { kode: "48", negara: "Polandia" },
+  { kode: "351", negara: "Portugal" },
+  { kode: "33", negara: "Prancis" },
+  { kode: "974", negara: "Qatar" },
+  { kode: "1809", negara: "Republik Dominika" },
+  { kode: "40", negara: "Rumania" },
+  { kode: "7", negara: "Rusia / Kazakhstan" },
+  { kode: "250", negara: "Rwanda" },
+  { kode: "1869", negara: "Saint Kitts dan Nevis" },
+  { kode: "1758", negara: "Saint Lucia" },
+  { kode: "1784", negara: "Saint Vincent dan Grenadine" },
+  { kode: "685", negara: "Samoa" },
+  { kode: "378", negara: "San Marino" },
+  { kode: "239", negara: "Sao Tome dan Principe" },
+  { kode: "64", negara: "Selandia Baru" },
+  { kode: "221", negara: "Senegal" },
+  { kode: "381", negara: "Serbia" },
+  { kode: "248", negara: "Seychelles" },
+  { kode: "232", negara: "Sierra Leone" },
+  { kode: "65", negara: "Singapura" },
+  { kode: "357", negara: "Siprus" },
+  { kode: "386", negara: "Slovenia" },
+  { kode: "421", negara: "Slowakia" },
+  { kode: "677", negara: "Solomon" },
+  { kode: "252", negara: "Somalia" },
+  { kode: "34", negara: "Spanyol" },
+  { kode: "94", negara: "Sri Lanka" },
+  { kode: "249", negara: "Sudan" },
+  { kode: "211", negara: "Sudan Selatan" },
+  { kode: "597", negara: "Suriname" },
+  { kode: "963", negara: "Suriah" },
+  { kode: "46", negara: "Swedia" },
+  { kode: "41", negara: "Swiss" },
+  { kode: "992", negara: "Tajikistan" },
+  { kode: "255", negara: "Tanzania" },
+  { kode: "66", negara: "Thailand" },
+  { kode: "670", negara: "Timor Leste" },
+  { kode: "86", negara: "Tiongkok" },
+  { kode: "228", negara: "Togo" },
+  { kode: "676", negara: "Tonga" },
+  { kode: "1868", negara: "Trinidad dan Tobago" },
+  { kode: "216", negara: "Tunisia" },
+  { kode: "90", negara: "Turki" },
+  { kode: "993", negara: "Turkmenistan" },
+  { kode: "688", negara: "Tuvalu" },
+  { kode: "256", negara: "Uganda" },
+  { kode: "380", negara: "Ukraina" },
+  { kode: "971", negara: "Uni Emirat Arab" },
+  { kode: "598", negara: "Uruguay" },
+  { kode: "998", negara: "Uzbekistan" },
+  { kode: "678", negara: "Vanuatu" },
+  { kode: "58", negara: "Venezuela" },
+  { kode: "84", negara: "Vietnam" },
+  { kode: "967", negara: "Yaman" },
+  { kode: "962", negara: "Yordania" },
+  { kode: "30", negara: "Yunani" },
+  { kode: "260", negara: "Zambia" },
+  { kode: "263", negara: "Zimbabwe" },
+];
+
+// Negara yang sering dipakai ditampilkan lebih dulu, sisanya urut abjad.
+const KODE_NEGARA_PRIORITAS = [
+  "82", // Korea Selatan
+  "62", // Indonesia
+  "60", // Malaysia
+  "65", // Singapura
+  "81", // Jepang
+  "86", // Tiongkok
+  "886", // Taiwan
+  "852", // Hong Kong
+  "61", // Australia
+  "1", // Amerika Serikat / Kanada
+  "44", // Inggris
+  "971", // Uni Emirat Arab
+];
+
+const KODE_NEGARA = [...KODE_NEGARA_SEMUA].sort((a, b) => {
+  const ia = KODE_NEGARA_PRIORITAS.indexOf(a.kode);
+  const ib = KODE_NEGARA_PRIORITAS.indexOf(b.kode);
+  if (ia !== -1 && ib !== -1) return ia - ib;
+  if (ia !== -1) return -1;
+  if (ib !== -1) return 1;
+  return a.negara.localeCompare(b.negara, "id");
+});
+
 
 const STEPS = [
   { title: "Tahap 1 — Data Diri", short: "Data Diri" },
@@ -387,23 +623,82 @@ export default function DaftarPage({
     }
   }
 
+  function setDomisili(value: Domisili) {
+    if (value === form.domisili) return;
+    setForm((f) => ({
+      ...f,
+      domisili: value,
+      whatsapp: "",
+      kodeWhatsapp: "",
+      provinsi: "",
+      kabupaten: "",
+      kecamatan: "",
+      desa: "",
+      negara: "",
+      provinsiLuar: "",
+      kotaLuar: "",
+    }));
+    setErrors({});
+  }
+
+  function setKodeNegara(kode: string) {
+    const negara = KODE_NEGARA.find((k) => k.kode === kode)?.negara;
+    setForm((f) => ({
+      ...f,
+      kodeWhatsapp: kode,
+      // Isi otomatis negara jika belum diisi, tapi tetap bisa diedit manual.
+      negara: f.negara.trim() ? f.negara : (negara ?? ""),
+    }));
+    if (errors.kodeWhatsapp) {
+      setErrors((e) => {
+        const next = { ...e };
+        delete next.kodeWhatsapp;
+        return next;
+      });
+    }
+  }
+
   function validate(s: number) {
     const e: Record<string, string> = {};
     const req = "Wajib diisi.";
 
     if (s === 0) {
+      const isLuar = form.domisili === "luar";
+
       if (!form.nama.trim()) e.nama = req;
+
       if (!form.whatsapp.trim()) e.whatsapp = req;
-      else if (!/^\+?[0-9][0-9\s-]{7,17}$/.test(form.whatsapp.trim()))
+      else if (isLuar) {
+        const kode = form.kodeWhatsapp.replace(/\D/g, "");
+        const nomor = form.whatsapp.replace(/\D/g, "");
+        if (!kode) e.kodeWhatsapp = req;
+        else if (kode.length > 4)
+          e.kodeWhatsapp = "Kode negara maksimal 4 digit, contoh 82.";
+        if (nomor.length < 6)
+          e.whatsapp =
+            "Masukkan nomor WhatsApp yang valid, contoh 10 1234 5678.";
+        else if (kode && kode.length + nomor.length > 15)
+          e.whatsapp =
+            "Total digit kode negara dan nomor maksimal 15 digit.";
+      } else if (!/^\+?[0-9][0-9\s-]{7,17}$/.test(form.whatsapp.trim()))
         e.whatsapp =
           "Masukkan nomor WhatsApp yang valid, contoh +62 812 3456 7890.";
+
       if (!form.email.trim()) e.email = req;
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
         e.email = "Masukkan alamat email yang valid.";
-      if (!form.provinsi) e.provinsi = "Pilih provinsi.";
-      if (!form.kabupaten) e.kabupaten = "Pilih kabupaten/kota.";
-      if (!form.kecamatan) e.kecamatan = "Pilih kecamatan.";
-      if (!form.desa) e.desa = "Pilih desa/kelurahan.";
+
+      if (isLuar) {
+        if (!form.negara.trim()) e.negara = "Tuliskan negara Anda.";
+        if (!form.provinsiLuar.trim())
+          e.provinsiLuar = "Tuliskan provinsi/state Anda.";
+        if (!form.kotaLuar.trim()) e.kotaLuar = "Tuliskan kota Anda.";
+      } else {
+        if (!form.provinsi) e.provinsi = "Pilih provinsi.";
+        if (!form.kabupaten) e.kabupaten = "Pilih kabupaten/kota.";
+        if (!form.kecamatan) e.kecamatan = "Pilih kecamatan.";
+        if (!form.desa) e.desa = "Pilih desa/kelurahan.";
+      }
     }
 
     if (s === 1) {
@@ -439,15 +734,23 @@ export default function DaftarPage({
     if (!validate(step)) return;
 
     const tujuanLain = form.tujuanLainOn ? form.tujuanLain.trim() : "";
+    const isLuar = form.domisili === "luar";
+    const kode = form.kodeWhatsapp.replace(/\D/g, "");
 
     const payload: RegistrationPayload = {
       nama: form.nama.trim(),
-      whatsapp: form.whatsapp.trim(),
+      whatsapp: isLuar
+        ? `+${kode} ${form.whatsapp.trim()}`
+        : form.whatsapp.trim(),
       email: form.email.trim(),
-      provinsi: nameOf(provinces.items, form.provinsi),
-      kabupaten: nameOf(regencies.items, form.kabupaten),
-      kecamatan: nameOf(districts.items, form.kecamatan),
-      desa: nameOf(villages.items, form.desa),
+      provinsi: isLuar ? "Luar Negeri" : nameOf(provinces.items, form.provinsi),
+      kabupaten: isLuar
+        ? form.negara.trim()
+        : nameOf(regencies.items, form.kabupaten),
+      kecamatan: isLuar
+        ? form.provinsiLuar.trim()
+        : nameOf(districts.items, form.kecamatan),
+      desa: isLuar ? form.kotaLuar.trim() : nameOf(villages.items, form.desa),
       alamat: form.alamat.trim(),
       status:
         form.status === STATUS_LAIN ? form.statusLain.trim() : form.status,
@@ -594,152 +897,323 @@ export default function DaftarPage({
                       />
                     </Field>
 
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <Field
-                        id="whatsapp"
-                        label="Nomor WhatsApp aktif"
-                        required
-                        error={errors.whatsapp}
-                      >
-                        <input
-                          id="whatsapp"
-                          type="tel"
-                          autoComplete="tel"
-                          inputMode="tel"
-                          value={form.whatsapp}
-                          onChange={(e) => set("whatsapp", e.target.value)}
-                          placeholder="+62 xxx xxxx xxxx"
-                          className={cls(errors.whatsapp)}
-                          aria-invalid={!!errors.whatsapp}
+                    <fieldset>
+                      <legend className="mb-2 block text-sm font-semibold text-deep">
+                        Domisili saat ini
+                        <span className="ml-0.5 text-[#E3081C]">*</span>
+                      </legend>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Choice
+                          type="radio"
+                          name="domisili"
+                          label="Di Indonesia"
+                          checked={form.domisili === "indonesia"}
+                          onChange={() => setDomisili("indonesia")}
                         />
-                      </Field>
+                        <Choice
+                          type="radio"
+                          name="domisili"
+                          label="Di luar negeri"
+                          checked={form.domisili === "luar"}
+                          onChange={() => setDomisili("luar")}
+                        />
+                      </div>
+                    </fieldset>
 
-                      <Field
-                        id="email"
-                        label="Email"
-                        required
-                        error={errors.email}
-                      >
-                        <input
-                          id="email"
-                          type="email"
-                          autoComplete="email"
-                          value={form.email}
-                          onChange={(e) => set("email", e.target.value)}
-                          placeholder="nama@email.com"
-                          className={cls(errors.email)}
-                          aria-invalid={!!errors.email}
-                        />
-                      </Field>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      {form.domisili === "luar" ? (
+                        <>
+                          <Field
+                            id="kodeWhatsapp"
+                            label="Kode negara WhatsApp"
+                            required
+                            error={errors.kodeWhatsapp}
+                            hint="Pilih kode negara. Contoh: +82 Korea Selatan, +60 Malaysia."
+                          >
+                            <SelectField
+                              id="kodeWhatsapp"
+                              value={form.kodeWhatsapp}
+                              onChange={setKodeNegara}
+                              options={KODE_NEGARA.map((k) => ({
+                                value: k.kode,
+                                label: `${k.negara} (+${k.kode})`,
+                              }))}
+                              placeholder="Pilih kode negara"
+                              error={errors.kodeWhatsapp}
+                            />
+                          </Field>
+
+                          <Field
+                            id="whatsapp"
+                            label="Nomor WhatsApp aktif"
+                            required
+                            error={errors.whatsapp}
+                            hint="Tulis tanpa kode negara, contoh 10 1234 5678."
+                          >
+                            <input
+                              id="whatsapp"
+                              type="tel"
+                              autoComplete="tel-national"
+                              inputMode="tel"
+                              value={form.whatsapp}
+                              onChange={(e) =>
+                                set("whatsapp", e.target.value)
+                              }
+                              placeholder="10 1234 5678"
+                              className={cls(errors.whatsapp)}
+                              aria-invalid={!!errors.whatsapp}
+                            />
+                          </Field>
+                        </>
+                      ) : (
+                        <>
+                          <Field
+                            id="whatsapp"
+                            label="Nomor WhatsApp aktif"
+                            required
+                            error={errors.whatsapp}
+                          >
+                            <input
+                              id="whatsapp"
+                              type="tel"
+                              autoComplete="tel"
+                              inputMode="tel"
+                              value={form.whatsapp}
+                              onChange={(e) =>
+                                set("whatsapp", e.target.value)
+                              }
+                              placeholder="+62 xxx xxxx xxxx"
+                              className={cls(errors.whatsapp)}
+                              aria-invalid={!!errors.whatsapp}
+                            />
+                          </Field>
+
+                          <Field
+                            id="email"
+                            label="Email"
+                            required
+                            error={errors.email}
+                          >
+                            <input
+                              id="email"
+                              type="email"
+                              autoComplete="email"
+                              value={form.email}
+                              onChange={(e) => set("email", e.target.value)}
+                              placeholder="nama@email.com"
+                              className={cls(errors.email)}
+                              aria-invalid={!!errors.email}
+                            />
+                          </Field>
+                        </>
+                      )}
+
+                      {form.domisili === "luar" && (
+                        <div className="sm:col-span-2">
+                          <Field
+                            id="email"
+                            label="Email"
+                            required
+                            error={errors.email}
+                          >
+                            <input
+                              id="email"
+                              type="email"
+                              autoComplete="email"
+                              value={form.email}
+                              onChange={(e) => set("email", e.target.value)}
+                              placeholder="nama@email.com"
+                              className={cls(errors.email)}
+                              aria-invalid={!!errors.email}
+                            />
+                          </Field>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <Field
-                        id="provinsi"
-                        label="Provinsi"
-                        required
-                        error={errors.provinsi}
-                        hint={
-                          provinces.loading
-                            ? "Memuat data provinsi…"
-                            : provinces.failed
-                              ? "Data provinsi gagal dimuat. Muat ulang halaman lalu coba lagi."
-                              : undefined
-                        }
-                      >
-                        <SelectField
+                    {form.domisili === "luar" ? (
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <Field
+                          id="negara"
+                          label="Negara"
+                          required
+                          error={errors.negara}
+                        >
+                          <input
+                            id="negara"
+                            type="text"
+                            autoComplete="country-name"
+                            value={form.negara}
+                            onChange={(e) => set("negara", e.target.value)}
+                            placeholder="Contoh: Korea Selatan"
+                            className={cls(errors.negara)}
+                            aria-invalid={!!errors.negara}
+                          />
+                        </Field>
+
+                        <Field
+                          id="provinsiLuar"
+                          label="Provinsi/State"
+                          required
+                          error={errors.provinsiLuar}
+                        >
+                          <input
+                            id="provinsiLuar"
+                            type="text"
+                            autoComplete="address-level1"
+                            value={form.provinsiLuar}
+                            onChange={(e) =>
+                              set("provinsiLuar", e.target.value)
+                            }
+                            placeholder="Contoh: Seoul"
+                            className={cls(errors.provinsiLuar)}
+                            aria-invalid={!!errors.provinsiLuar}
+                          />
+                        </Field>
+
+                        <Field
+                          id="kotaLuar"
+                          label="Kota"
+                          required
+                          error={errors.kotaLuar}
+                        >
+                          <input
+                            id="kotaLuar"
+                            type="text"
+                            autoComplete="address-level2"
+                            value={form.kotaLuar}
+                            onChange={(e) => set("kotaLuar", e.target.value)}
+                            placeholder="Contoh: Seoul"
+                            className={cls(errors.kotaLuar)}
+                            aria-invalid={!!errors.kotaLuar}
+                          />
+                        </Field>
+                      </div>
+                    ) : (
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <Field
                           id="provinsi"
-                          value={form.provinsi}
-                          onChange={(v) => {
-                            setForm((f) => ({
-                              ...f,
-                              provinsi: v,
-                              kabupaten: "",
-                              kecamatan: "",
-                              desa: "",
-                            }));
-                            setErrors((e) => ({ ...e, provinsi: "" }));
-                          }}
-                          options={regionOptions(provinces)}
-                          placeholder="Pilih provinsi"
+                          label="Provinsi"
+                          required
                           error={errors.provinsi}
-                          disabled={provinces.loading}
-                        />
-                      </Field>
+                          hint={
+                            provinces.loading
+                              ? "Memuat data provinsi…"
+                              : provinces.failed
+                                ? "Data provinsi gagal dimuat. Muat ulang halaman lalu coba lagi."
+                                : undefined
+                          }
+                        >
+                          <SelectField
+                            id="provinsi"
+                            value={form.provinsi}
+                            onChange={(v) => {
+                              setForm((f) => ({
+                                ...f,
+                                provinsi: v,
+                                kabupaten: "",
+                                kecamatan: "",
+                                desa: "",
+                              }));
+                              setErrors((e) => ({ ...e, provinsi: "" }));
+                            }}
+                            options={regionOptions(provinces)}
+                            placeholder="Pilih provinsi"
+                            error={errors.provinsi}
+                            disabled={provinces.loading}
+                          />
+                        </Field>
 
-                      <Field
-                        id="kabupaten"
-                        label="Kabupaten/Kota"
-                        required
-                        error={errors.kabupaten}
-                        hint={regencies.loading ? "Memuat data…" : undefined}
-                      >
-                        <SelectField
+                        <Field
                           id="kabupaten"
-                          value={form.kabupaten}
-                          onChange={(v) => {
-                            setForm((f) => ({
-                              ...f,
-                              kabupaten: v,
-                              kecamatan: "",
-                              desa: "",
-                            }));
-                            setErrors((e) => ({ ...e, kabupaten: "" }));
-                          }}
-                          options={regionOptions(regencies)}
-                          placeholder="Pilih kabupaten/kota"
+                          label="Kabupaten/Kota"
+                          required
                           error={errors.kabupaten}
-                          disabled={!form.provinsi || regencies.loading}
-                        />
-                      </Field>
+                          hint={regencies.loading ? "Memuat data…" : undefined}
+                        >
+                          <SelectField
+                            id="kabupaten"
+                            value={form.kabupaten}
+                            onChange={(v) => {
+                              setForm((f) => ({
+                                ...f,
+                                kabupaten: v,
+                                kecamatan: "",
+                                desa: "",
+                              }));
+                              setErrors((e) => ({ ...e, kabupaten: "" }));
+                            }}
+                            options={regionOptions(regencies)}
+                            placeholder="Pilih kabupaten/kota"
+                            error={errors.kabupaten}
+                            disabled={!form.provinsi || regencies.loading}
+                          />
+                        </Field>
 
-                      <Field
-                        id="kecamatan"
-                        label="Kecamatan"
-                        required
-                        error={errors.kecamatan}
-                        hint={districts.loading ? "Memuat data…" : undefined}
-                      >
-                        <SelectField
+                        <Field
                           id="kecamatan"
-                          value={form.kecamatan}
-                          onChange={(v) => {
-                            setForm((f) => ({ ...f, kecamatan: v, desa: "" }));
-                            setErrors((e) => ({ ...e, kecamatan: "" }));
-                          }}
-                          options={regionOptions(districts)}
-                          placeholder="Pilih kecamatan"
+                          label="Kecamatan"
+                          required
                           error={errors.kecamatan}
-                          disabled={!form.kabupaten || districts.loading}
-                        />
-                      </Field>
+                          hint={districts.loading ? "Memuat data…" : undefined}
+                        >
+                          <SelectField
+                            id="kecamatan"
+                            value={form.kecamatan}
+                            onChange={(v) => {
+                              setForm((f) => ({
+                                ...f,
+                                kecamatan: v,
+                                desa: "",
+                              }));
+                              setErrors((e) => ({ ...e, kecamatan: "" }));
+                            }}
+                            options={regionOptions(districts)}
+                            placeholder="Pilih kecamatan"
+                            error={errors.kecamatan}
+                            disabled={!form.kabupaten || districts.loading}
+                          />
+                        </Field>
 
-                      <Field
-                        id="desa"
-                        label="Desa/Kelurahan"
-                        required
-                        error={errors.desa}
-                        hint={villages.loading ? "Memuat data…" : undefined}
-                      >
-                        <SelectField
+                        <Field
                           id="desa"
-                          value={form.desa}
-                          onChange={(v) => set("desa", v)}
-                          options={regionOptions(villages)}
-                          placeholder="Pilih desa/kelurahan"
+                          label="Desa/Kelurahan"
+                          required
                           error={errors.desa}
-                          disabled={!form.kecamatan || villages.loading}
-                        />
-                      </Field>
-                    </div>
+                          hint={villages.loading ? "Memuat data…" : undefined}
+                        >
+                          <SelectField
+                            id="desa"
+                            value={form.desa}
+                            onChange={(v) => set("desa", v)}
+                            options={regionOptions(villages)}
+                            placeholder="Pilih desa/kelurahan"
+                            error={errors.desa}
+                            disabled={!form.kecamatan || villages.loading}
+                          />
+                        </Field>
+                      </div>
+                    )}
 
-                    <Field id="alamat" label="Alamat lengkap">
+                    <Field
+                      id="alamat"
+                      label="Alamat lengkap"
+                      hint={
+                        form.domisili === "luar"
+                          ? "Sertakan nama jalan, nomor rumah, distrik, dan kode pos."
+                          : undefined
+                      }
+                    >
                       <textarea
                         id="alamat"
                         rows={3}
                         value={form.alamat}
                         onChange={(e) => set("alamat", e.target.value)}
-                        placeholder="Nama jalan, nomor rumah, RT/RW, kode pos"
+                        placeholder={
+                          form.domisili === "luar"
+                            ? "Nama jalan, nomor rumah, distrik, kode pos, negara"
+                            : "Nama jalan, nomor rumah, RT/RW, kode pos"
+                        }
                         className={cls()}
                       />
                     </Field>

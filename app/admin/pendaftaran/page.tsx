@@ -9,6 +9,7 @@ type PendaftarRow = {
   whatsapp: string;
   email: string;
   provinsi: string;
+  kabupaten: string;
   status: string;
   ide: string;
   createdAt?: string;
@@ -91,13 +92,13 @@ export default function PendaftaranList() {
       if (!res.ok) throw new Error("Gagal mengambil data");
       const json = await res.json() as ApiResp;
 
-      const headers = ["No", "Nama", "WhatsApp", "Email", "Provinsi", "Status", "Ide Bisnis", "Tanggal Daftar"];
+      const headers = ["No", "Nama", "WhatsApp", "Email", "Provinsi/Negara", "Status", "Ide Bisnis", "Tanggal Daftar"];
       const rows = json.data.map((r, i) => [
         i + 1,
         `"${r.nama}"`,
         `"${r.whatsapp}"`,
         `"${r.email}"`,
-        `"${r.provinsi}"`,
+        `"${r.provinsi === "Luar Negeri" ? `Luar Negeri - ${r.kabupaten}` : r.provinsi}"`,
         `"${r.status}"`,
         `"${r.ide}"`,
         `"${new Date(r.createdAt || r.created_at || "").toLocaleDateString("id-ID")}"`,
@@ -190,7 +191,7 @@ export default function PendaftaranList() {
                   <th className="px-4 py-3 font-semibold text-gray-500">Nama</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">WhatsApp</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Email</th>
-                  <th className="px-4 py-3 font-semibold text-gray-500">Provinsi</th>
+                  <th className="px-4 py-3 font-semibold text-gray-500">Provinsi/Negara</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Status</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Tanggal</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Aksi</th>
@@ -210,7 +211,9 @@ export default function PendaftaranList() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{r.whatsapp}</td>
                     <td className="px-4 py-3 text-gray-600">{r.email}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.provinsi}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {r.provinsi === "Luar Negeri" ? r.kabupaten : r.provinsi}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                         {r.status}
