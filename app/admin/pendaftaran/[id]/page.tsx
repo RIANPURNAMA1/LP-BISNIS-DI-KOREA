@@ -218,6 +218,10 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
 
   const isLuarNegeri = data.provinsi === "Luar Negeri";
 
+  // Data baru (domisili Indonesia) hanya menyimpan kota/daerah di kolom kabupaten.
+  const alamatTunggal =
+    !isLuarNegeri && !data.provinsi && !data.kecamatan && !data.desa;
+
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
@@ -327,23 +331,34 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
 
           <SectionCard icon={MapPin} title="Alamat">
             <dl>
-              <InfoRow
-                label={isLuarNegeri ? "Domisili" : "Provinsi"}
-                value={data.provinsi}
-              />
-              <InfoRow
-                label={isLuarNegeri ? "Negara" : "Kabupaten/Kota"}
-                value={data.kabupaten}
-              />
-              <InfoRow
-                label={isLuarNegeri ? "Provinsi/State" : "Kecamatan"}
-                value={data.kecamatan}
-              />
-              <InfoRow
-                label={isLuarNegeri ? "Kota" : "Desa/Kelurahan"}
-                value={data.desa}
-              />
-              <InfoRow label="Alamat Lengkap" value={data.alamat} />
+              {alamatTunggal ? (
+                <InfoRow
+                  label="Kota/Daerah Domisili"
+                  value={data.kabupaten}
+                />
+              ) : (
+                <>
+                  <InfoRow
+                    label={isLuarNegeri ? "Domisili" : "Provinsi"}
+                    value={data.provinsi}
+                  />
+                  <InfoRow
+                    label={isLuarNegeri ? "Negara" : "Kabupaten/Kota"}
+                    value={data.kabupaten}
+                  />
+                  <InfoRow
+                    label={isLuarNegeri ? "Provinsi/State" : "Kecamatan"}
+                    value={data.kecamatan}
+                  />
+                  <InfoRow
+                    label={isLuarNegeri ? "Kota" : "Desa/Kelurahan"}
+                    value={data.desa}
+                  />
+                </>
+              )}
+              {data.alamat && (
+                <InfoRow label="Alamat Lengkap" value={data.alamat} />
+              )}
             </dl>
           </SectionCard>
 

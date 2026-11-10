@@ -7,12 +7,6 @@ import type { FormEvent, ReactNode } from "react";
 /* Data & tipe                                                         */
 /* ------------------------------------------------------------------ */
 
-// Lewat proxy server sendiri (lihat wilayah-route.ts).
-// Alternatif tanpa proxy: "https://emsifa.github.io/api-wilayah-indonesia/api"
-const WILAYAH_API = "/api/wilayah";
-
-type Region = { id: string; name: string };
-
 export type RegistrationPayload = {
   nama: string;
   whatsapp: string;
@@ -38,14 +32,10 @@ type FormState = {
   whatsapp: string;
   kodeWhatsapp: string; // kode negara, tanpa "+"
   email: string;
-  provinsi: string; // id wilayah (Indonesia)
-  kabupaten: string;
-  kecamatan: string;
-  desa: string;
+  kotaDomisili: string; // kota/daerah domisili (Indonesia)
   negara: string; // manual, luar negeri
   provinsiLuar: string;
   kotaLuar: string;
-  alamat: string;
   status: string;
   statusLain: string;
   ide: string;
@@ -64,14 +54,10 @@ const initialForm: FormState = {
   whatsapp: "",
   kodeWhatsapp: "",
   email: "",
-  provinsi: "",
-  kabupaten: "",
-  kecamatan: "",
-  desa: "",
+  kotaDomisili: "",
   negara: "",
   provinsiLuar: "",
   kotaLuar: "",
-  alamat: "",
   status: "",
   statusLain: "",
   ide: "",
@@ -349,76 +335,6 @@ const STEPS = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Helper                                                              */
-/* ------------------------------------------------------------------ */
-
-// Nama wilayah dari API berupa huruf kapital semua, ubah jadi Title Case.
-const toTitle = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(
-      /(^|[\s/(-])([a-z])/g,
-      (_, p: string, c: string) => p + c.toUpperCase(),
-    );
-
-type RawRegion = { id?: string; code?: string; name: string };
-
-// Terima dua bentuk respons: array langsung [{ id, name }] atau { data: [{ code, name }] }
-function normalizeRegions(json: unknown): Region[] {
-  const list = Array.isArray(json)
-    ? json
-    : Array.isArray((json as { data?: unknown } | null)?.data)
-      ? (json as { data: unknown[] }).data
-      : [];
-  return (list as RawRegion[])
-    .map((x) => ({ id: String(x.id ?? x.code ?? ""), name: x.name }))
-    .filter((x) => x.id && x.name);
-}
-
-function useRegions(path: string | null) {
-  const [items, setItems] = useState<Region[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (!path) {
-      setItems([]);
-      setLoading(false);
-      setFailed(false);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    setFailed(false);
-    fetch(`${WILAYAH_API}/${path}.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error("gagal");
-        return r.json();
-      })
-      .then((json: unknown) => {
-        if (!cancelled) setItems(normalizeRegions(json));
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setItems([]);
-          setFailed(true);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [path]);
-
-  return { items, loading, failed };
-}
-
-const nameOf = (list: Region[], id: string) =>
-  toTitle(list.find((r) => r.id === id)?.name ?? "");
-
-/* ------------------------------------------------------------------ */
 /* Komponen kecil                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -591,17 +507,6 @@ export default function DaftarPage({
   const [submitError, setSubmitError] = useState("");
   const [done, setDone] = useState(false);
 
-  const provinces = useRegions("provinces");
-  const regencies = useRegions(
-    form.provinsi ? `regencies/${form.provinsi}` : null,
-  );
-  const districts = useRegions(
-    form.kabupaten ? `districts/${form.kabupaten}` : null,
-  );
-  const villages = useRegions(
-    form.kecamatan ? `villages/${form.kecamatan}` : null,
-  );
-
   useEffect(() => {
     document.title =
       "Daftar Bisnis di Korea — Indonesia-Korea Business Project";
@@ -630,10 +535,7 @@ export default function DaftarPage({
       domisili: value,
       whatsapp: "",
       kodeWhatsapp: "",
-      provinsi: "",
-      kabupaten: "",
-      kecamatan: "",
-      desa: "",
+      kotaDomisili: "",
       negara: "",
       provinsiLuar: "",
       kotaLuar: "",
@@ -694,10 +596,8 @@ export default function DaftarPage({
           e.provinsiLuar = "Tuliskan provinsi/state Anda.";
         if (!form.kotaLuar.trim()) e.kotaLuar = "Tuliskan kota Anda.";
       } else {
-        if (!form.provinsi) e.provinsi = "Pilih provinsi.";
-        if (!form.kabupaten) e.kabupaten = "Pilih kabupaten/kota.";
-        if (!form.kecamatan) e.kecamatan = "Pilih kecamatan.";
-        if (!form.desa) e.desa = "Pilih desa/kelurahan.";
+        if (!form.kotaDomisili.trim())
+          e.kotaDomisili = "Tuliskan kota/daerah domisili Anda.";
       }
     }
 
@@ -743,15 +643,13 @@ export default function DaftarPage({
         ? `+${kode} ${form.whatsapp.trim()}`
         : form.whatsapp.trim(),
       email: form.email.trim(),
-      provinsi: isLuar ? "Luar Negeri" : nameOf(provinces.items, form.provinsi),
-      kabupaten: isLuar
-        ? form.negara.trim()
-        : nameOf(regencies.items, form.kabupaten),
-      kecamatan: isLuar
-        ? form.provinsiLuar.trim()
-        : nameOf(districts.items, form.kecamatan),
-      desa: isLuar ? form.kotaLuar.trim() : nameOf(villages.items, form.desa),
-      alamat: form.alamat.trim(),
+      // Untuk domisili Indonesia, kota/daerah disimpan di kolom kabupaten.
+      // Kolom provinsi/kecamatan/desa dikosongkan karena tidak dipakai lagi.
+      provinsi: isLuar ? "Luar Negeri" : "",
+      kabupaten: isLuar ? form.negara.trim() : form.kotaDomisili.trim(),
+      kecamatan: isLuar ? form.provinsiLuar.trim() : "",
+      desa: isLuar ? form.kotaLuar.trim() : "",
+      alamat: "",
       status:
         form.status === STATUS_LAIN ? form.statusLain.trim() : form.status,
       ide: form.ide,
@@ -775,9 +673,6 @@ export default function DaftarPage({
       setSending(false);
     }
   }
-
-  const regionOptions = (r: { items: Region[] }) =>
-    r.items.map((x) => ({ value: x.id, label: toTitle(x.name) }));
 
   return (
     <main className="min-h-screen bg-white">
@@ -1090,133 +985,26 @@ export default function DaftarPage({
                         </Field>
                       </div>
                     ) : (
-                      <div className="grid gap-5 sm:grid-cols-2">
-                        <Field
-                          id="provinsi"
-                          label="Provinsi"
-                          required
-                          error={errors.provinsi}
-                          hint={
-                            provinces.loading
-                              ? "Memuat data provinsi…"
-                              : provinces.failed
-                                ? "Data provinsi gagal dimuat. Muat ulang halaman lalu coba lagi."
-                                : undefined
+                      <Field
+                        id="kotaDomisili"
+                        label="Kota/Daerah Domisili"
+                        required
+                        error={errors.kotaDomisili}
+                      >
+                        <input
+                          id="kotaDomisili"
+                          type="text"
+                          autoComplete="address-level2"
+                          value={form.kotaDomisili}
+                          onChange={(e) =>
+                            set("kotaDomisili", e.target.value)
                           }
-                        >
-                          <SelectField
-                            id="provinsi"
-                            value={form.provinsi}
-                            onChange={(v) => {
-                              setForm((f) => ({
-                                ...f,
-                                provinsi: v,
-                                kabupaten: "",
-                                kecamatan: "",
-                                desa: "",
-                              }));
-                              setErrors((e) => ({ ...e, provinsi: "" }));
-                            }}
-                            options={regionOptions(provinces)}
-                            placeholder="Pilih provinsi"
-                            error={errors.provinsi}
-                            disabled={provinces.loading}
-                          />
-                        </Field>
-
-                        <Field
-                          id="kabupaten"
-                          label="Kabupaten/Kota"
-                          required
-                          error={errors.kabupaten}
-                          hint={regencies.loading ? "Memuat data…" : undefined}
-                        >
-                          <SelectField
-                            id="kabupaten"
-                            value={form.kabupaten}
-                            onChange={(v) => {
-                              setForm((f) => ({
-                                ...f,
-                                kabupaten: v,
-                                kecamatan: "",
-                                desa: "",
-                              }));
-                              setErrors((e) => ({ ...e, kabupaten: "" }));
-                            }}
-                            options={regionOptions(regencies)}
-                            placeholder="Pilih kabupaten/kota"
-                            error={errors.kabupaten}
-                            disabled={!form.provinsi || regencies.loading}
-                          />
-                        </Field>
-
-                        <Field
-                          id="kecamatan"
-                          label="Kecamatan"
-                          required
-                          error={errors.kecamatan}
-                          hint={districts.loading ? "Memuat data…" : undefined}
-                        >
-                          <SelectField
-                            id="kecamatan"
-                            value={form.kecamatan}
-                            onChange={(v) => {
-                              setForm((f) => ({
-                                ...f,
-                                kecamatan: v,
-                                desa: "",
-                              }));
-                              setErrors((e) => ({ ...e, kecamatan: "" }));
-                            }}
-                            options={regionOptions(districts)}
-                            placeholder="Pilih kecamatan"
-                            error={errors.kecamatan}
-                            disabled={!form.kabupaten || districts.loading}
-                          />
-                        </Field>
-
-                        <Field
-                          id="desa"
-                          label="Desa/Kelurahan"
-                          required
-                          error={errors.desa}
-                          hint={villages.loading ? "Memuat data…" : undefined}
-                        >
-                          <SelectField
-                            id="desa"
-                            value={form.desa}
-                            onChange={(v) => set("desa", v)}
-                            options={regionOptions(villages)}
-                            placeholder="Pilih desa/kelurahan"
-                            error={errors.desa}
-                            disabled={!form.kecamatan || villages.loading}
-                          />
-                        </Field>
-                      </div>
+                          placeholder="Contoh: Jakarta Selatan, Bandung, Surabaya"
+                          className={cls(errors.kotaDomisili)}
+                          aria-invalid={!!errors.kotaDomisili}
+                        />
+                      </Field>
                     )}
-
-                    <Field
-                      id="alamat"
-                      label="Alamat lengkap"
-                      hint={
-                        form.domisili === "luar"
-                          ? "Sertakan nama jalan, nomor rumah, distrik, dan kode pos."
-                          : undefined
-                      }
-                    >
-                      <textarea
-                        id="alamat"
-                        rows={3}
-                        value={form.alamat}
-                        onChange={(e) => set("alamat", e.target.value)}
-                        placeholder={
-                          form.domisili === "luar"
-                            ? "Nama jalan, nomor rumah, distrik, kode pos, negara"
-                            : "Nama jalan, nomor rumah, RT/RW, kode pos"
-                        }
-                        className={cls()}
-                      />
-                    </Field>
                   </div>
                 )}
 

@@ -17,10 +17,12 @@ export const pendaftaranSchema = z.object({
     .string()
     .min(1, "Email wajib diisi.")
     .email("Masukkan alamat email yang valid."),
-  provinsi: z.string().min(1, "Provinsi wajib dipilih."),
-  kabupaten: z.string().min(1, "Kabupaten/Kota wajib dipilih."),
-  kecamatan: z.string().min(1, "Kecamatan wajib dipilih."),
-  desa: z.string().min(1, "Desa/Kelurahan wajib dipilih."),
+  // Untuk domisili Indonesia, kota/daerah disimpan di kolom kabupaten.
+  // Kolom provinsi/kecamatan/desa boleh kosong (data lama tetap didukung).
+  provinsi: z.string().optional().default(""),
+  kabupaten: z.string().min(1, "Kota/Daerah domisili wajib diisi."),
+  kecamatan: z.string().optional().default(""),
+  desa: z.string().optional().default(""),
   alamat: z.string().optional().default(""),
   status: z.string().min(1, "Status wajib dipilih."),
   ide: z.string().min(1, "Kesiapan bisnis wajib dipilih."),

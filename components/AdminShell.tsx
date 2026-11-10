@@ -17,6 +17,7 @@ import {
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/pendaftaran", label: "Data Pendaftar", icon: ClipboardList },
+  { href: "/admin/profil", label: "Profil", icon: UserCircle2 },
 ];
 
 function AdminNavbar() {
@@ -39,10 +40,14 @@ function AdminNavbar() {
           </div>
           <div className="flex items-center gap-3">
             {session?.user && (
-              <span className="hidden items-center gap-1.5 text-xs text-gray-500 sm:inline-flex">
+              <Link
+                href="/admin/profil"
+                title="Buka profil"
+                className="hidden items-center gap-1.5 text-xs text-gray-500 transition-colors hover:text-[#0052A4] sm:inline-flex"
+              >
                 <UserCircle2 className="h-4 w-4" />
                 {session.user.name || session.user.email}
-              </span>
+              </Link>
             )}
             <Link
               href="/"

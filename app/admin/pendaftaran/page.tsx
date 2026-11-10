@@ -323,7 +323,7 @@ export default function PendaftaranList() {
                   <th className="px-4 py-3 font-semibold text-gray-500">Nama</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">WhatsApp</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Email</th>
-                  <th className="px-4 py-3 font-semibold text-gray-500">Provinsi/Negara</th>
+                  <th className="px-4 py-3 font-semibold text-gray-500">Domisili</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Status</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Tanggal</th>
                   <th className="px-4 py-3 font-semibold text-gray-500">Aksi</th>
@@ -344,7 +344,9 @@ export default function PendaftaranList() {
                     <td className="px-4 py-3 text-gray-600">{r.whatsapp}</td>
                     <td className="px-4 py-3 text-gray-600">{r.email}</td>
                     <td className="px-4 py-3 text-gray-600">
-                      {r.provinsi === "Luar Negeri" ? r.kabupaten : r.provinsi}
+                      {r.provinsi === "Luar Negeri"
+                        ? r.kabupaten
+                        : r.provinsi || r.kabupaten}
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">

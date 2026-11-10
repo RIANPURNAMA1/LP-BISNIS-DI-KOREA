@@ -1,4 +1,3 @@
-// Prisma Schema untuk Bisnis di Korea
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,30 +7,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Tabel Pendaftaran ───────────────────────────────────────────
 model Pendaftaran {
-  id        Int      @id @default(autoincrement())
-  nama      String   @db.VarChar(255)
-  whatsapp  String   @db.VarChar(30)
-  email     String   @db.VarChar(255)
-  provinsi  String   @db.VarChar(100)
-  kabupaten String   @db.VarChar(100)
-  kecamatan String   @db.VarChar(100)
-  desa      String   @db.VarChar(100)
-  alamat    String?  @db.Text
-  status    String   @db.VarChar(100)
-  ide       String   @db.VarChar(100)
-  cerita    String?  @db.Text
-  pendapatan String? @db.VarChar(50)
-  tujuan    Json
-  sumber    String?  @db.VarChar(100)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  nama       String   @db.VarChar(255)
+  whatsapp   String   @db.VarChar(30)
+  email      String   @db.VarChar(255)
+  provinsi   String   @db.VarChar(100)
+  kabupaten  String   @db.VarChar(100)
+  kecamatan  String   @db.VarChar(100)
+  desa       String   @db.VarChar(100)
+  alamat     String?  @db.Text
+  status     String   @db.VarChar(100)
+  ide        String   @db.VarChar(100)
+  cerita     String?  @db.Text
+  pendapatan String?  @db.VarChar(50)
+  tujuan     String   @db.LongText
+  sumber     String?  @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("pendaftaran")
 }
 
-// ─── Tabel Admin User ────────────────────────────────────────────
 model AdminUser {
   id        Int      @id @default(autoincrement())
   email     String   @unique @db.VarChar(255)

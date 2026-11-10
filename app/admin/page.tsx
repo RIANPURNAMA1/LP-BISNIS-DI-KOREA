@@ -313,7 +313,7 @@ export default function AdminDashboard() {
                 <tr className="border-b border-gray-100 bg-gray-50/50">
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Nama</th>
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Email</th>
-                  <th className="px-5 py-2.5 font-semibold text-gray-500">Provinsi/Negara</th>
+                  <th className="px-5 py-2.5 font-semibold text-gray-500">Domisili</th>
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Status</th>
                   <th className="px-5 py-2.5 font-semibold text-gray-500">Tanggal</th>
                 </tr>
@@ -331,7 +331,9 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-5 py-3 text-gray-600">{r.email}</td>
                     <td className="px-5 py-3 text-gray-600">
-                      {r.provinsi === "Luar Negeri" ? r.kabupaten : r.provinsi}
+                      {r.provinsi === "Luar Negeri"
+                        ? r.kabupaten
+                        : r.provinsi || r.kabupaten}
                     </td>
                     <td className="px-5 py-3">
                       <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
