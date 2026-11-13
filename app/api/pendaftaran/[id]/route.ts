@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { parseTujuan } from "@/lib/validations";
 
 async function unauthorized() {
   return NextResponse.json(
@@ -35,7 +36,10 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({
+      success: true,
+      data: { ...data, tujuan: parseTujuan(data.tujuan) },
+    });
   } catch (error) {
     console.error("GET /api/pendaftaran/[id] error:", error);
     return NextResponse.json(

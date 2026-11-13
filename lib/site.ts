@@ -55,5 +55,5 @@ export const FAQ_ITEMS = [
 ];
 
 // Link undangan grup WhatsApp peserta (ditampilkan setelah formulir terkirim).
-// Isi lewat env NEXT_PUBLIC_WA_GROUP_URL, contoh: https://chat.whatsapp.com/XXXXXXXX
+// Diisi lewat env NEXT_PUBLIC_WA_GROUP_URL, contoh: https://chat.whatsapp.com/XXXXXXXX
 export const WA_GROUP_URL = (process.env.NEXT_PUBLIC_WA_GROUP_URL || "").trim();

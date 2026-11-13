@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { parseTujuan } from "@/lib/validations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,9 +39,7 @@ const COLUMNS: Column[] = [
 const PROJECT_NAME = "INDONESIA-KOREA BUSINESS PROJECT";
 
 function tujuanText(value: unknown) {
-  if (Array.isArray(value)) return value.map(String).join("; ");
-  if (typeof value === "string") return value;
-  return "";
+  return parseTujuan(value).join("; ");
 }
 
 function estimateRowHeight(values: string[]) {

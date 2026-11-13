@@ -57,3 +57,22 @@ export const listQuerySchema = z.object({
 });
 
 export type ListQuery = z.infer<typeof listQuerySchema>;
+
+// ─── Kolom `tujuan` ──────────────────────────────────────────────
+// Di database disimpan sebagai teks JSON (contoh: ["A","B"]),
+// di aplikasi dipakai sebagai array string.
+export function serializeTujuan(tujuan: string[]): string {
+  return JSON.stringify(tujuan);
+}
+
+export function parseTujuan(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.map(String);
+    return [String(parsed)];
+  } catch {
+    return [value];
+  }
+}

@@ -82,12 +82,7 @@ const IDE = [
   "Belum memiliki bisnis",
 ];
 
-const PENDAPATAN = [
-  "Under 5jt",
-  "5 – 10jt",
-  "10 – 20jt",
-  "Di atas 20jt",
-];
+const PENDAPATAN = ["Under 5jt", "5 – 10jt", "10 – 20jt", "Di atas 20jt"];
 
 const TUJUAN = [
   "Mencari peluang bisnis di Korea",
@@ -327,7 +322,6 @@ const KODE_NEGARA = [...KODE_NEGARA_SEMUA].sort((a, b) => {
   if (ib !== -1) return 1;
   return a.negara.localeCompare(b.negara, "id");
 });
-
 
 const STEPS = [
   { title: "Tahap 1 — Data Diri", short: "Data Diri" },
@@ -581,8 +575,7 @@ export default function DaftarPage({
           e.whatsapp =
             "Masukkan nomor WhatsApp yang valid, contoh 10 1234 5678.";
         else if (kode && kode.length + nomor.length > 15)
-          e.whatsapp =
-            "Total digit kode negara dan nomor maksimal 15 digit.";
+          e.whatsapp = "Total digit kode negara dan nomor maksimal 15 digit.";
       } else if (!/^\+?[0-9][0-9\s-]{7,17}$/.test(form.whatsapp.trim()))
         e.whatsapp =
           "Masukkan nomor WhatsApp yang valid, contoh +62 812 3456 7890.";
@@ -713,55 +706,61 @@ export default function DaftarPage({
                 Pendaftaran Anda berhasil dikirim!
               </h1>
               <p className="mx-auto mt-4 max-w-md text-base leading-7 text-gray-600">
-                Terima kasih atas ketertarikan Anda mengikuti Program Inkubasi
-                Bisnis Startup Indonesia-Korea Business Project.
-                {WA_GROUP_URL
-                  ? " Satu langkah lagi: bergabunglah ke grup WhatsApp peserta."
-                  : " Tim kami akan menghubungi Anda melalui WhatsApp atau email untuk informasi mengenai tahapan selanjutnya."}
+                Terima kasih telah mengikuti Program Bisnis di Korea
+                (Indonesia-Korea Business Project).
+              </p>
+              <p className="mx-auto mt-3 max-w-md text-base leading-7 text-gray-600">
+                Silakan gabung ke grup WhatsApp untuk info jadwal dan program
+                selanjutnya.
               </p>
 
-              {WA_GROUP_URL && (
-                <div className="mx-auto mt-8 max-w-md rounded-2xl border border-[#25D366]/40 bg-[#25D366]/5 p-5 text-left sm:p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#128C7E]">
-                    Langkah selanjutnya
-                  </p>
-                  <h2 className="mt-1 text-lg font-bold text-deep">
-                    Gabung Grup WhatsApp Peserta
-                  </h2>
-                  <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-6 text-gray-600">
-                    <li>Klik tombol &ldquo;Gabung Grup WhatsApp&rdquo; di bawah.</li>
-                    <li>WhatsApp akan terbuka, lalu pilih &ldquo;Gabung Grup&rdquo;.</li>
-                    <li>
-                      Informasi jadwal, materi, dan tahapan program akan
-                      dibagikan di grup tersebut.
-                    </li>
-                  </ol>
-                  <a
-                    href={WA_GROUP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1EBE5A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-5 w-5"
-                      aria-hidden="true"
+              <div className="mx-auto mt-8 max-w-md rounded-2xl border border-[#25D366]/40 bg-[#25D366]/5 p-5 text-left sm:p-6">
+                <h2 className="text-lg font-bold text-deep">
+                  Gabung Grup WhatsApp
+                </h2>
+                {WA_GROUP_URL ? (
+                  <>
+                    <p className="mt-2 text-sm leading-6 text-gray-600">
+                      Klik tombol di bawah, lalu pilih &ldquo;Gabung Grup&rdquo;.
+                    </p>
+                    <a
+                      href={WA_GROUP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1EBE5A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
                     >
-                      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.29Z" />
-                    </svg>
-                    Gabung Grup WhatsApp
-                  </a>
-                </div>
-              )}
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="h-5 w-5"
+                        aria-hidden="true"
+                      >
+                        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.29Z" />
+                      </svg>
+                      Gabung Grup WhatsApp
+                    </a>
+                    <p className="mt-3 break-all text-center text-xs text-gray-500">
+                      atau buka link:{" "}
+                      <a
+                        href={WA_GROUP_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-[#128C7E] underline"
+                      >
+                        {WA_GROUP_URL}
+                      </a>
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm leading-6 text-gray-600">
+                    Link grup akan kami kirim ke WhatsApp Anda.
+                  </p>
+                )}
+              </div>
 
               <a
                 href={homeHref}
-                className={
-                  WA_GROUP_URL
-                    ? "mt-6 inline-block rounded text-sm font-medium text-gray-500 transition-colors hover:text-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4]"
-                    : "mt-8 inline-block rounded-full bg-[#E3081C] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#B30616] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E3081C] focus-visible:ring-offset-2"
-                }
+                className="mt-6 inline-block rounded text-sm font-medium text-gray-500 transition-colors hover:text-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4]"
               >
                 Kembali ke beranda
               </a>
@@ -890,9 +889,7 @@ export default function DaftarPage({
                               autoComplete="tel-national"
                               inputMode="tel"
                               value={form.whatsapp}
-                              onChange={(e) =>
-                                set("whatsapp", e.target.value)
-                              }
+                              onChange={(e) => set("whatsapp", e.target.value)}
                               placeholder="10 1234 5678"
                               className={cls(errors.whatsapp)}
                               aria-invalid={!!errors.whatsapp}
@@ -913,9 +910,7 @@ export default function DaftarPage({
                               autoComplete="tel"
                               inputMode="tel"
                               value={form.whatsapp}
-                              onChange={(e) =>
-                                set("whatsapp", e.target.value)
-                              }
+                              onChange={(e) => set("whatsapp", e.target.value)}
                               placeholder="+62 xxx xxxx xxxx"
                               className={cls(errors.whatsapp)}
                               aria-invalid={!!errors.whatsapp}
@@ -1035,9 +1030,7 @@ export default function DaftarPage({
                           type="text"
                           autoComplete="address-level2"
                           value={form.kotaDomisili}
-                          onChange={(e) =>
-                            set("kotaDomisili", e.target.value)
-                          }
+                          onChange={(e) => set("kotaDomisili", e.target.value)}
                           placeholder="Contoh: Jakarta Selatan, Bandung, Surabaya"
                           className={cls(errors.kotaDomisili)}
                           aria-invalid={!!errors.kotaDomisili}
@@ -1122,7 +1115,7 @@ export default function DaftarPage({
                       )}
                     </fieldset>
 
-                      <fieldset>
+                    <fieldset>
                       <legend className="mb-2 text-sm font-semibold text-deep">
                         Berapa kisaran personal income (pendapatan pribadi) Anda
                         per bulan?
@@ -1154,8 +1147,6 @@ export default function DaftarPage({
                         className={cls()}
                       />
                     </Field>
-
-                  
                   </div>
                 )}
 

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { pendaftaranSchema, listQuerySchema } from "@/lib/validations";
+import {
+  pendaftaranSchema,
+  listQuerySchema,
+  serializeTujuan,
+  parseTujuan,
+} from "@/lib/validations";
 
 // ─── POST — Simpan pendaftaran baru ──────────────────────────────
 export async function POST(req: NextRequest) {
@@ -20,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     // Simpan ke database via Prisma
     const pendaftaran = await prisma.pendaftaran.create({
-      data: result.data,
+      data: { ...result.data, tujuan: serializeTujuan(result.data.tujuan) },
     });
 
     return NextResponse.json(
@@ -72,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data,
+      data: data.map((d) => ({ ...d, tujuan: parseTujuan(d.tujuan) })),
       total,
       page: query.page,
       totalPages: Math.ceil(total / query.limit),
