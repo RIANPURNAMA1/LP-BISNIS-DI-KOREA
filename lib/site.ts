@@ -53,3 +53,7 @@ export const FAQ_ITEMS = [
       "Klik tombol Daftar Program, lengkapi formulir pendaftaran secara online, lalu tim kami akan menghubungi Anda melalui WhatsApp atau email untuk informasi tahapan selanjutnya. Kuota peserta dibatasi agar pendampingan lebih terarah.",
   },
 ];
+
+// Link undangan grup WhatsApp peserta (ditampilkan setelah formulir terkirim).
+// Isi lewat env NEXT_PUBLIC_WA_GROUP_URL, contoh: https://chat.whatsapp.com/XXXXXXXX
+export const WA_GROUP_URL = (process.env.NEXT_PUBLIC_WA_GROUP_URL || "").trim();

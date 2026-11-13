@@ -3,5 +3,8 @@ node_modules
 out
 *.tsbuildinfo
 next-env.d.ts
-.env.local
+
+# Environment (jangan di-commit)
 .env
+.env.*
+!.env.example
