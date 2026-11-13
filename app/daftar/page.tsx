@@ -1,6 +1,7 @@
 "use client";
 
 import DaftarPage from "@/components/DaftarPage";
+import { RegistrationFieldError } from "@/components/DaftarPage";
 import type { RegistrationPayload } from "@/components/DaftarPage";
 
 export default function Daftar() {
@@ -12,7 +13,12 @@ export default function Daftar() {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => null);
-      throw new Error(err?.error || "Gagal mengirim pendaftaran");
+      if (res.status === 409 && err?.field === "email") {
+        throw new RegistrationFieldError("email", err.error);
+      }
+      throw new Error(
+        "Pendaftaran belum terkirim. Periksa koneksi Anda lalu coba lagi.",
+      );
     }
   }
 

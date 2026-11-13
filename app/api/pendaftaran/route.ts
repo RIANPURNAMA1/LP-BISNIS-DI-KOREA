@@ -23,9 +23,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Email harus unik: satu email hanya boleh mendaftar sekali.
+    const email = result.data.email.trim().toLowerCase();
+    const sudahAda = await prisma.pendaftaran.findFirst({
+      where: { email },
+      select: { id: true },
+    });
+    if (sudahAda) {
+      return NextResponse.json(
+        {
+          success: false,
+          field: "email",
+          error:
+            "Email ini sudah terdaftar. Gunakan email lain atau hubungi admin jika Anda sudah pernah mendaftar.",
+        },
+        { status: 409 }
+      );
+    }
+
     // Simpan ke database via Prisma
     const pendaftaran = await prisma.pendaftaran.create({
-      data: { ...result.data, tujuan: serializeTujuan(result.data.tujuan) },
+      data: {
+        ...result.data,
+        email,
+        tujuan: serializeTujuan(result.data.tujuan),
+      },
     });
 
     return NextResponse.json(

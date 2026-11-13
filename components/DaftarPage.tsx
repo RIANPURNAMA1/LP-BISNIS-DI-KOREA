@@ -8,6 +8,17 @@ import { WA_GROUP_URL } from "@/lib/site";
 /* Data & tipe                                                         */
 /* ------------------------------------------------------------------ */
 
+/** Error dari server yang terkait kolom tertentu, misalnya email sudah terdaftar. */
+export class RegistrationFieldError extends Error {
+  constructor(
+    public field: "email",
+    message: string,
+  ) {
+    super(message);
+    this.name = "RegistrationFieldError";
+  }
+}
+
 export type RegistrationPayload = {
   nama: string;
   whatsapp: string;
@@ -660,10 +671,18 @@ export default function DaftarPage({
       if (onSubmit) await onSubmit(payload);
       else console.log("Pendaftaran:", payload);
       setDone(true);
-    } catch {
-      setSubmitError(
-        "Pendaftaran belum terkirim. Periksa koneksi Anda lalu coba lagi.",
-      );
+    } catch (err) {
+      if (err instanceof RegistrationFieldError) {
+        // Kolom email ada di Tahap 1: kembali ke sana dan tampilkan pesannya.
+        setErrors({ [err.field]: err.message });
+        setStep(0);
+      } else {
+        setSubmitError(
+          err instanceof Error && err.message
+            ? err.message
+            : "Pendaftaran belum terkirim. Periksa koneksi Anda lalu coba lagi.",
+        );
+      }
     } finally {
       setSending(false);
     }
