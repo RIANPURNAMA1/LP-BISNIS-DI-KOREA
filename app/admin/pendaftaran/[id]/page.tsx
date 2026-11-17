@@ -378,14 +378,18 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
                     label={isLuarNegeri ? "Negara" : "Kabupaten/Kota"}
                     value={data.kabupaten}
                   />
-                  <InfoRow
-                    label={isLuarNegeri ? "Provinsi/State" : "Kecamatan"}
-                    value={data.kecamatan}
-                  />
-                  <InfoRow
-                    label={isLuarNegeri ? "Kota" : "Desa/Kelurahan"}
-                    value={data.desa}
-                  />
+                  {(isLuarNegeri || data.kecamatan) && (
+                    <InfoRow
+                      label={isLuarNegeri ? "Provinsi/State" : "Kecamatan"}
+                      value={data.kecamatan}
+                    />
+                  )}
+                  {(isLuarNegeri || data.desa) && (
+                    <InfoRow
+                      label={isLuarNegeri ? "Kota" : "Desa/Kelurahan"}
+                      value={data.desa}
+                    />
+                  )}
                 </>
               )}
               {data.alamat && (

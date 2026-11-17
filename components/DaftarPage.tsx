@@ -48,8 +48,10 @@ type FormState = {
   whatsapp: string;
   kodeWhatsapp: string; // kode negara, tanpa "+"
   email: string;
-  wilayahId: "" | "jabodetabek" | "luar_jabodetabek"; // wilayah (Indonesia)
-  kotaDomisili: string; // kota/daerah domisili (Indonesia)
+  provinsiId: string;
+  provinsiNama: string;
+  kabupatenId: string;
+  kabupatenNama: string;
   negara: string; // manual, luar negeri
   provinsiLuar: string;
   kotaLuar: string;
@@ -72,8 +74,10 @@ const initialForm: FormState = {
   whatsapp: "",
   kodeWhatsapp: "",
   email: "",
-  wilayahId: "",
-  kotaDomisili: "",
+  provinsiId: "",
+  provinsiNama: "",
+  kabupatenId: "",
+  kabupatenNama: "",
   negara: "",
   provinsiLuar: "",
   kotaLuar: "",
@@ -90,15 +94,15 @@ const initialForm: FormState = {
   setuju: false,
 };
 
-// Daerah Jabodetabek yang bisa dipilih (disimpan di kolom kabupaten).
-const JABODETABEK = [
-  "Jakarta",
-  "Bogor (Kota/Kabupaten)",
-  "Depok",
-  "Tangerang (Kota/Kabupaten)",
-  "Tangerang Selatan",
-  "Bekasi (Kota/Kabupaten)",
-];
+// Kode kabupaten/kota Jabodetabek dari wilayah.id — menentukan grup WhatsApp.
+const JABODETABEK_KABUPATEN_IDS = new Set([
+  // DKI Jakarta (semua kota/kabupaten administrasi)
+  "31.01", "31.71", "31.72", "31.73", "31.74", "31.75",
+  // Jawa Barat: Bogor, Depok, Bekasi
+  "32.01", "32.71", "32.76", "32.16", "32.75",
+  // Banten: Tangerang, Tangerang Selatan
+  "36.03", "36.71", "36.74",
+]);
 
 const STATUS = ["Karyawan", "Pelajar atau mahasiswa", "Pengusaha"];
 const STATUS_LAIN = "__lain__";
@@ -552,6 +556,10 @@ export default function DaftarPage({
   const [submitError, setSubmitError] = useState("");
   const [done, setDone] = useState(false);
   const [groupUrl, setGroupUrl] = useState("");
+  const [provinsiList, setProvinsiList] = useState<{ code: string; name: string }[]>([]);
+  const [kabupatenList, setKabupatenList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingProvinsi, setLoadingProvinsi] = useState(false);
+  const [loadingKabupaten, setLoadingKabupaten] = useState(false);
 
   useEffect(() => {
     document.title =
@@ -562,6 +570,28 @@ export default function DaftarPage({
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [step, done]);
+
+  useEffect(() => {
+    setLoadingProvinsi(true);
+    fetch("/api/wilayah/provinces.json")
+      .then((r) => r.json())
+      .then((json) => setProvinsiList(json.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingProvinsi(false));
+  }, []);
+
+  useEffect(() => {
+    if (!form.provinsiId) {
+      setKabupatenList([]);
+      return;
+    }
+    setLoadingKabupaten(true);
+    fetch(`/api/wilayah/regencies/${form.provinsiId}.json`)
+      .then((r) => r.json())
+      .then((json) => setKabupatenList(json.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingKabupaten(false));
+  }, [form.provinsiId]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -581,8 +611,10 @@ export default function DaftarPage({
       domisili: value,
       whatsapp: "",
       kodeWhatsapp: "",
-      wilayahId: "",
-      kotaDomisili: "",
+      provinsiId: "",
+      provinsiNama: "",
+      kabupatenId: "",
+      kabupatenNama: "",
       negara: "",
       provinsiLuar: "",
       kotaLuar: "",
@@ -642,12 +674,8 @@ export default function DaftarPage({
           e.provinsiLuar = "Tuliskan provinsi/state Anda.";
         if (!form.kotaLuar.trim()) e.kotaLuar = "Tuliskan kota Anda.";
       } else {
-        if (!form.wilayahId) e.wilayahId = "Pilih wilayah domisili Anda.";
-        else if (!form.kotaDomisili.trim())
-          e.kotaDomisili =
-            form.wilayahId === "jabodetabek"
-              ? "Pilih daerah domisili Anda."
-              : "Tuliskan kota/daerah domisili Anda.";
+        if (!form.provinsiId) e.provinsiId = "Pilih provinsi domisili Anda.";
+        if (!form.kabupatenId) e.kabupatenId = "Pilih kabupaten/kota domisili Anda.";
       }
     }
 
@@ -693,10 +721,8 @@ export default function DaftarPage({
         ? `+${kode} ${form.whatsapp.trim()}`
         : form.whatsapp.trim(),
       email: form.email.trim(),
-      // Untuk domisili Indonesia, kota/daerah disimpan di kolom kabupaten.
-      // Kolom provinsi/kecamatan/desa dikosongkan karena tidak dipakai lagi.
-      provinsi: isLuar ? "Luar Negeri" : "",
-      kabupaten: isLuar ? form.negara.trim() : form.kotaDomisili.trim(),
+      provinsi: isLuar ? "Luar Negeri" : form.provinsiNama.trim(),
+      kabupaten: isLuar ? form.negara.trim() : form.kabupatenNama.trim(),
       kecamatan: isLuar ? form.provinsiLuar.trim() : "",
       desa: isLuar ? form.kotaLuar.trim() : "",
       alamat: "",
@@ -710,7 +736,7 @@ export default function DaftarPage({
         form.sumber === STATUS_LAIN ? form.sumberLain.trim() : form.sumber,
       wilayah: isLuar
         ? "luar_negeri"
-        : form.wilayahId === "jabodetabek"
+        : JABODETABEK_KABUPATEN_IDS.has(form.kabupatenId)
           ? "jabodetabek"
           : "luar_jabodetabek",
     };
@@ -1034,78 +1060,83 @@ export default function DaftarPage({
                     ) : (
                       <div className="grid gap-5 sm:grid-cols-2">
                         <Field
-                          id="wilayahId"
-                          label="Wilayah Domisili"
+                          id="provinsiId"
+                          label="Provinsi"
                           required
-                          error={errors.wilayahId}
+                          error={errors.provinsiId}
                         >
                           <SelectField
-                            id="wilayahId"
-                            value={form.wilayahId}
+                            id="provinsiId"
+                            value={form.provinsiId}
                             onChange={(v) => {
+                              const nama =
+                                provinsiList.find((p) => p.code === v)?.name ??
+                                "";
                               setForm((f) => ({
                                 ...f,
-                                wilayahId: v as FormState["wilayahId"],
-                                kotaDomisili: "",
+                                provinsiId: v,
+                                provinsiNama: nama,
+                                kabupatenId: "",
+                                kabupatenNama: "",
                               }));
                               setErrors((er) => {
                                 const next = { ...er };
-                                delete next.wilayahId;
-                                delete next.kotaDomisili;
+                                delete next.provinsiId;
+                                delete next.kabupatenId;
                                 return next;
                               });
                             }}
-                            options={[
-                              { value: "jabodetabek", label: "Jabodetabek" },
-                              {
-                                value: "luar_jabodetabek",
-                                label: "Luar Jabodetabek",
-                              },
-                            ]}
-                            placeholder="Pilih wilayah"
-                            error={errors.wilayahId}
+                            options={provinsiList.map((p) => ({
+                              value: p.code,
+                              label: p.name,
+                            }))}
+                            placeholder={
+                              loadingProvinsi ? "Memuat…" : "Pilih provinsi"
+                            }
+                            error={errors.provinsiId}
+                            disabled={loadingProvinsi}
                           />
                         </Field>
 
-                        {form.wilayahId === "jabodetabek" && (
-                          <Field
-                            id="kotaDomisili"
-                            label="Daerah Domisili"
-                            required
-                            error={errors.kotaDomisili}
-                          >
-                            <SelectField
-                              id="kotaDomisili"
-                              value={form.kotaDomisili}
-                              onChange={(v) => set("kotaDomisili", v)}
-                              options={simple(JABODETABEK)}
-                              placeholder="Pilih daerah"
-                              error={errors.kotaDomisili}
-                            />
-                          </Field>
-                        )}
-
-                        {form.wilayahId === "luar_jabodetabek" && (
-                          <Field
-                            id="kotaDomisili"
-                            label="Kota/Daerah Domisili"
-                            required
-                            error={errors.kotaDomisili}
-                          >
-                            <input
-                              id="kotaDomisili"
-                              type="text"
-                              autoComplete="address-level2"
-                              value={form.kotaDomisili}
-                              onChange={(e) =>
-                                set("kotaDomisili", e.target.value)
-                              }
-                              placeholder="Contoh: Bandung, Surabaya, Medan"
-                              className={cls(errors.kotaDomisili)}
-                              aria-invalid={!!errors.kotaDomisili}
-                            />
-                          </Field>
-                        )}
+                        <Field
+                          id="kabupatenId"
+                          label="Kabupaten/Kota"
+                          required
+                          error={errors.kabupatenId}
+                        >
+                          <SelectField
+                            id="kabupatenId"
+                            value={form.kabupatenId}
+                            onChange={(v) => {
+                              const nama =
+                                kabupatenList.find((k) => k.code === v)?.name ??
+                                "";
+                              setForm((f) => ({
+                                ...f,
+                                kabupatenId: v,
+                                kabupatenNama: nama,
+                              }));
+                              setErrors((er) => {
+                                const next = { ...er };
+                                delete next.kabupatenId;
+                                return next;
+                              });
+                            }}
+                            options={kabupatenList.map((k) => ({
+                              value: k.code,
+                              label: k.name,
+                            }))}
+                            placeholder={
+                              loadingKabupaten
+                                ? "Memuat…"
+                                : form.provinsiId
+                                  ? "Pilih kabupaten/kota"
+                                  : "Pilih provinsi dulu"
+                            }
+                            error={errors.kabupatenId}
+                            disabled={!form.provinsiId || loadingKabupaten}
+                          />
+                        </Field>
                       </div>
                     )}
                     <GroupTitle

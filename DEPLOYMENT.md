@@ -80,7 +80,6 @@ Penting: Ganti password database dan secret dengan nilai yang kuat. Jangan commi
 Masuk ke MySQL:
 sudo mysql
 
-
 Buat database dan user:
 CREATE DATABASE bisnis_korea
 CHARACTER SET utf8mb4
