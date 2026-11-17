@@ -351,9 +351,21 @@ const KODE_NEGARA = [...KODE_NEGARA_SEMUA].sort((a, b) => {
 });
 
 const STEPS = [
-  { title: "Tahap 1 — Data Diri", short: "Data Diri" },
-  { title: "Tahap 2 — Profil dan Kesiapan Bisnis", short: "Profil Bisnis" },
-  { title: "Tahap 3 — Tujuan dan Konfirmasi", short: "Tujuan" },
+  {
+    short: "Data Diri",
+    heading: "Data diri",
+    desc: "Informasi dasar untuk menghubungi Anda.",
+  },
+  {
+    short: "Profil Bisnis",
+    heading: "Profil dan kesiapan bisnis",
+    desc: "Bantu kami memahami kondisi dan rencana bisnis Anda.",
+  },
+  {
+    short: "Tujuan",
+    heading: "Tujuan dan konfirmasi",
+    desc: "Langkah terakhir sebelum pendaftaran dikirim.",
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -361,10 +373,10 @@ const STEPS = [
 /* ------------------------------------------------------------------ */
 
 const inputBase =
-  "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-deep placeholder:text-gray-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
+  "w-full rounded-lg border bg-white px-3.5 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
 const inputOk =
-  "border-gray-300 focus:border-[#0052A4] focus:ring-[#0052A4]/20";
-const inputErr = "border-red-400 focus:border-red-500 focus:ring-red-500/20";
+  "border-gray-300 hover:border-gray-400 focus:border-gray-900 focus:ring-gray-900/10";
+const inputErr = "border-red-400 focus:border-red-500 focus:ring-red-500/10";
 
 const cls = (error?: string) => `${inputBase} ${error ? inputErr : inputOk}`;
 
@@ -387,10 +399,10 @@ function Field({
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block text-sm font-semibold text-deep"
+        className="mb-1.5 block text-sm font-medium text-gray-900"
       >
         {label}
-        {required && <span className="ml-0.5 text-[#E3081C]">*</span>}
+        {required && <span className="ml-0.5 text-red-600">*</span>}
       </label>
       {children}
       {hint && !error && <p className="mt-1.5 text-xs text-gray-500">{hint}</p>}
@@ -418,10 +430,10 @@ function Choice({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition-colors ${
+      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
         checked
-          ? "border-[#0052A4] bg-[#0052A4]/[0.05] text-deep"
-          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+          ? "border-gray-900 bg-gray-50 text-gray-900"
+          : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
       }`}
     >
       <input
@@ -429,7 +441,7 @@ function Choice({
         name={name}
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 shrink-0 accent-[#0052A4]"
+        className="h-4 w-4 shrink-0 accent-gray-900"
       />
       {label}
     </label>
@@ -503,6 +515,15 @@ function OtherInput({
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+function GroupTitle({ title, desc }: { title: string; desc?: string }) {
+  return (
+    <div className="border-b border-gray-200 pb-2.5 pt-2">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      {desc && <p className="mt-0.5 text-xs text-gray-500">{desc}</p>}
     </div>
   );
 }
@@ -720,24 +741,24 @@ export default function DaftarPage({
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-gray-50">
       <div className="page-enter mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <a
           href={homeHref}
-          className="inline-flex items-center gap-2 rounded text-sm font-medium text-gray-500 transition-colors hover:text-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4]"
+          className="inline-flex items-center gap-2 rounded text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
         >
           <span aria-hidden="true">←</span> Kembali ke beranda
         </a>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           {done ? (
             /* ---------------- Konfirmasi ---------------- */
             <div className="px-6 py-12 text-center sm:px-12 sm:py-16">
-              <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#0052A4]/10 text-[#0052A4]">
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-gray-900 text-white">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
-                  className="h-8 w-8"
+                  className="h-7 w-7"
                   aria-hidden="true"
                 >
                   <path
@@ -751,21 +772,21 @@ export default function DaftarPage({
               </span>
               <h1
                 id="reg-title"
-                className="mt-6 text-2xl font-bold tracking-tight text-deep sm:text-3xl"
+                className="mt-6 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl"
               >
                 Pendaftaran Anda berhasil dikirim!
               </h1>
-              <p className="mx-auto mt-4 max-w-md text-base leading-7 text-gray-600">
+              <p className="mx-auto mt-4 max-w-md text-[15px] leading-7 text-gray-600">
                 Terima kasih telah mengikuti Program Bisnis di Korea
                 (Indonesia-Korea Business Project).
               </p>
-              <p className="mx-auto mt-3 max-w-md text-base leading-7 text-gray-600">
+              <p className="mx-auto mt-2 max-w-md text-[15px] leading-7 text-gray-600">
                 Silakan gabung ke grup WhatsApp untuk info jadwal dan program
                 selanjutnya.
               </p>
 
-              <div className="mx-auto mt-8 max-w-md rounded-2xl border border-[#25D366]/40 bg-[#25D366]/5 p-5 text-left sm:p-6">
-                <h2 className="text-lg font-bold text-deep">
+              <div className="mx-auto mt-8 max-w-md rounded-xl border border-gray-200 bg-gray-50 p-5 text-left sm:p-6">
+                <h2 className="text-base font-semibold text-gray-900">
                   Gabung Grup WhatsApp
                 </h2>
                 {groupUrl ? (
@@ -795,7 +816,7 @@ export default function DaftarPage({
                         href={groupUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-[#128C7E] underline"
+                        className="font-medium text-gray-700 underline"
                       >
                         {groupUrl}
                       </a>
@@ -810,7 +831,7 @@ export default function DaftarPage({
 
               <a
                 href={homeHref}
-                className="mt-6 inline-block rounded text-sm font-medium text-gray-500 transition-colors hover:text-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4]"
+                className="mt-6 inline-block rounded text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
               >
                 Kembali ke beranda
               </a>
@@ -818,40 +839,80 @@ export default function DaftarPage({
           ) : (
             <form noValidate onSubmit={handleSubmit}>
               {/* Header */}
-              <div className="border-b border-gray-100 px-5 pb-5 pt-6 sm:px-8">
-                <p className="text-xs font-semibold tracking-wide text-[#E3081C]">
+              <div className="border-b border-gray-200 px-5 pb-6 pt-7 sm:px-8">
+                <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
                   Indonesia-Korea Business Project
                 </p>
                 <h1
                   id="reg-title"
-                  className="mt-1.5 text-lg font-bold leading-snug tracking-tight text-deep sm:text-xl"
+                  className="mt-2 text-xl font-semibold leading-snug tracking-tight text-gray-900 sm:text-2xl"
                 >
                   Formulir Pendaftaran Bisnis di Korea
                 </h1>
+                <p className="mt-1.5 text-sm text-gray-500">
+                  Isi data berikut dengan benar. Hanya membutuhkan beberapa
+                  menit.
+                </p>
 
                 <ol
-                  className="mt-5 grid grid-cols-3 gap-2"
+                  className="mt-6 flex items-center"
                   aria-label="Progres pendaftaran"
                 >
-                  {STEPS.map((s, i) => (
+                  {STEPS.map((st, i) => (
                     <li
-                      key={s.short}
+                      key={st.short}
                       aria-current={i === step ? "step" : undefined}
+                      className={`flex items-center ${
+                        i < STEPS.length - 1 ? "flex-1" : ""
+                      }`}
                     >
-                      <div
-                        className={`h-1.5 rounded-full transition-colors ${
-                          i <= step ? "bg-[#0052A4]" : "bg-gray-200"
-                        }`}
-                      />
-                      <span
-                        className={`mt-1.5 block text-xs ${
-                          i === step
-                            ? "font-semibold text-deep"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {s.short}
+                      <span className="flex items-center gap-2.5">
+                        <span
+                          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold transition-colors ${
+                            i < step
+                              ? "bg-gray-900 text-white"
+                              : i === step
+                                ? "bg-gray-900 text-white ring-4 ring-gray-900/10"
+                                : "border border-gray-300 bg-white text-gray-400"
+                          }`}
+                        >
+                          {i < step ? (
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="m6 12.5 4 4 8-9"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          ) : (
+                            i + 1
+                          )}
+                        </span>
+                        <span
+                          className={`hidden text-sm sm:inline ${
+                            i === step
+                              ? "font-semibold text-gray-900"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {st.short}
+                        </span>
                       </span>
+                      {i < STEPS.length - 1 && (
+                        <span
+                          aria-hidden="true"
+                          className={`mx-3 h-px flex-1 transition-colors ${
+                            i < step ? "bg-gray-900" : "bg-gray-200"
+                          }`}
+                        />
+                      )}
                     </li>
                   ))}
                 </ol>
@@ -859,13 +920,17 @@ export default function DaftarPage({
 
               {/* Isi */}
               <div key={step} className="animate-fade-up px-5 py-6 sm:px-8">
-                <h2 className="text-base font-bold text-deep">
-                  {STEPS[step].title}
+                <p className="text-xs font-medium text-gray-500">
+                  Langkah {step + 1} dari {STEPS.length}
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-gray-900">
+                  {STEPS[step].heading}
                 </h2>
+                <p className="mt-1 text-sm text-gray-500">{STEPS[step].desc}</p>
 
                 {/* ---------- Tahap 1 ---------- */}
                 {step === 0 && (
-                  <div className="mt-5 space-y-5">
+                  <div className="mt-6 space-y-5">
                     <Field
                       id="nama"
                       label="Nama lengkap"
@@ -884,6 +949,11 @@ export default function DaftarPage({
                       />
                     </Field>
 
+                    <GroupTitle
+                      title="Domisili"
+                      desc="Menentukan grup WhatsApp yang akan Anda terima."
+                    />
+
                     <div>
                       <Choice
                         type="checkbox"
@@ -901,113 +971,6 @@ export default function DaftarPage({
                           ? "Isi nomor WhatsApp dengan kode negara tempat Anda tinggal sekarang."
                           : "Jika Anda tinggal di Indonesia, biarkan kotak ini tidak dicentang."}
                       </p>
-                    </div>
-
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      {form.domisili === "luar" ? (
-                        <>
-                          <Field
-                            id="kodeWhatsapp"
-                            label="Kode negara WhatsApp"
-                            required
-                            error={errors.kodeWhatsapp}
-                            hint="Pilih kode negara. Contoh: +82 Korea Selatan, +60 Malaysia."
-                          >
-                            <SelectField
-                              id="kodeWhatsapp"
-                              value={form.kodeWhatsapp}
-                              onChange={setKodeNegara}
-                              options={KODE_NEGARA.map((k) => ({
-                                value: k.kode,
-                                label: `${k.negara} (+${k.kode})`,
-                              }))}
-                              placeholder="Pilih kode negara"
-                              error={errors.kodeWhatsapp}
-                            />
-                          </Field>
-
-                          <Field
-                            id="whatsapp"
-                            label="Nomor WhatsApp aktif"
-                            required
-                            error={errors.whatsapp}
-                            hint="Tulis tanpa kode negara, contoh 10 1234 5678."
-                          >
-                            <input
-                              id="whatsapp"
-                              type="tel"
-                              autoComplete="tel-national"
-                              inputMode="tel"
-                              value={form.whatsapp}
-                              onChange={(e) => set("whatsapp", e.target.value)}
-                              placeholder="10 1234 5678"
-                              className={cls(errors.whatsapp)}
-                              aria-invalid={!!errors.whatsapp}
-                            />
-                          </Field>
-                        </>
-                      ) : (
-                        <>
-                          <Field
-                            id="whatsapp"
-                            label="Nomor WhatsApp aktif"
-                            required
-                            error={errors.whatsapp}
-                          >
-                            <input
-                              id="whatsapp"
-                              type="tel"
-                              autoComplete="tel"
-                              inputMode="tel"
-                              value={form.whatsapp}
-                              onChange={(e) => set("whatsapp", e.target.value)}
-                              placeholder="+62 xxx xxxx xxxx"
-                              className={cls(errors.whatsapp)}
-                              aria-invalid={!!errors.whatsapp}
-                            />
-                          </Field>
-
-                          <Field
-                            id="email"
-                            label="Email"
-                            required
-                            error={errors.email}
-                          >
-                            <input
-                              id="email"
-                              type="email"
-                              autoComplete="email"
-                              value={form.email}
-                              onChange={(e) => set("email", e.target.value)}
-                              placeholder="nama@email.com"
-                              className={cls(errors.email)}
-                              aria-invalid={!!errors.email}
-                            />
-                          </Field>
-                        </>
-                      )}
-
-                      {form.domisili === "luar" && (
-                        <div className="sm:col-span-2">
-                          <Field
-                            id="email"
-                            label="Email"
-                            required
-                            error={errors.email}
-                          >
-                            <input
-                              id="email"
-                              type="email"
-                              autoComplete="email"
-                              value={form.email}
-                              onChange={(e) => set("email", e.target.value)}
-                              placeholder="nama@email.com"
-                              className={cls(errors.email)}
-                              aria-invalid={!!errors.email}
-                            />
-                          </Field>
-                        </div>
-                      )}
                     </div>
 
                     {form.domisili === "luar" ? (
@@ -1145,16 +1108,128 @@ export default function DaftarPage({
                         )}
                       </div>
                     )}
+                    <GroupTitle
+                      title="Kontak"
+                      desc="Kami menghubungi Anda melalui WhatsApp dan email."
+                    />
+
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      {form.domisili === "luar" ? (
+                        <>
+                          <Field
+                            id="kodeWhatsapp"
+                            label="Kode negara WhatsApp"
+                            required
+                            error={errors.kodeWhatsapp}
+                            hint="Pilih kode negara. Contoh: +82 Korea Selatan, +60 Malaysia."
+                          >
+                            <SelectField
+                              id="kodeWhatsapp"
+                              value={form.kodeWhatsapp}
+                              onChange={setKodeNegara}
+                              options={KODE_NEGARA.map((k) => ({
+                                value: k.kode,
+                                label: `${k.negara} (+${k.kode})`,
+                              }))}
+                              placeholder="Pilih kode negara"
+                              error={errors.kodeWhatsapp}
+                            />
+                          </Field>
+
+                          <Field
+                            id="whatsapp"
+                            label="Nomor WhatsApp aktif"
+                            required
+                            error={errors.whatsapp}
+                            hint="Tulis tanpa kode negara, contoh 10 1234 5678."
+                          >
+                            <input
+                              id="whatsapp"
+                              type="tel"
+                              autoComplete="tel-national"
+                              inputMode="tel"
+                              value={form.whatsapp}
+                              onChange={(e) => set("whatsapp", e.target.value)}
+                              placeholder="10 1234 5678"
+                              className={cls(errors.whatsapp)}
+                              aria-invalid={!!errors.whatsapp}
+                            />
+                          </Field>
+                        </>
+                      ) : (
+                        <>
+                          <Field
+                            id="whatsapp"
+                            label="Nomor WhatsApp aktif"
+                            required
+                            error={errors.whatsapp}
+                          >
+                            <input
+                              id="whatsapp"
+                              type="tel"
+                              autoComplete="tel"
+                              inputMode="tel"
+                              value={form.whatsapp}
+                              onChange={(e) => set("whatsapp", e.target.value)}
+                              placeholder="+62 xxx xxxx xxxx"
+                              className={cls(errors.whatsapp)}
+                              aria-invalid={!!errors.whatsapp}
+                            />
+                          </Field>
+
+                          <Field
+                            id="email"
+                            label="Email"
+                            required
+                            error={errors.email}
+                          >
+                            <input
+                              id="email"
+                              type="email"
+                              autoComplete="email"
+                              value={form.email}
+                              onChange={(e) => set("email", e.target.value)}
+                              placeholder="nama@email.com"
+                              className={cls(errors.email)}
+                              aria-invalid={!!errors.email}
+                            />
+                          </Field>
+                        </>
+                      )}
+
+                      {form.domisili === "luar" && (
+                        <div className="sm:col-span-2">
+                          <Field
+                            id="email"
+                            label="Email"
+                            required
+                            error={errors.email}
+                          >
+                            <input
+                              id="email"
+                              type="email"
+                              autoComplete="email"
+                              value={form.email}
+                              onChange={(e) => set("email", e.target.value)}
+                              placeholder="nama@email.com"
+                              className={cls(errors.email)}
+                              aria-invalid={!!errors.email}
+                            />
+                          </Field>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 )}
 
                 {/* ---------- Tahap 2 ---------- */}
                 {step === 1 && (
-                  <div className="mt-5 space-y-6">
+                  <div className="mt-6 space-y-6">
                     <fieldset>
-                      <legend className="mb-2 text-sm font-semibold text-deep">
+                      <legend className="mb-2 text-sm font-medium text-gray-900">
                         Status Anda saat ini
-                        <span className="ml-0.5 text-[#E3081C]">*</span>
+                        <span className="ml-0.5 text-red-600">*</span>
                       </legend>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {STATUS.map((o) => (
@@ -1197,9 +1272,9 @@ export default function DaftarPage({
                     </fieldset>
 
                     <fieldset>
-                      <legend className="mb-2 text-sm font-semibold text-deep">
+                      <legend className="mb-2 text-sm font-medium text-gray-900">
                         Apakah Anda sudah memiliki bisnis atau ide bisnis?
-                        <span className="ml-0.5 text-[#E3081C]">*</span>
+                        <span className="ml-0.5 text-red-600">*</span>
                       </legend>
                       <div className="grid gap-2">
                         {IDE.map((o) => (
@@ -1224,7 +1299,7 @@ export default function DaftarPage({
                     </fieldset>
 
                     <fieldset>
-                      <legend className="mb-2 text-sm font-semibold text-deep">
+                      <legend className="mb-2 text-sm font-medium text-gray-900">
                         Berapa kisaran personal income (pendapatan pribadi) Anda
                         per bulan?
                       </legend>
@@ -1260,11 +1335,11 @@ export default function DaftarPage({
 
                 {/* ---------- Tahap 3 ---------- */}
                 {step === 2 && (
-                  <div className="mt-5 space-y-6">
+                  <div className="mt-6 space-y-6">
                     <fieldset>
-                      <legend className="text-sm font-semibold text-deep">
+                      <legend className="text-sm font-medium text-gray-900">
                         Apa tujuan utama Anda mengikuti program ini?
-                        <span className="ml-0.5 text-[#E3081C]">*</span>
+                        <span className="ml-0.5 text-red-600">*</span>
                       </legend>
                       <p className="mb-2 mt-1 text-xs text-gray-500">
                         Boleh pilih lebih dari satu sesuai tujuan Anda.
@@ -1348,7 +1423,7 @@ export default function DaftarPage({
                           errors.setuju
                             ? "border-red-400 bg-red-50/40"
                             : form.setuju
-                              ? "border-[#0052A4] bg-[#0052A4]/[0.05]"
+                              ? "border-gray-900 bg-gray-50"
                               : "border-gray-200 bg-white"
                         }`}
                       >
@@ -1356,13 +1431,13 @@ export default function DaftarPage({
                           type="checkbox"
                           checked={form.setuju}
                           onChange={(e) => set("setuju", e.target.checked)}
-                          className="mt-1 h-4 w-4 shrink-0 accent-[#0052A4]"
+                          className="mt-1 h-4 w-4 shrink-0 accent-gray-900"
                           aria-invalid={!!errors.setuju}
                         />
                         <span className="text-gray-700">
-                          <span className="font-semibold text-deep">
+                          <span className="font-medium text-gray-900">
                             Persetujuan penggunaan data
-                            <span className="ml-0.5 text-[#E3081C]">*</span>
+                            <span className="ml-0.5 text-red-600">*</span>
                           </span>
                           <br />
                           Saya menyetujui penggunaan data yang saya berikan
@@ -1393,18 +1468,18 @@ export default function DaftarPage({
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between gap-3 border-t border-gray-100 bg-white px-5 py-4 sm:px-8">
+              <div className="flex items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 px-5 py-4 sm:px-8">
                 {step > 0 ? (
                   <button
                     type="button"
                     onClick={() => setStep((s) => s - 1)}
-                    className="rounded-full px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4]"
+                    className="rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
                   >
                     Kembali
                   </button>
                 ) : (
                   <span className="text-xs text-gray-400">
-                    <span className="text-[#E3081C]">*</span> wajib diisi
+                    <span className="text-red-600">*</span> wajib diisi
                   </span>
                 )}
 
