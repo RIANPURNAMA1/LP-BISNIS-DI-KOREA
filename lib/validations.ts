@@ -32,6 +32,9 @@ export const pendaftaranSchema = z.object({
     .array(z.string())
     .min(1, "Pilih minimal satu tujuan."),
   sumber: z.string().optional().default(""),
+  wilayah: z.enum(["jabodetabek", "luar_jabodetabek", "luar_negeri"], {
+    message: "Wilayah domisili wajib dipilih.",
+  }),
 });
 
 export type PendaftaranInput = z.infer<typeof pendaftaranSchema>;

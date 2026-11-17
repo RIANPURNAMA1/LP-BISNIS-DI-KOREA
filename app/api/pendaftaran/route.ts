@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { getGrupUrlUntuk } from "@/lib/grup";
 import {
   pendaftaranSchema,
   listQuerySchema,
@@ -50,8 +51,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Link grup WhatsApp dipilih di server sesuai wilayah pendaftar.
+    let groupUrl = "";
+    try {
+      groupUrl = await getGrupUrlUntuk(result.data.wilayah);
+    } catch (e) {
+      // Pendaftaran sudah tersimpan; kegagalan baca link tidak boleh menggagalkannya.
+      console.error("Gagal membaca link grup:", e);
+    }
+
     return NextResponse.json(
-      { success: true, id: pendaftaran.id },
+      { success: true, id: pendaftaran.id, groupUrl },
       { status: 201 }
     );
   } catch (error) {

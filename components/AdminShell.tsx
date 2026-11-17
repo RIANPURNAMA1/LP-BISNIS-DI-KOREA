@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Globe,
   LogOut,
+  MessageCircle,
   UserCircle2,
   ShieldCheck,
   type LucideIcon,
@@ -17,6 +18,7 @@ import {
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/pendaftaran", label: "Data Pendaftar", icon: ClipboardList },
+  { href: "/admin/pengaturan", label: "Grup WhatsApp", icon: MessageCircle },
   { href: "/admin/profil", label: "Profil", icon: UserCircle2 },
 ];
 

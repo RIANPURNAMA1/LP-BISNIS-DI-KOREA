@@ -23,10 +23,22 @@ model Pendaftaran {
   pendapatan String?  @db.VarChar(50)
   tujuan     String   @db.LongText
   sumber     String?  @db.VarChar(100)
+  // jabodetabek | luar_jabodetabek | luar_negeri (kosong untuk data lama)
+  wilayah    String   @default("") @db.VarChar(30)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("pendaftaran")
+}
+
+// Pengaturan umum situs berbentuk key-value, diubah lewat halaman admin.
+// Dipakai antara lain untuk link grup WhatsApp per wilayah.
+model Pengaturan {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pengaturan")
 }
 
 model AdminUser {

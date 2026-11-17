@@ -34,7 +34,14 @@ const COLUMNS: Column[] = [
   { header: "Cerita Bisnis", width: 46 },
   { header: "Sumber Informasi", width: 20 },
   { header: "Tanggal Daftar", width: 20, align: "center" },
+  { header: "Wilayah Grup", width: 20, align: "center" },
 ];
+
+const WILAYAH_LABEL: Record<string, string> = {
+  jabodetabek: "Jabodetabek",
+  luar_jabodetabek: "Luar Jabodetabek",
+  luar_negeri: "Luar Negeri",
+};
 
 const PROJECT_NAME = "INDONESIA-KOREA BUSINESS PROJECT";
 
@@ -208,6 +215,7 @@ export async function GET(req: NextRequest) {
         row.cerita ?? "",
         row.sumber ?? "",
         row.createdAt,
+        WILAYAH_LABEL[row.wilayah] ?? "",
       ];
 
       const excelRow = sheet.addRow(values);

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { WA_GROUP_URL } from "@/lib/site";
 
 /* ------------------------------------------------------------------ */
 /* Data & tipe                                                         */
@@ -34,7 +33,12 @@ export type RegistrationPayload = {
   pendapatan: string;
   tujuan: string[];
   sumber: string;
+  /** jabodetabek | luar_jabodetabek | luar_negeri — menentukan grup WhatsApp. */
+  wilayah: "jabodetabek" | "luar_jabodetabek" | "luar_negeri";
 };
+
+/** Hasil dari server setelah pendaftaran tersimpan. */
+export type RegistrationResult = { groupUrl?: string } | void;
 
 type Domisili = "indonesia" | "luar";
 
@@ -44,6 +48,7 @@ type FormState = {
   whatsapp: string;
   kodeWhatsapp: string; // kode negara, tanpa "+"
   email: string;
+  wilayahId: "" | "jabodetabek" | "luar_jabodetabek"; // wilayah (Indonesia)
   kotaDomisili: string; // kota/daerah domisili (Indonesia)
   negara: string; // manual, luar negeri
   provinsiLuar: string;
@@ -67,6 +72,7 @@ const initialForm: FormState = {
   whatsapp: "",
   kodeWhatsapp: "",
   email: "",
+  wilayahId: "",
   kotaDomisili: "",
   negara: "",
   provinsiLuar: "",
@@ -83,6 +89,16 @@ const initialForm: FormState = {
   sumber: "",
   setuju: false,
 };
+
+// Daerah Jabodetabek yang bisa dipilih (disimpan di kolom kabupaten).
+const JABODETABEK = [
+  "Jakarta",
+  "Bogor (Kota/Kabupaten)",
+  "Depok",
+  "Tangerang (Kota/Kabupaten)",
+  "Tangerang Selatan",
+  "Bekasi (Kota/Kabupaten)",
+];
 
 const STATUS = ["Karyawan", "Pelajar atau mahasiswa", "Pengusaha"];
 const STATUS_LAIN = "__lain__";
@@ -502,7 +518,9 @@ export default function DaftarPage({
   homeHref = "/",
 }: {
   /** Kirim data ke backend. Jika tidak diisi, data hanya ditampilkan di console. */
-  onSubmit?: (data: RegistrationPayload) => Promise<void> | void;
+  onSubmit?: (
+    data: RegistrationPayload,
+  ) => Promise<RegistrationResult> | RegistrationResult;
   /** Tujuan tautan "Kembali ke beranda". */
   homeHref?: string;
 }) {
@@ -512,6 +530,7 @@ export default function DaftarPage({
   const [sending, setSending] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [done, setDone] = useState(false);
+  const [groupUrl, setGroupUrl] = useState("");
 
   useEffect(() => {
     document.title =
@@ -541,6 +560,7 @@ export default function DaftarPage({
       domisili: value,
       whatsapp: "",
       kodeWhatsapp: "",
+      wilayahId: "",
       kotaDomisili: "",
       negara: "",
       provinsiLuar: "",
@@ -601,8 +621,12 @@ export default function DaftarPage({
           e.provinsiLuar = "Tuliskan provinsi/state Anda.";
         if (!form.kotaLuar.trim()) e.kotaLuar = "Tuliskan kota Anda.";
       } else {
-        if (!form.kotaDomisili.trim())
-          e.kotaDomisili = "Tuliskan kota/daerah domisili Anda.";
+        if (!form.wilayahId) e.wilayahId = "Pilih wilayah domisili Anda.";
+        else if (!form.kotaDomisili.trim())
+          e.kotaDomisili =
+            form.wilayahId === "jabodetabek"
+              ? "Pilih daerah domisili Anda."
+              : "Tuliskan kota/daerah domisili Anda.";
       }
     }
 
@@ -663,13 +687,20 @@ export default function DaftarPage({
       tujuan: tujuanLain ? [...form.tujuan, tujuanLain] : form.tujuan,
       sumber:
         form.sumber === STATUS_LAIN ? form.sumberLain.trim() : form.sumber,
+      wilayah: isLuar
+        ? "luar_negeri"
+        : form.wilayahId === "jabodetabek"
+          ? "jabodetabek"
+          : "luar_jabodetabek",
     };
 
     setSending(true);
     setSubmitError("");
     try {
-      if (onSubmit) await onSubmit(payload);
+      let result: RegistrationResult = undefined;
+      if (onSubmit) result = await onSubmit(payload);
       else console.log("Pendaftaran:", payload);
+      setGroupUrl(result?.groupUrl?.trim() ?? "");
       setDone(true);
     } catch (err) {
       if (err instanceof RegistrationFieldError) {
@@ -737,13 +768,13 @@ export default function DaftarPage({
                 <h2 className="text-lg font-bold text-deep">
                   Gabung Grup WhatsApp
                 </h2>
-                {WA_GROUP_URL ? (
+                {groupUrl ? (
                   <>
                     <p className="mt-2 text-sm leading-6 text-gray-600">
                       Klik tombol di bawah, lalu pilih &ldquo;Gabung Grup&rdquo;.
                     </p>
                     <a
-                      href={WA_GROUP_URL}
+                      href={groupUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1EBE5A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
@@ -761,12 +792,12 @@ export default function DaftarPage({
                     <p className="mt-3 break-all text-center text-xs text-gray-500">
                       atau buka link:{" "}
                       <a
-                        href={WA_GROUP_URL}
+                        href={groupUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-[#128C7E] underline"
                       >
-                        {WA_GROUP_URL}
+                        {groupUrl}
                       </a>
                     </p>
                   </>
@@ -1038,23 +1069,81 @@ export default function DaftarPage({
                         </Field>
                       </div>
                     ) : (
-                      <Field
-                        id="kotaDomisili"
-                        label="Kota/Daerah Domisili"
-                        required
-                        error={errors.kotaDomisili}
-                      >
-                        <input
-                          id="kotaDomisili"
-                          type="text"
-                          autoComplete="address-level2"
-                          value={form.kotaDomisili}
-                          onChange={(e) => set("kotaDomisili", e.target.value)}
-                          placeholder="Contoh: Jakarta Selatan, Bandung, Surabaya"
-                          className={cls(errors.kotaDomisili)}
-                          aria-invalid={!!errors.kotaDomisili}
-                        />
-                      </Field>
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        <Field
+                          id="wilayahId"
+                          label="Wilayah Domisili"
+                          required
+                          error={errors.wilayahId}
+                        >
+                          <SelectField
+                            id="wilayahId"
+                            value={form.wilayahId}
+                            onChange={(v) => {
+                              setForm((f) => ({
+                                ...f,
+                                wilayahId: v as FormState["wilayahId"],
+                                kotaDomisili: "",
+                              }));
+                              setErrors((er) => {
+                                const next = { ...er };
+                                delete next.wilayahId;
+                                delete next.kotaDomisili;
+                                return next;
+                              });
+                            }}
+                            options={[
+                              { value: "jabodetabek", label: "Jabodetabek" },
+                              {
+                                value: "luar_jabodetabek",
+                                label: "Luar Jabodetabek",
+                              },
+                            ]}
+                            placeholder="Pilih wilayah"
+                            error={errors.wilayahId}
+                          />
+                        </Field>
+
+                        {form.wilayahId === "jabodetabek" && (
+                          <Field
+                            id="kotaDomisili"
+                            label="Daerah Domisili"
+                            required
+                            error={errors.kotaDomisili}
+                          >
+                            <SelectField
+                              id="kotaDomisili"
+                              value={form.kotaDomisili}
+                              onChange={(v) => set("kotaDomisili", v)}
+                              options={simple(JABODETABEK)}
+                              placeholder="Pilih daerah"
+                              error={errors.kotaDomisili}
+                            />
+                          </Field>
+                        )}
+
+                        {form.wilayahId === "luar_jabodetabek" && (
+                          <Field
+                            id="kotaDomisili"
+                            label="Kota/Daerah Domisili"
+                            required
+                            error={errors.kotaDomisili}
+                          >
+                            <input
+                              id="kotaDomisili"
+                              type="text"
+                              autoComplete="address-level2"
+                              value={form.kotaDomisili}
+                              onChange={(e) =>
+                                set("kotaDomisili", e.target.value)
+                              }
+                              placeholder="Contoh: Bandung, Surabaya, Medan"
+                              className={cls(errors.kotaDomisili)}
+                              aria-invalid={!!errors.kotaDomisili}
+                            />
+                          </Field>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

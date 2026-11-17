@@ -40,6 +40,7 @@ type Pendaftar = {
   pendapatan: string;
   tujuan: string[];
   sumber: string;
+  wilayah?: string;
   createdAt?: string;
   created_at?: string;
   updatedAt?: string;
@@ -49,6 +50,16 @@ type Pendaftar = {
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
+
+// Wilayah dari formulir, beserta grup WhatsApp yang diberikan ke pendaftar.
+const WILAYAH_INFO: Record<string, { label: string; grup: string }> = {
+  jabodetabek: { label: "Jabodetabek", grup: "Grup Jabodetabek" },
+  luar_jabodetabek: {
+    label: "Luar Jabodetabek",
+    grup: "Grup Luar Jabodetabek",
+  },
+  luar_negeri: { label: "Luar Negeri", grup: "Grup Luar Jabodetabek" },
+};
 
 function getInitials(name: string) {
   return (
@@ -217,6 +228,7 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
     .join(", ");
 
   const isLuarNegeri = data.provinsi === "Luar Negeri";
+  const wilayahInfo = data.wilayah ? WILAYAH_INFO[data.wilayah] : undefined;
 
   // Data baru (domisili Indonesia) hanya menyimpan kota/daerah di kolom kabupaten.
   const alamatTunggal =
@@ -331,6 +343,26 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
 
           <SectionCard icon={MapPin} title="Alamat">
             <dl>
+              <InfoRow
+                label="Wilayah Domisili"
+                value={
+                  wilayahInfo ? (
+                    <Badge tone="blue">{wilayahInfo.label}</Badge>
+                  ) : (
+                    <span className="text-gray-400">
+                      Belum tercatat (pendaftaran lama)
+                    </span>
+                  )
+                }
+              />
+              <InfoRow
+                label="Grup WhatsApp"
+                value={
+                  wilayahInfo ? (
+                    <Badge tone="green">{wilayahInfo.grup}</Badge>
+                  ) : null
+                }
+              />
               {alamatTunggal ? (
                 <InfoRow
                   label="Kota/Daerah Domisili"
