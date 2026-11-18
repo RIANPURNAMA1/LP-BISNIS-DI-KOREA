@@ -35,13 +35,64 @@ export async function GET() {
       prisma.pendaftaran.count({ where: { createdAt: { gte: monthStart } } }),
     ]);
 
+    // Deret harian 75 hari terakhir (zona waktu Jakarta) untuk grafik & tren.
+    const DAY = 86400000;
+    const RANGE = 75;
+    const keyOf = (d: Date) =>
+      d.toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+    const dailyKeys = Array.from({ length: RANGE }, (_, i) =>
+      keyOf(new Date(now.getTime() - (RANGE - 1 - i) * DAY))
+    );
+    const rangeRows = await prisma.pendaftaran.findMany({
+      select: { createdAt: true },
+      where: { createdAt: { gte: new Date(now.getTime() - (RANGE + 1) * DAY) } },
+    });
+    const bucket = new Map<string, number>();
+    for (const r of rangeRows) {
+      const k = keyOf(r.createdAt);
+      bucket.set(k, (bucket.get(k) ?? 0) + 1);
+    }
+    const daily = dailyKeys.map((date) => ({ date, count: bucket.get(date) ?? 0 }));
+
+    // Jumlah pada jendela [from, from+len) dihitung dari akhir deret (0 = hari ini).
+    const sumBack = (daysBackStart: number, len: number) => {
+      let t = 0;
+      for (let i = 0; i < len; i++) {
+        const idx = RANGE - 1 - (daysBackStart + i);
+        if (idx >= 0 && idx < RANGE) t += daily[idx].count;
+      }
+      return t;
+    };
+    const todayKey = dailyKeys[RANGE - 1];
+    const [ty, tm, td] = todayKey.split("-").map(Number);
+    const dow = new Date(Date.UTC(ty, tm - 1, td)).getUTCDay(); // 0=Min
+    const elapsedWeek = dow === 0 ? 7 : dow; // hari berjalan sejak Senin
+    const elapsedMonth = td;
+    const prevMonthLen = new Date(Date.UTC(ty, tm - 1, 0)).getUTCDate();
+
+    const prev = {
+      today: sumBack(1, 1),
+      week: sumBack(7, elapsedWeek), // hari yang sama minggu lalu
+      month: sumBack(prevMonthLen, elapsedMonth), // tanggal yang sama bulan lalu
+    };
+
     // Breakdown per provinsi/negara (top 10)
-    const byProvinsi = await prisma.pendaftaran.groupBy({
+    const byProvinsiRaw = await prisma.pendaftaran.groupBy({
       by: ["provinsi", "kabupaten"],
       _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-      take: 10,
     });
+    const provMap = new Map<string, number>();
+    for (const item of byProvinsiRaw) {
+      const label =
+        item.provinsi === "Luar Negeri"
+          ? `Luar Negeri - ${item.kabupaten}`
+          : item.provinsi || item.kabupaten || "Tidak diisi";
+      provMap.set(label, (provMap.get(label) ?? 0) + item._count.id);
+    }
+    const mergedProvinsi = [...provMap.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
 
     // Breakdown per status
     const byStatus = await prisma.pendaftaran.groupBy({
@@ -82,7 +133,7 @@ export async function GET() {
     // Format response agar konsisten
     const formatGroup = (items: { _count: { id: number }; [key: string]: unknown }[], key: string) =>
       items.map((item) => ({
-        label: (item[key] as string) || "(kosong)",
+        label: (item[key] as string) || "Tidak diisi",
         value: item._count.id,
       }));
 
@@ -90,16 +141,13 @@ export async function GET() {
       success: true,
       data: {
         total,
-        today,
-        week,
-        month,
-        byProvinsi: byProvinsi.map((item) => ({
-          label:
-            item.provinsi === "Luar Negeri"
-              ? `Luar Negeri - ${item.kabupaten}`
-              : item.provinsi || "(kosong)",
-          value: item._count.id,
-        })),
+        // dihitung dari deret harian (zona Jakarta) agar sebanding dengan `prev`
+        today: sumBack(0, 1),
+        week: sumBack(0, elapsedWeek),
+        month: sumBack(0, elapsedMonth),
+        byProvinsi: mergedProvinsi,
+        daily,
+        prev,
         byStatus: formatGroup(byStatus, "status"),
         byIde: formatGroup(byIde, "ide"),
         bySumber: formatGroup(bySumber, "sumber"),

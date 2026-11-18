@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { getGrupUrlUntuk } from "@/lib/grup";
+import { notifyPendaftaranBaru } from "@/lib/wa-notif";
 import {
   pendaftaranSchema,
   listQuerySchema,
@@ -49,6 +50,23 @@ export async function POST(req: NextRequest) {
         email,
         tujuan: serializeTujuan(result.data.tujuan),
       },
+    });
+
+    // Notifikasi WhatsApp ke admin (di latar belakang; tidak menunda/menggagalkan respons).
+    void notifyPendaftaranBaru({
+      id: pendaftaran.id,
+      nama: pendaftaran.nama,
+      whatsapp: pendaftaran.whatsapp,
+      email: pendaftaran.email,
+      provinsi: pendaftaran.provinsi,
+      kabupaten: pendaftaran.kabupaten,
+      desa: pendaftaran.desa,
+      status: pendaftaran.status,
+      ide: pendaftaran.ide,
+      pendapatan: pendaftaran.pendapatan,
+      tujuan: parseTujuan(pendaftaran.tujuan),
+      sumber: pendaftaran.sumber,
+      createdAt: pendaftaran.createdAt,
     });
 
     // Link grup WhatsApp dipilih di server sesuai wilayah pendaftar.
