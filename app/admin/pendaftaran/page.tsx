@@ -2,7 +2,7 @@
 
 import { EVENT_OPTIONS, eventLabel } from "@/lib/event";
 import EventSelect from "@/components/EventSelect";
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -94,7 +94,10 @@ function formatTanggal(r: PendaftarRow) {
       });
 }
 
-const MIN_ROWS = 40; // baris kosong pengisi agar tabel penuh sampai bawah layar
+// Tinggi baris tabel (px) dan tinggi footer; dipakai menghitung berapa baris yang muat di layar.
+const ROW_H = 53;
+const FOOTER_H = 57;
+const HEAD_H_FALLBACK = 42;
 
 const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRow) => string }[] = [
   { key: "nama", label: "Nama", width: 180, get: (r) => r.nama ?? "" },
@@ -153,9 +156,36 @@ function PendaftaranList() {
 
   const [eventFilter, setEventFilter] = useState("");
 
-  const limit = 20;
+  // Jumlah baris per halaman = jumlah baris yang muat penuh di tinggi tabel layar ini.
+  // Halaman baru (pagination) baru muncul jika data lebih banyak dari itu.
+  const [limit, setLimit] = useState(0);
+  const limitRef = useRef(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    const calc = () => {
+      const toolbarH = toolbarRef.current?.offsetHeight ?? 76;
+      const headH =
+        card.querySelector("thead")?.getBoundingClientRect().height || HEAD_H_FALLBACK;
+      const space = card.clientHeight - toolbarH - FOOTER_H - headH - 8;
+      const n = Math.max(5, Math.floor(space / ROW_H));
+      if (limitRef.current !== n) {
+        if (limitRef.current !== 0) setPage(1);
+        limitRef.current = n;
+        setLimit(n);
+      }
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(card);
+    return () => ro.disconnect();
+  }, []);
 
   const fetchData = useCallback(() => {
+    if (!limit) return;
     setLoading(true);
     setError("");
     const params = new URLSearchParams({
@@ -180,7 +210,7 @@ function PendaftaranList() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [page, search, eventFilter]);
+  }, [page, search, eventFilter, limit]);
 
   useEffect(() => {
     fetchData();
@@ -398,9 +428,15 @@ function PendaftaranList() {
         </div>
       </div>
 
-      <div className="-mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl rounded-tl-none bg-white shadow-sm ring-1 ring-slate-200/60">
+      <div
+        ref={cardRef}
+        className="-mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl rounded-tl-none bg-white shadow-sm ring-1 ring-slate-200/60"
+      >
         {/* Toolbar */}
-        <div className="flex shrink-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          ref={toolbarRef}
+          className="flex shrink-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
           <form
             onSubmit={handleSearch}
             className="flex h-11 w-full items-center gap-2 rounded-full border border-slate-200 bg-white pl-4 pr-1.5 transition-colors focus-within:border-[#0052A4]/50 sm:max-w-sm"
@@ -543,7 +579,7 @@ function PendaftaranList() {
                   const isSel = selected.has(r.id);
                   const bg = isSel ? "bg-[#0052A4]/[0.06]" : "bg-white group-hover:bg-slate-50";
                   return (
-                    <tr key={r.id} className="group">
+                    <tr key={r.id} className="group h-[53px]">
                       <td className={`relative border-b border-l border-r border-slate-200 px-4 py-3.5 ${bg}`}>
                         {isSel && (
                           <span className="absolute inset-y-0 left-0 w-1 rounded-r bg-[#0052A4]" />
@@ -625,7 +661,7 @@ function PendaftaranList() {
                     </tr>
                   );
                 })}
-                {Array.from({ length: Math.max(0, MIN_ROWS - data.length) }).map((_, k) => (
+                {Array.from({ length: Math.max(0, limit - data.length) }).map((_, k) => (
                   <tr key={`empty-${k}`}>
                     <td className="h-[53px] border-b border-l border-r border-slate-200 bg-white" />
                     {COLUMNS.map((c) => (
@@ -640,11 +676,14 @@ function PendaftaranList() {
         )}
 
         {/* Footer / paginasi */}
-        {!loading && !error && total > 0 && (
-          <div className="flex shrink-0 flex-col items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 text-xs text-slate-500 sm:flex-row">
+        {!loading && !error && (
+          <div className="flex h-[57px] shrink-0 flex-col items-center justify-between gap-2 border-t border-slate-100 px-4 text-xs text-slate-500 sm:flex-row">
             <span>
-              {(page - 1) * limit + 1}–{(page - 1) * limit + data.length} dari {total} pendaftar
+              {total === 0
+                ? "0 pendaftar"
+                : `${(page - 1) * limit + 1}–${(page - 1) * limit + data.length} dari ${total} pendaftar`}
             </span>
+            {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -667,6 +706,7 @@ function PendaftaranList() {
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
+            )}
           </div>
         )}
       </div>
