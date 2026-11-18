@@ -15,11 +15,11 @@ type Resp = {
 
 type Message = { type: "success" | "error"; text: string };
 
-const card = "rounded-md border border-gray-300 bg-white";
+const card = "rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60";
 const btnPrimary =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60";
 const btnGhost =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
 
 const STATUS_LABEL: Record<WaStatus, string> = {
   disconnected: "Belum terhubung",
@@ -153,14 +153,14 @@ export default function NotifikasiWA() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-gray-900">Notifikasi WhatsApp</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-slate-900">Notifikasi WhatsApp</h2>
+        <p className="text-sm text-slate-500">
           Hubungkan WhatsApp admin, lalu atur nomor yang menerima pemberitahuan setiap ada pendaftar baru.
         </p>
       </div>
 
       {loadError && (
-        <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           {loadError}
         </div>
@@ -169,11 +169,11 @@ export default function NotifikasiWA() {
       <div className="grid items-start gap-6 lg:grid-cols-2">
         {/* Langkah 1 */}
         <section className={card}>
-          <header className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-            <h3 className="text-sm font-bold text-gray-900">1. Hubungkan WhatsApp</h3>
+          <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <h3 className="text-sm font-bold text-slate-900">1. Hubungkan WhatsApp</h3>
             <span
               className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                connected ? "text-emerald-600" : "text-gray-500"
+                connected ? "text-emerald-600" : "text-slate-500"
               }`}
             >
               <span
@@ -181,7 +181,7 @@ export default function NotifikasiWA() {
                   connected
                     ? "bg-emerald-500"
                     : status === "disconnected"
-                      ? "bg-gray-300"
+                      ? "bg-slate-300"
                       : "animate-pulse bg-amber-400"
                 }`}
               />
@@ -192,7 +192,7 @@ export default function NotifikasiWA() {
           <div className="space-y-4 px-5 py-5">
             {status === "disconnected" && (
               <>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Klik tombol di bawah, lalu scan QR dari WhatsApp di HP yang akan dipakai sebagai pengirim
                   notifikasi. Disarankan memakai nomor khusus, bukan nomor pribadi.
                 </p>
@@ -204,7 +204,7 @@ export default function NotifikasiWA() {
             )}
 
             {status === "connecting" && (
-              <div className="flex items-center gap-3 py-6 text-sm text-gray-600">
+              <div className="flex items-center gap-3 py-6 text-sm text-slate-600">
                 <Loader2 className="h-5 w-5 animate-spin text-[#0052A4]" />
                 Menyiapkan koneksi...
               </div>
@@ -216,9 +216,9 @@ export default function NotifikasiWA() {
                 <img
                   src={wa.qr}
                   alt="QR WhatsApp"
-                  className="h-64 w-64 shrink-0 rounded-md border border-gray-300"
+                  className="h-64 w-64 shrink-0 rounded-xl border border-slate-200"
                 />
-                <ol className="list-decimal space-y-1.5 pl-5 text-sm text-gray-600">
+                <ol className="list-decimal space-y-1.5 pl-5 text-sm text-slate-600">
                   <li>Buka WhatsApp di HP.</li>
                   <li>
                     Ketuk <b>Menu (⋮)</b> atau <b>Pengaturan</b> &rarr; <b>Perangkat tertaut</b>.
@@ -226,14 +226,14 @@ export default function NotifikasiWA() {
                   <li>
                     Ketuk <b>Tautkan perangkat</b>, lalu arahkan kamera ke QR ini.
                   </li>
-                  <li className="text-xs text-gray-400">QR diperbarui otomatis. Jika kedaluwarsa, klik Hubungkan lagi.</li>
+                  <li className="text-xs text-slate-400">QR diperbarui otomatis. Jika kedaluwarsa, klik Hubungkan lagi.</li>
                 </ol>
               </div>
             )}
 
             {connected && (
               <>
-                <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                   Terhubung sebagai <b>+{wa?.number ?? "-"}</b>. Koneksi tersimpan di server dan pulih
                   otomatis jika server restart.
                 </div>
@@ -248,16 +248,16 @@ export default function NotifikasiWA() {
 
         {/* Langkah 2 */}
         <section className={`${card} ${connected ? "" : "opacity-60"}`}>
-          <header className="border-b border-gray-200 px-5 py-4">
-            <h3 className="text-sm font-bold text-gray-900">2. Notifikasi pendaftar baru</h3>
+          <header className="border-b border-slate-100 px-5 py-4">
+            <h3 className="text-sm font-bold text-slate-900">2. Notifikasi pendaftar baru</h3>
             {!connected && (
-              <p className="mt-0.5 text-xs text-gray-500">Aktif setelah WhatsApp terhubung.</p>
+              <p className="mt-0.5 text-xs text-slate-500">Aktif setelah WhatsApp terhubung.</p>
             )}
           </header>
 
           <form onSubmit={save} className="space-y-4 px-5 py-5">
             <label className="flex cursor-pointer items-center justify-between gap-4">
-              <span className="text-sm font-medium text-gray-800">
+              <span className="text-sm font-medium text-slate-800">
                 Kirim notifikasi setiap ada pendaftar baru
               </span>
               <input
@@ -265,12 +265,12 @@ export default function NotifikasiWA() {
                 checked={enabled}
                 disabled={!connected}
                 onChange={(e) => setEnabled(e.target.checked)}
-                className="h-5 w-5 rounded border-gray-300 text-[#0052A4]"
+                className="h-5 w-5 rounded border-slate-300 text-[#0052A4]"
               />
             </label>
 
             <div>
-              <label htmlFor="numbers" className="mb-1.5 block text-sm font-medium text-gray-800">
+              <label htmlFor="numbers" className="mb-1.5 block text-sm font-medium text-slate-800">
                 Nomor tujuan admin
               </label>
               <textarea
@@ -280,16 +280,16 @@ export default function NotifikasiWA() {
                 value={numbersText}
                 onChange={(e) => setNumbersText(e.target.value)}
                 placeholder={"081234567890\n+6281298765432"}
-                className="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20 disabled:bg-gray-50"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20 disabled:bg-slate-50"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500">
                 Satu nomor per baris, maksimal 5. Format 08xx atau +62xx diterima.
               </p>
             </div>
 
             {message && (
               <div
-                className={`flex items-start gap-2 rounded-md px-4 py-2.5 text-sm font-medium ${
+                className={`flex items-start gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${
                   message.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
                 }`}
               >
@@ -322,10 +322,10 @@ export default function NotifikasiWA() {
       </div>
 
       <section className={card}>
-        <header className="border-b border-gray-200 px-5 py-3">
-          <h3 className="text-sm font-bold text-gray-900">Contoh pesan yang diterima admin</h3>
+        <header className="border-b border-slate-100 px-5 py-3">
+          <h3 className="text-sm font-bold text-slate-900">Contoh pesan yang diterima admin</h3>
         </header>
-        <pre className="whitespace-pre-wrap px-5 py-4 font-sans text-sm leading-relaxed text-gray-700">{`*Pendaftar baru*
+        <pre className="whitespace-pre-wrap px-5 py-4 font-sans text-sm leading-relaxed text-slate-700">{`*Pendaftar baru*
 _17 Nov 2026, 10.46 WIB_
 
 Nama: Rian Purnama

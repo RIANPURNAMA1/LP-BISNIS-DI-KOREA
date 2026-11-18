@@ -8,7 +8,7 @@ type Links = { jabodetabek: string; luarJabodetabek: string };
 type Message = { type: "success" | "error"; text: string };
 
 const inputCls =
-  "w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
 
 export default function PengaturanGrup() {
   const router = useRouter();
@@ -91,7 +91,7 @@ export default function PengaturanGrup() {
 
   if (loadError) {
     return (
-      <div className="rounded-md border border-red-200 bg-red-50 px-6 py-5 text-sm font-medium text-red-700">
+      <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-sm font-medium text-red-700">
         {loadError}
       </div>
     );
@@ -100,21 +100,21 @@ export default function PengaturanGrup() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Grup WhatsApp</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-slate-900">Grup WhatsApp</h2>
+        <p className="mt-1 text-sm text-slate-500">
           Link grup yang ditampilkan ke pendaftar setelah formulir terkirim,
           sesuai wilayah domisili mereka.
         </p>
       </div>
 
-      <section className="max-w-2xl rounded-md border border-gray-300 bg-white">
+      <section className="max-w-2xl rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
         <form onSubmit={handleSubmit} className="space-y-5 p-5">
           <div>
             <label
               htmlFor="jabodetabek"
-              className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700"
+              className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-700"
             >
-              <Link2 className="h-3.5 w-3.5 text-gray-400" />
+              <Link2 className="h-3.5 w-3.5 text-slate-400" />
               Link grup Jabodetabek
             </label>
             <input
@@ -127,7 +127,7 @@ export default function PengaturanGrup() {
               placeholder="https://chat.whatsapp.com/XXXXXXXX"
               className={inputCls}
             />
-            <p className="mt-1.5 text-xs text-gray-500">
+            <p className="mt-1.5 text-xs text-slate-500">
               Untuk pendaftar dari Jakarta, Bogor, Depok, Tangerang, dan Bekasi.
             </p>
           </div>
@@ -135,9 +135,9 @@ export default function PengaturanGrup() {
           <div>
             <label
               htmlFor="luar"
-              className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700"
+              className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-700"
             >
-              <Link2 className="h-3.5 w-3.5 text-gray-400" />
+              <Link2 className="h-3.5 w-3.5 text-slate-400" />
               Link grup Luar Jabodetabek
             </label>
             <input
@@ -150,13 +150,13 @@ export default function PengaturanGrup() {
               placeholder="https://chat.whatsapp.com/XXXXXXXX"
               className={inputCls}
             />
-            <p className="mt-1.5 text-xs text-gray-500">
+            <p className="mt-1.5 text-xs text-slate-500">
               Untuk pendaftar dari luar Jabodetabek, termasuk yang berdomisili
               di luar negeri.
             </p>
           </div>
 
-          <p className="rounded-md bg-gray-50 px-3.5 py-2.5 text-xs text-gray-500">
+          <p className="rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500">
             Jika dikosongkan, pendaftar akan melihat pesan bahwa link grup
             dikirim lewat WhatsApp.
           </p>
@@ -164,7 +164,7 @@ export default function PengaturanGrup() {
           {message && (
             <div
               role="alert"
-              className={`flex items-start gap-2 rounded-md px-4 py-2.5 text-sm font-medium ${
+              className={`flex items-start gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${
                 message.type === "success"
                   ? "bg-green-50 text-green-700"
                   : "bg-red-50 text-red-700"
@@ -182,7 +182,7 @@ export default function PengaturanGrup() {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" />

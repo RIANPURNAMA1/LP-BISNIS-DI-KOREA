@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import EventSelect from "@/components/EventSelect";
 import {
   AlertCircle,
   ArrowLeft,
   Briefcase,
+  CalendarCheck,
   CalendarClock,
   CheckCircle2,
   ChevronRight,
@@ -41,6 +43,7 @@ type Pendaftar = {
   tujuan: string[];
   sumber: string;
   wilayah?: string;
+  eventStatus?: string;
   createdAt?: string;
   created_at?: string;
   updatedAt?: string;
@@ -155,6 +158,7 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [savingEvent, setSavingEvent] = useState(false);
 
   useEffect(() => {
     fetch(`/api/pendaftaran/${params.id}`)
@@ -166,6 +170,26 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  async function changeEvent(next: string) {
+    if (!data) return;
+    const prev = data.eventStatus ?? "";
+    setData({ ...data, eventStatus: next });
+    setSavingEvent(true);
+    try {
+      const res = await fetch(`/api/pendaftaran/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventStatus: next }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setData((d) => (d ? { ...d, eventStatus: prev } : d));
+      alert("Gagal menyimpan status event. Coba lagi.");
+    } finally {
+      setSavingEvent(false);
+    }
+  }
 
   async function handleDelete() {
     if (!data || !confirm(`Yakin hapus pendaftaran "${data.nama}"?`)) return;
@@ -445,6 +469,16 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
               ) : (
                 <p className="text-sm text-gray-300">—</p>
               )}
+            </div>
+          </SectionCard>
+
+          <SectionCard icon={CalendarCheck} title="Status Event">
+            <div className="py-4">
+              <EventSelect
+                value={data.eventStatus ?? ""}
+                onChange={changeEvent}
+                busy={savingEvent}
+              />
             </div>
           </SectionCard>
 

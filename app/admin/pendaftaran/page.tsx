@@ -1,5 +1,7 @@
 "use client";
 
+import { EVENT_OPTIONS, eventLabel } from "@/lib/event";
+import EventSelect from "@/components/EventSelect";
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -34,6 +36,7 @@ type PendaftarRow = {
   tujuan: string[] | string;
   cerita: string;
   sumber: string;
+  eventStatus?: string;
   createdAt?: string;
   created_at?: string;
 };
@@ -110,6 +113,7 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
     get: (r) => (r.provinsi === "Luar Negeri" ? r.desa : r.kabupaten) ?? "",
   },
   { key: "status", label: "Status", width: 130, get: (r) => r.status ?? "" },
+  { key: "event", label: "Status Event", width: 170, get: (r) => eventLabel(r.eventStatus) },
   { key: "ide", label: "Ide Bisnis", width: 220, get: (r) => r.ide ?? "" },
   { key: "pendapatan", label: "Personal Income", width: 150, get: (r) => r.pendapatan ?? "" },
   {
@@ -131,7 +135,9 @@ export default function PendaftaranPage() {
 }
 
 function PendaftaranList() {
-  const urlQuery = useSearchParams().get("q") ?? "";
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") ?? "";
+  const urlEvent = searchParams.get("event") ?? "";
   const [data, setData] = useState<PendaftarRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -145,6 +151,8 @@ function PendaftaranList() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
+  const [eventFilter, setEventFilter] = useState("");
+
   const limit = 20;
 
   const fetchData = useCallback(() => {
@@ -157,6 +165,7 @@ function PendaftaranList() {
       order: "desc",
     });
     if (search) params.set("search", search);
+    if (eventFilter) params.set("event", eventFilter);
 
     fetch(`/api/pendaftaran?${params}`)
       .then((r) => {
@@ -171,7 +180,7 @@ function PendaftaranList() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [page, search]);
+  }, [page, search, eventFilter]);
 
   useEffect(() => {
     fetchData();
@@ -184,10 +193,32 @@ function PendaftaranList() {
     setPage(1);
   }, [urlQuery]);
 
+  // Filter event dari link (mis. dari dashboard: ?event=webinar)
+  useEffect(() => {
+    setEventFilter(urlEvent);
+    setPage(1);
+  }, [urlEvent]);
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setPage(1);
     setSearch(searchInput.trim());
+  }
+
+  async function changeEvent(id: number, next: string) {
+    const prev = data.find((r) => r.id === id)?.eventStatus ?? "";
+    setData((list) => list.map((r) => (r.id === id ? { ...r, eventStatus: next } : r)));
+    try {
+      const res = await fetch(`/api/pendaftaran/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventStatus: next }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setData((list) => list.map((r) => (r.id === id ? { ...r, eventStatus: prev } : r)));
+      alert("Gagal menyimpan status event. Coba lagi.");
+    }
   }
 
   async function handleDelete(id: number, nama: string) {
@@ -224,6 +255,7 @@ function PendaftaranList() {
       "Cerita Bisnis",
       "Sumber Informasi",
       "Tanggal Daftar",
+      "Status Event",
     ];
 
     const rows = list.map((r, i) => {
@@ -258,6 +290,7 @@ function PendaftaranList() {
         r.cerita,
         r.sumber,
         tanggalText,
+        eventLabel(r.eventStatus),
       ].map(csvCell);
     });
 
@@ -280,6 +313,7 @@ function PendaftaranList() {
         order: "desc",
       });
       if (search) params.set("search", search);
+      if (eventFilter) params.set("event", eventFilter);
 
       const res = await fetch(`/api/pendaftaran?${params}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
@@ -318,6 +352,7 @@ function PendaftaranList() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
+      if (eventFilter) params.set("event", eventFilter);
 
       const res = await fetch(`/api/pendaftaran/export?${params}`);
       if (!res.ok) throw new Error("Gagal membuat file Excel");
@@ -400,6 +435,42 @@ function PendaftaranList() {
               <Search className="h-4 w-4" />
             </button>
           </form>
+
+          <div className="relative sm:mr-auto">
+            <select
+              value={eventFilter}
+              onChange={(e) => {
+                setPage(1);
+                setEventFilter(e.target.value);
+              }}
+              aria-label="Filter status event"
+              className={`h-11 cursor-pointer appearance-none rounded-full border bg-white py-0 pl-4 pr-9 text-sm font-medium shadow-none outline-none transition-colors focus:ring-0 ${
+                eventFilter
+                  ? "border-[#0052A4]/40 text-[#0052A4]"
+                  : "border-slate-200 text-slate-600"
+              }`}
+            >
+              <option value="">Semua event</option>
+              <option value="belum">Belum ikut</option>
+              {EVENT_OPTIONS.filter((o) => o.value).map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <svg
+              viewBox="0 0 20 20"
+              className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M5 8l5 5 5-5" />
+            </svg>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleExportCsv}
@@ -505,6 +576,13 @@ function PendaftaranList() {
                             >
                               {text}
                             </a>
+                          );
+                        } else if (c.key === "event") {
+                          content = (
+                            <EventSelect
+                              value={r.eventStatus ?? ""}
+                              onChange={(v) => changeEvent(r.id, v)}
+                            />
                           );
                         } else if (c.key === "status" && text) {
                           content = (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { getGrupUrlUntuk } from "@/lib/grup";
+import { eventWhere } from "@/lib/event";
 import { notifyPendaftaranBaru } from "@/lib/wa-notif";
 import {
   pendaftaranSchema,
@@ -105,15 +106,18 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = listQuerySchema.parse(Object.fromEntries(searchParams));
 
-    const where = query.search
-      ? {
-          OR: [
-            { nama: { contains: query.search } },
-            { email: { contains: query.search } },
-            { whatsapp: { contains: query.search } },
-          ],
-        }
-      : {};
+    const where = {
+      ...(query.search
+        ? {
+            OR: [
+              { nama: { contains: query.search } },
+              { email: { contains: query.search } },
+              { whatsapp: { contains: query.search } },
+            ],
+          }
+        : {}),
+      ...eventWhere(query.event),
+    };
 
     const [data, total] = await Promise.all([
       prisma.pendaftaran.findMany({

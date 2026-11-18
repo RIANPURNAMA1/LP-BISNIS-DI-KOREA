@@ -35,9 +35,9 @@ function Alert({ message }: { message: Message }) {
   return (
     <div
       role="alert"
-      className={`flex items-start gap-2 rounded-md px-4 py-2.5 text-sm font-medium ${
+      className={`flex items-start gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${
         isSuccess
-          ? "bg-green-50 text-green-700"
+          ? "bg-emerald-50 text-emerald-700"
           : "bg-red-50 text-red-700"
       }`}
     >
@@ -59,9 +59,9 @@ function FieldLabel({
   return (
     <label
       htmlFor={htmlFor}
-      className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700"
+      className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-700"
     >
-      <Icon className="h-3.5 w-3.5 text-gray-400" />
+      <Icon className="h-3.5 w-3.5 text-slate-400" />
       {children}
     </label>
   );
@@ -250,7 +250,7 @@ export default function AdminProfile() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#0052A4]" />
-          <p className="mt-3 text-sm text-gray-500">Memuat profil...</p>
+          <p className="mt-3 text-sm text-slate-500">Memuat profil...</p>
         </div>
       </div>
     );
@@ -259,7 +259,7 @@ export default function AdminProfile() {
   if (loadError || !profile) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="rounded-md border border-red-200 bg-red-50 px-8 py-6 text-center">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-8 py-6 text-center">
           <AlertCircle className="mx-auto mb-2 h-6 w-6 text-red-500" />
           <p className="text-sm font-medium text-red-700">
             {loadError || "Gagal memuat data profil."}
@@ -283,24 +283,24 @@ export default function AdminProfile() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Profil Admin</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-slate-900">Profil Admin</h2>
+        <p className="mt-1 text-sm text-slate-500">
           Kelola informasi akun dan keamanan akun admin Anda.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Informasi Akun */}
-        <section className="rounded-md border border-gray-300 bg-white">
-          <div className="flex items-center gap-4 border-b border-gray-100 px-5 py-4">
+        <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+          <div className="flex items-center gap-4 border-b border-slate-100 px-5 py-4">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#0052A4] text-lg font-bold text-white">
               {initial}
             </span>
             <div className="min-w-0">
-              <h3 className="truncate text-sm font-bold text-gray-900">
+              <h3 className="truncate text-sm font-bold text-slate-900">
                 Informasi Akun
               </h3>
-              <p className="truncate text-xs text-gray-500">{profile.email}</p>
+              <p className="truncate text-xs text-slate-500">{profile.email}</p>
             </div>
           </div>
 
@@ -317,7 +317,7 @@ export default function AdminProfile() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nama admin"
                 required
-                className="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
               />
             </div>
 
@@ -333,9 +333,9 @@ export default function AdminProfile() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
                 required
-                className="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
               />
-              <p className="mt-1.5 text-xs text-gray-500">
+              <p className="mt-1.5 text-xs text-slate-500">
                 Gunakan email baru ini untuk login berikutnya.
               </p>
             </div>
@@ -345,7 +345,7 @@ export default function AdminProfile() {
             <button
               type="submit"
               disabled={savingProfile}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {savingProfile ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -358,14 +358,14 @@ export default function AdminProfile() {
         </section>
 
         {/* Ubah Password */}
-        <section className="rounded-md border border-gray-300 bg-white">
-          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-amber-50 text-amber-600">
+        <section className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+          <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-600">
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Ubah Password</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-bold text-slate-900">Ubah Password</h3>
+              <p className="text-xs text-slate-500">
                 Minimal 6 karakter. Password lama wajib diisi.
               </p>
             </div>
@@ -384,7 +384,7 @@ export default function AdminProfile() {
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Masukkan password lama"
                 required
-                className="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
               />
             </div>
 
@@ -401,7 +401,7 @@ export default function AdminProfile() {
                 placeholder="Minimal 6 karakter"
                 minLength={6}
                 required
-                className="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
               />
             </div>
 
@@ -418,16 +418,16 @@ export default function AdminProfile() {
                 placeholder="Ulangi password baru"
                 minLength={6}
                 required
-                className="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
               />
             </div>
 
-            <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-600">
+            <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-600">
               <input
                 type="checkbox"
                 checked={showPasswords}
                 onChange={(e) => setShowPasswords(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-[#0052A4] focus:ring-[#0052A4]/20"
+                className="h-4 w-4 rounded border-slate-300 text-[#0052A4] focus:ring-[#0052A4]/20"
               />
               {showPasswords ? (
                 <EyeOff className="h-3.5 w-3.5" />
@@ -442,7 +442,7 @@ export default function AdminProfile() {
             <button
               type="submit"
               disabled={savingPassword}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {savingPassword ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

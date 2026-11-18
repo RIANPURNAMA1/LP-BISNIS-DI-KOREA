@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { EVENT_OPTIONS, eventLabel } from "@/lib/event";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,50 @@ export async function GET() {
       orderBy: { _count: { id: "desc" } },
     });
 
+    // Breakdown per status event (webinar / seminar)
+    const byEvent = await prisma.pendaftaran.groupBy({
+      by: ["eventStatus"],
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+    });
+
+    // Daftar orang per status event (8 terbaru per kelompok) + jumlah totalnya
+    const eventPeopleEntries = await Promise.all(
+      EVENT_OPTIONS.map(async (o) => {
+        const [count, rows] = await Promise.all([
+          prisma.pendaftaran.count({ where: { eventStatus: o.value } }),
+          prisma.pendaftaran.findMany({
+            where: { eventStatus: o.value },
+            select: {
+              id: true,
+              nama: true,
+              whatsapp: true,
+              provinsi: true,
+              kabupaten: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "desc" },
+            take: 8,
+          }),
+        ]);
+        return [
+          o.value,
+          {
+            count,
+            people: rows.map((r) => ({
+              id: r.id,
+              nama: r.nama,
+              whatsapp: r.whatsapp,
+              domisili:
+                r.provinsi === "Luar Negeri" ? r.kabupaten : r.provinsi || r.kabupaten,
+              createdAt: r.createdAt,
+            })),
+          },
+        ] as const;
+      })
+    );
+    const eventPeople = Object.fromEntries(eventPeopleEntries);
+
     // Breakdown per sumber
     const bySumber = await prisma.pendaftaran.groupBy({
       by: ["sumber"],
@@ -151,6 +196,11 @@ export async function GET() {
         byStatus: formatGroup(byStatus, "status"),
         byIde: formatGroup(byIde, "ide"),
         bySumber: formatGroup(bySumber, "sumber"),
+        eventPeople,
+        byEvent: byEvent.map((item) => ({
+          label: eventLabel(item.eventStatus),
+          value: item._count.id,
+        })),
         recent,
       },
     });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { parseTujuan } from "@/lib/validations";
+import { EVENT_VALUES } from "@/lib/event";
 
 async function unauthorized() {
   return NextResponse.json(
@@ -42,6 +43,43 @@ export async function GET(
     });
   } catch (error) {
     console.error("GET /api/pendaftaran/[id] error:", error);
+    return NextResponse.json(
+      { success: false, error: "Terjadi kesalahan server." },
+      { status: 500 }
+    );
+  }
+}
+
+// ─── PATCH — Ubah status event pendaftar ─────────────────────────
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user) return unauthorized();
+
+    const id = parseInt(params.id, 10);
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, error: "ID tidak valid." },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const eventStatus = typeof body?.eventStatus === "string" ? body.eventStatus : null;
+    if (eventStatus === null || !EVENT_VALUES.includes(eventStatus)) {
+      return NextResponse.json(
+        { success: false, error: "Status event tidak valid." },
+        { status: 400 }
+      );
+    }
+
+    await prisma.pendaftaran.update({ where: { id }, data: { eventStatus } });
+    return NextResponse.json({ success: true, eventStatus });
+  } catch (error) {
+    console.error("PATCH /api/pendaftaran/[id] error:", error);
     return NextResponse.json(
       { success: false, error: "Terjadi kesalahan server." },
       { status: 500 }

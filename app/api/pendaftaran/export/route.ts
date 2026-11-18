@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eventLabel, eventWhere } from "@/lib/event";
 import ExcelJS from "exceljs";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
@@ -35,6 +36,7 @@ const COLUMNS: Column[] = [
   { header: "Sumber Informasi", width: 20 },
   { header: "Tanggal Daftar", width: 20, align: "center" },
   { header: "Wilayah Grup", width: 20, align: "center" },
+  { header: "Status Event", width: 20, align: "center" },
 ];
 
 const WILAYAH_LABEL: Record<string, string> = {
@@ -71,15 +73,18 @@ export async function GET(req: NextRequest) {
     }
 
     const search = (req.nextUrl.searchParams.get("search") ?? "").trim();
-    const where = search
-      ? {
-          OR: [
-            { nama: { contains: search } },
-            { email: { contains: search } },
-            { whatsapp: { contains: search } },
-          ],
-        }
-      : {};
+    const where = {
+      ...(search
+        ? {
+            OR: [
+              { nama: { contains: search } },
+              { email: { contains: search } },
+              { whatsapp: { contains: search } },
+            ],
+          }
+        : {}),
+      ...eventWhere(req.nextUrl.searchParams.get("event")),
+    };
 
     const data = await prisma.pendaftaran.findMany({
       where,
@@ -216,6 +221,7 @@ export async function GET(req: NextRequest) {
         row.sumber ?? "",
         row.createdAt,
         WILAYAH_LABEL[row.wilayah] ?? "",
+        eventLabel(row.eventStatus),
       ];
 
       const excelRow = sheet.addRow(values);

@@ -25,6 +25,8 @@ model Pendaftaran {
   sumber     String?  @db.VarChar(100)
   // jabodetabek | luar_jabodetabek | luar_negeri (kosong untuk data lama)
   wilayah    String   @default("") @db.VarChar(30)
+  // "" (belum ikut) | webinar | seminar | keduanya — diatur admin
+  eventStatus String  @default("") @map("event_status") @db.VarChar(30)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 

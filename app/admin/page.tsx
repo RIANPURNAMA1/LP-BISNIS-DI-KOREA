@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { EVENT_OPTIONS } from "@/lib/event";
 import {
   AlertCircle,
   ArrowDownRight,
@@ -11,6 +12,7 @@ import {
   CalendarCheck,
   CalendarRange,
   Loader2,
+  MessageCircle,
   Minus,
   RefreshCw,
   TrendingUp,
@@ -36,6 +38,14 @@ type Stats = {
   byStatus: ChartItem[];
   byIde: ChartItem[];
   bySumber: ChartItem[];
+  byEvent: ChartItem[];
+  eventPeople: Record<
+    string,
+    {
+      count: number;
+      people: { id: number; nama: string; whatsapp: string; domisili: string; createdAt?: string }[];
+    }
+  >;
   recent: {
     id: number;
     nama: string;
@@ -363,13 +373,36 @@ function TrendChart({ daily, delay = 0 }: { daily: Day[]; delay?: number }) {
 /* Donut (interaktif)                                                  */
 /* ------------------------------------------------------------------ */
 
-function Donut({ data, title, delay = 0 }: { data: ChartItem[]; title: string; delay?: number }) {
+const DONUT_TOP = 5;
+
+function Donut({
+  data: allData,
+  title,
+  delay = 0,
+  top = DONUT_TOP,
+}: {
+  data: ChartItem[];
+  title: string;
+  delay?: number;
+  top?: number;
+}) {
   const [active, setActive] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const t = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(t);
   }, []);
+
+  // Tampilkan hanya yang terbanyak; sisanya digabung jadi satu irisan "Lainnya".
+  const sorted = [...allData].sort((a, b) => b.value - a.value);
+  const rest = sorted.slice(top);
+  const data: ChartItem[] =
+    rest.length > 0
+      ? [
+          ...sorted.slice(0, top),
+          { label: `Lainnya (${rest.length})`, value: rest.reduce((s, d) => s + d.value, 0) },
+        ]
+      : sorted;
   const total = data.reduce((s, d) => s + d.value, 0);
 
   const R = 56;
@@ -391,7 +424,7 @@ function Donut({ data, title, delay = 0 }: { data: ChartItem[]; title: string; d
       {total === 0 ? (
         <p className="py-10 text-center text-sm text-slate-400">Belum ada data</p>
       ) : (
-        <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row">
+        <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row xl:flex-col 2xl:flex-row">
           <div className="relative h-40 w-40 shrink-0">
             <svg viewBox="0 0 140 140" className="h-full w-full -rotate-90">
               <circle cx="70" cy="70" r={R} fill="none" stroke="#F1F5F9" strokeWidth="18" />
@@ -568,6 +601,114 @@ function Recent({ items, delay = 0 }: { items: Stats["recent"]; delay?: number }
 }
 
 /* ------------------------------------------------------------------ */
+/* Peserta per status event                                            */
+/* ------------------------------------------------------------------ */
+
+const EVENT_DOT: Record<string, string> = {
+  "": "bg-slate-400",
+  webinar: "bg-sky-500",
+  seminar: "bg-emerald-500",
+  keduanya: "bg-[#0052A4]",
+};
+
+function waHref(raw: string) {
+  let n = raw.replace(/\D/g, "");
+  if (!n) return "";
+  if (n.startsWith("00")) n = n.slice(2);
+  else if (n.startsWith("0")) n = "62" + n.slice(1);
+  return `https://wa.me/${n}`;
+}
+
+function EventPeople({ data, delay = 0 }: { data: Stats["eventPeople"]; delay?: number }) {
+  const [tab, setTab] = useState<string>("webinar");
+  const current = data?.[tab] ?? { count: 0, people: [] };
+  const option = EVENT_OPTIONS.find((o) => o.value === tab) ?? EVENT_OPTIONS[0];
+  // "belum ikut" dipakai sebagai filter khusus di halaman data pendaftar
+  const filterParam = tab === "" ? "belum" : tab;
+
+  return (
+    <section className={`${card} reveal overflow-hidden`} style={{ animationDelay: `${delay}ms` }}>
+      <header className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">Peserta berdasarkan status event</h3>
+          <p className="mt-0.5 text-xs text-slate-500">Pendaftar terbaru di setiap kelompok.</p>
+        </div>
+        <Link
+          href={`/admin/pendaftaran?event=${filterParam}`}
+          className="group inline-flex items-center gap-1 text-xs font-medium text-[#0052A4] hover:underline"
+        >
+          Lihat semua ({current.count})
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      </header>
+
+      <div className="mt-4 flex gap-1 overflow-x-auto px-5">
+        {EVENT_OPTIONS.map((o) => {
+          const active = tab === o.value;
+          return (
+            <button
+              key={o.value || "belum"}
+              onClick={() => setTab(o.value)}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                active ? "bg-[#0052A4] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-white" : EVENT_DOT[o.value]}`} />
+              {o.label}
+              <span
+                className={`rounded-full px-1.5 py-px text-[10px] tabular-nums ${
+                  active ? "bg-white/20 text-white" : "bg-white text-slate-500"
+                }`}
+              >
+                {data?.[o.value]?.count ?? 0}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {current.people.length === 0 ? (
+        <p className="px-5 py-12 text-center text-sm text-slate-400">
+          Belum ada pendaftar dengan status &ldquo;{option.label}&rdquo;.
+        </p>
+      ) : (
+        <ul key={tab} className="mt-4 grid divide-y divide-slate-100 border-t border-slate-100 md:grid-cols-2 md:divide-y-0">
+          {current.people.map((p, i) => {
+            const wa = waHref(p.whatsapp);
+            return (
+              <li
+                key={p.id}
+                className="reveal flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-slate-50 md:border-b md:border-slate-100"
+                style={{ animationDelay: `${i * 40}ms`, animationDuration: "0.4s" }}
+              >
+                <Link href={`/admin/pendaftaran/${p.id}`} className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-900">{p.nama}</p>
+                  <p className="truncate text-xs text-slate-500">
+                    {[p.domisili, timeAgo(p.createdAt)].filter(Boolean).join(" · ")}
+                  </p>
+                </Link>
+                {wa && (
+                  <a
+                    href={wa}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Chat ${p.whatsapp}`}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{p.whatsapp}</span>
+                  </a>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -713,10 +854,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Sebaran */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Donut data={stats.byStatus} title="Status pendaftar" delay={500} />
         <Donut data={stats.byIde} title="Kesiapan bisnis" delay={570} />
+        <Donut data={stats.byEvent ?? []} title="Keikutsertaan event" delay={640} />
       </div>
+      <EventPeople data={stats.eventPeople} delay={700} />
+
       <div className="grid gap-6 lg:grid-cols-2">
         <RankBars data={stats.byProvinsi} title="Asal daerah / negara" unit="pendaftar" delay={640} />
         <RankBars data={stats.bySumber} title="Sumber informasi" unit="pendaftar" delay={710} />
