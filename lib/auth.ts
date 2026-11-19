@@ -4,10 +4,33 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
 import authConfig from "./auth.config";
 
+// Pembatas percobaan login per email (in-memory, per instance server).
+const MAX_FAIL = 5;
+const WINDOW_MS = 15 * 60 * 1000;
+const fails = new Map<string, { n: number; first: number }>();
+
+function isLocked(key: string) {
+  const f = fails.get(key);
+  if (!f) return false;
+  if (Date.now() - f.first > WINDOW_MS) {
+    fails.delete(key);
+    return false;
+  }
+  return f.n >= MAX_FAIL;
+}
+
+function recordFail(key: string) {
+  const f = fails.get(key);
+  if (!f || Date.now() - f.first > WINDOW_MS) fails.set(key, { n: 1, first: Date.now() });
+  else f.n += 1;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
+    // Login admin
     Credentials({
+      id: "credentials",
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -19,45 +42,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.adminUser.findUnique({
           where: { email: credentials.email as string },
         });
-
         if (!user) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
+        const isValid = await bcrypt.compare(credentials.password as string, user.password);
         if (!isValid) return null;
 
-        return {
-          id: String(user.id),
-          email: user.email,
-          name: user.name,
-        };
+        return { id: String(user.id), email: user.email, name: user.name, role: "admin" };
+      },
+    }),
+    // Login peserta (pendaftar)
+    Credentials({
+      id: "peserta",
+      name: "peserta",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const email = String(credentials.email).trim().toLowerCase();
+        if (isLocked(email)) return null;
+
+        const peserta = await prisma.pendaftaran.findFirst({ where: { email } });
+        const ok =
+          !!peserta?.password &&
+          (await bcrypt.compare(String(credentials.password), peserta.password));
+        if (!peserta || !ok) {
+          recordFail(email);
+          return null;
+        }
+
+        fails.delete(email);
+        await prisma.pendaftaran.update({
+          where: { id: peserta.id },
+          data: { lastLoginAt: new Date() },
+        });
+        return { id: String(peserta.id), email: peserta.email, name: peserta.nama, role: "peserta" };
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
-      }
-
-      // Dipanggil dari useSession().update() setelah admin mengubah profil.
-      if (trigger === "update" && session) {
-        if (typeof session.name === "string") token.name = session.name;
-        if (typeof session.email === "string") token.email = session.email;
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as { id?: string }).id = token.id as string;
-      }
-      return session;
-    },
-  },
 });

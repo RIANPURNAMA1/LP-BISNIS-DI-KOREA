@@ -19,6 +19,7 @@ export class RegistrationFieldError extends Error {
 }
 
 export type RegistrationPayload = {
+  password: string;
   nama: string;
   whatsapp: string;
   email: string;
@@ -48,6 +49,8 @@ type FormState = {
   whatsapp: string;
   kodeWhatsapp: string; // kode negara, tanpa "+"
   email: string;
+  password: string;
+  passwordKonfirmasi: string;
   provinsiId: string;
   provinsiNama: string;
   kabupatenId: string;
@@ -74,6 +77,8 @@ const initialForm: FormState = {
   whatsapp: "",
   kodeWhatsapp: "",
   email: "",
+  password: "",
+  passwordKonfirmasi: "",
   provinsiId: "",
   provinsiNama: "",
   kabupatenId: "",
@@ -668,6 +673,11 @@ export default function DaftarPage({
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
         e.email = "Masukkan alamat email yang valid.";
 
+      if (form.password.length < 8) e.password = "Password minimal 8 karakter.";
+      else if (form.password.length > 72) e.password = "Password maksimal 72 karakter.";
+      if (form.passwordKonfirmasi !== form.password)
+        e.passwordKonfirmasi = "Konfirmasi password tidak sama.";
+
       if (isLuar) {
         if (!form.negara.trim()) e.negara = "Tuliskan negara Anda.";
         if (!form.provinsiLuar.trim())
@@ -716,6 +726,7 @@ export default function DaftarPage({
     const kode = form.kodeWhatsapp.replace(/\D/g, "");
 
     const payload: RegistrationPayload = {
+      password: form.password,
       nama: form.nama.trim(),
       whatsapp: isLuar
         ? `+${kode} ${form.whatsapp.trim()}`
@@ -856,8 +867,15 @@ export default function DaftarPage({
               </div>
 
               <a
+                href="/peserta"
+                className="mt-6 flex w-full max-w-md items-center justify-center rounded-full bg-[#0052A4] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#00438a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4] focus-visible:ring-offset-2 mx-auto"
+              >
+                Masuk ke Halaman Peserta
+              </a>
+
+              <a
                 href={homeHref}
-                className="mt-6 inline-block rounded text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
+                className="mt-4 inline-block rounded text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
               >
                 Kembali ke beranda
               </a>
@@ -1251,6 +1269,41 @@ export default function DaftarPage({
                       )}
                     </div>
 
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <Field
+                        id="password"
+                        label="Password"
+                        required
+                        error={errors.password}
+                        hint="Minimal 8 karakter. Dipakai untuk masuk ke halaman peserta."
+                      >
+                        <input
+                          id="password"
+                          type="password"
+                          autoComplete="new-password"
+                          value={form.password}
+                          onChange={(e) => set("password", e.target.value)}
+                          className={cls(errors.password)}
+                          aria-invalid={!!errors.password}
+                        />
+                      </Field>
+                      <Field
+                        id="passwordKonfirmasi"
+                        label="Ulangi password"
+                        required
+                        error={errors.passwordKonfirmasi}
+                      >
+                        <input
+                          id="passwordKonfirmasi"
+                          type="password"
+                          autoComplete="new-password"
+                          value={form.passwordKonfirmasi}
+                          onChange={(e) => set("passwordKonfirmasi", e.target.value)}
+                          className={cls(errors.passwordKonfirmasi)}
+                          aria-invalid={!!errors.passwordKonfirmasi}
+                        />
+                      </Field>
+                    </div>
                   </div>
                 )}
 

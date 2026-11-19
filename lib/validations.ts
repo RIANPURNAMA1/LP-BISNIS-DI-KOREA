@@ -35,6 +35,10 @@ export const pendaftaranSchema = z.object({
   wilayah: z.enum(["jabodetabek", "luar_jabodetabek", "luar_negeri"], {
     message: "Wilayah domisili wajib dipilih.",
   }),
+  password: z
+    .string()
+    .min(8, "Password minimal 8 karakter.")
+    .max(72, "Password maksimal 72 karakter."),
 });
 
 export type PendaftaranInput = z.infer<typeof pendaftaranSchema>;
@@ -80,3 +84,16 @@ export function parseTujuan(value: unknown): string[] {
     return [value];
   }
 }
+
+// ─── Password peserta ────────────────────────────────────────────
+export const passwordSchema = z
+  .string()
+  .min(8, "Password minimal 8 karakter.")
+  .max(72, "Password maksimal 72 karakter.");
+
+// ─── Jadwal sesi ─────────────────────────────────────────────────
+export const jadwalSchema = z.object({
+  tanggal: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid."),
+  jam: z.string().regex(/^\d{2}:\d{2}$/, "Jam tidak valid."),
+  catatan: z.string().max(500, "Catatan maksimal 500 karakter.").optional().default(""),
+});

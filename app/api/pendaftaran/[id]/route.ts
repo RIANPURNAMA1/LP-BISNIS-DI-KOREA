@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { parseTujuan } from "@/lib/validations";
 import { EVENT_VALUES } from "@/lib/event";
@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     const id = parseInt(params.id, 10);
@@ -28,7 +28,10 @@ export async function GET(
       );
     }
 
-    const data = await prisma.pendaftaran.findUnique({ where: { id } });
+    const data = await prisma.pendaftaran.findUnique({
+      where: { id },
+      omit: { password: true },
+    });
 
     if (!data) {
       return NextResponse.json(
@@ -56,7 +59,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     const id = parseInt(params.id, 10);
@@ -93,7 +96,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     const id = parseInt(params.id, 10);

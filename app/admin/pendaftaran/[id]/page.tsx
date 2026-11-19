@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import EventSelect from "@/components/EventSelect";
+import ResetPassword from "@/components/ResetPassword";
 import {
   AlertCircle,
   ArrowLeft,
@@ -272,6 +273,8 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
         <ChevronRight className="h-4 w-4 text-gray-300" />
         <span className="font-medium text-gray-900">{data.nama}</span>
       </nav>
+
+      <ResetPassword id={data.id} />
 
       {/* Profile Header */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">

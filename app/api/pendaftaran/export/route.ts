@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eventLabel, eventWhere } from "@/lib/event";
 import ExcelJS from "exceljs";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { parseTujuan } from "@/lib/validations";
 
@@ -64,7 +64,7 @@ function estimateRowHeight(values: string[]) {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Tidak terautentikasi." },
@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
     };
 
     const data = await prisma.pendaftaran.findMany({
+      omit: { password: true },
       where,
       orderBy: { createdAt: "desc" },
       take: MAX_ROWS,

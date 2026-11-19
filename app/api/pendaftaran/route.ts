@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import bcrypt from "bcryptjs";
+import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { getGrupUrlUntuk } from "@/lib/grup";
 import { eventWhere } from "@/lib/event";
@@ -44,11 +45,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Simpan ke database via Prisma
+    // Simpan ke database via Prisma (password disimpan sebagai hash)
+    const { password, ...data } = result.data;
     const pendaftaran = await prisma.pendaftaran.create({
       data: {
-        ...result.data,
+        ...data,
         email,
+        password: await bcrypt.hash(password, 10),
         tujuan: serializeTujuan(result.data.tujuan),
       },
     });
@@ -95,7 +98,7 @@ export async function POST(req: NextRequest) {
 // ─── GET — Daftar pendaftar dengan pagination ────────────────────
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Tidak terautentikasi." },
@@ -121,6 +124,7 @@ export async function GET(req: NextRequest) {
 
     const [data, total] = await Promise.all([
       prisma.pendaftaran.findMany({
+        omit: { password: true },
         where,
         orderBy: { [query.sort]: query.order },
         skip: (query.page - 1) * query.limit,

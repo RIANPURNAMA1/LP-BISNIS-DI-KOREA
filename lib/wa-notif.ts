@@ -113,5 +113,32 @@ export async function notifyPendaftaranBaru(p: PendaftarPesan) {
   }
 }
 
+/** Notifikasi jadwal sesi baru ke admin. Tidak pernah melempar error. */
+export async function notifyJadwalBaru(p: {
+  nama: string;
+  whatsapp: string;
+  tanggal: string;
+  jam: string;
+  catatan?: string | null;
+}) {
+  try {
+    if (getWaSnapshot().status !== "connected") return;
+    const settings = await getNotifSettings();
+    if (!settings.enabled || settings.numbers.length === 0) return;
+
+    const lines = [
+      "*Jadwal sesi baru*",
+      `Nama: ${p.nama}`,
+      `WhatsApp: ${p.whatsapp}`,
+      `Waktu: ${p.tanggal} pukul ${p.jam} WIB`,
+      ...(p.catatan ? [`Catatan: ${p.catatan}`] : []),
+      `${SITE_URL}/admin/jadwal`,
+    ];
+    await sendWaText(settings.numbers, lines.join("\n"));
+  } catch (e) {
+    console.error("[wa] notifikasi jadwal error:", e);
+  }
+}
+
 export const TEST_MESSAGE =
   "*Tes notifikasi*\nWhatsApp berhasil terhubung. Notifikasi pendaftar baru akan dikirim ke nomor ini.";

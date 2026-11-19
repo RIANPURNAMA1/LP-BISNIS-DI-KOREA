@@ -11,6 +11,7 @@ import {
   Globe,
   LogOut,
   BellRing,
+  CalendarClock,
   MessageCircle,
   UserCircle2,
   ChevronDown,
@@ -23,6 +24,7 @@ import {
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/pendaftaran", label: "Data Pendaftar", icon: ClipboardList },
+  { href: "/admin/jadwal", label: "Jadwal Sesi", icon: CalendarClock },
   { href: "/admin/pengaturan", label: "Grup WhatsApp", icon: MessageCircle },
   { href: "/admin/notifikasi", label: "Notifikasi WA", icon: BellRing },
   { href: "/admin/profil", label: "Profil", icon: UserCircle2 },

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { EVENT_OPTIONS, eventLabel } from "@/lib/event";
 
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Tidak terautentikasi." },

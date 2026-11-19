@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/guard";
 import {
   disconnectWhatsApp,
   getWaSnapshot,
@@ -31,7 +31,7 @@ function fail(error: string, status = 400) {
 // Status koneksi + pengaturan notifikasi (dipolling oleh halaman admin).
 export async function GET() {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     let snap = getWaSnapshot();
@@ -51,7 +51,7 @@ export async function GET() {
 // Aksi: connect | disconnect | test
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     const body = await req.json().catch(() => ({}));
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 // Simpan pengaturan notifikasi (aktif/nonaktif + nomor tujuan).
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     const body = await req.json();

@@ -27,6 +27,10 @@ model Pendaftaran {
   wilayah    String   @default("") @db.VarChar(30)
   // "" (belum ikut) | webinar | seminar | keduanya — diatur admin
   eventStatus String  @default("") @map("event_status") @db.VarChar(30)
+  // Hash bcrypt untuk login peserta; null = belum punya akses (data lama).
+  password    String? @db.VarChar(255)
+  lastLoginAt DateTime? @map("last_login_at")
+  jadwal      JadwalSesi[]
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -51,4 +55,26 @@ model AdminUser {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("admin_users")
+}
+
+// Jadwal sesi meeting online yang dipilih peserta.
+// tanggal "YYYY-MM-DD" & jam "HH:mm" dalam WIB.
+// slotKey = "tanggal_jam" selama jadwal aktif, NULL jika batal/ditolak,
+// sehingga satu slot tidak bisa diambil dua peserta (unique mengizinkan banyak NULL).
+model JadwalSesi {
+  id            Int         @id @default(autoincrement())
+  pendaftaranId Int         @map("pendaftaran_id")
+  tanggal       String      @db.VarChar(10)
+  jam           String      @db.VarChar(5)
+  catatan       String?     @db.VarChar(500)
+  // menunggu | dikonfirmasi | selesai | batal | ditolak
+  status        String      @default("menunggu") @db.VarChar(20)
+  slotKey       String?     @unique @map("slot_key") @db.VarChar(20)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  pendaftaran   Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+
+  @@index([pendaftaranId])
+  @@index([tanggal])
+  @@map("jadwal_sesi")
 }

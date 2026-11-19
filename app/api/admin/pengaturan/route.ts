@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { KEY_GRUP_JABODETABEK, KEY_GRUP_LUAR, getGrupLinks } from "@/lib/grup";
 
@@ -30,7 +30,7 @@ function validateLink(value: unknown, label: string): string | null {
 
 export async function GET() {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
     const links = await getGrupLinks();
     return NextResponse.json({ success: true, data: links });
@@ -45,7 +45,7 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
 
     const body = await req.json();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 
@@ -12,7 +12,7 @@ async function unauthorized() {
 
 export async function GET() {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
     const id = parseInt((session.user as { id?: string }).id || "", 10);
     if (isNaN(id)) return unauthorized();
@@ -33,7 +33,7 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await requireAdmin();
     if (!session?.user) return unauthorized();
     const id = parseInt((session.user as { id?: string }).id || "", 10);
     if (isNaN(id)) return unauthorized();

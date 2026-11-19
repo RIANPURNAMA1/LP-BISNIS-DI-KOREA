@@ -1,5 +1,6 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import DaftarPage from "@/components/DaftarPage";
 import { RegistrationFieldError } from "@/components/DaftarPage";
 import type {
@@ -26,6 +27,12 @@ export default function Daftar() {
       );
     }
     const json = await res.json().catch(() => null);
+    // Langsung masuk sebagai peserta; jika gagal, peserta tetap bisa login manual.
+    await signIn("peserta", {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    }).catch(() => null);
     return {
       groupUrl: typeof json?.groupUrl === "string" ? json.groupUrl : "",
     };
