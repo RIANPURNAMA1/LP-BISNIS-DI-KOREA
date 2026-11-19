@@ -256,9 +256,10 @@ function TrendChart({ daily, delay = 0 }: { daily: Day[]; delay?: number }) {
   const ticks = [0, 1, 2, 3, 4].map((i) => Math.round((niceMax / 4) * i));
   const labelEvery = Math.ceil(data.length / (width < 480 ? 4 : 7));
 
-  function onMove(e: React.MouseEvent<SVGSVGElement>) {
+  function onMove(e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const rel = e.clientX - rect.left - pad.l;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const rel = clientX - rect.left - pad.l;
     const idx = Math.round((rel / innerW) * (data.length - 1));
     setHover(Math.min(Math.max(idx, 0), data.length - 1));
   }
@@ -296,6 +297,8 @@ function TrendChart({ daily, delay = 0 }: { daily: Day[]; delay?: number }) {
             width={width}
             height={H}
             onMouseMove={onMove}
+            onTouchStart={onMove}
+            onTouchMove={onMove}
             onMouseLeave={() => setHover(null)}
             className="block cursor-crosshair"
           >
@@ -846,7 +849,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tren + terbaru */}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-3 [&>*]:min-w-0">
         <div className="xl:col-span-2">
           <TrendChart daily={stats.daily} delay={360} />
         </div>
@@ -854,14 +857,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* Sebaran */}
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
         <Donut data={stats.byStatus} title="Status pendaftar" delay={500} />
         <Donut data={stats.byIde} title="Kesiapan bisnis" delay={570} />
         <Donut data={stats.byEvent ?? []} title="Keikutsertaan event" delay={640} />
       </div>
       <EventPeople data={stats.eventPeople} delay={700} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <RankBars data={stats.byProvinsi} title="Asal daerah / negara" unit="pendaftar" delay={640} />
         <RankBars data={stats.bySumber} title="Sumber informasi" unit="pendaftar" delay={710} />
       </div>

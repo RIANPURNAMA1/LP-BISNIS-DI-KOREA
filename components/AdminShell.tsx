@@ -15,6 +15,8 @@ import {
   UserCircle2,
   ChevronDown,
   Search,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,7 +50,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
       {pos && (
         <span
           role="tooltip"
-          className="tip-in pointer-events-none fixed z-[60] whitespace-nowrap rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+          className="tip-in pointer-events-none fixed z-[60] hidden md:block whitespace-nowrap rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg"
           style={{ top: pos.top, left: pos.left }}
         >
           <span className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[2px] bg-slate-900" />
@@ -59,23 +61,21 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function Sidebar({ collapsed }: { collapsed: boolean }) {
+function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
   const itemBase =
     "group relative flex h-11 items-center gap-3 rounded-xl text-sm font-medium transition-colors";
-  const itemPad = collapsed ? "justify-center px-0" : "px-3";
+  const itemPad = "px-3 md:justify-center md:px-0";
 
   return (
     <aside
-      className={`fixed bottom-3 left-3 top-3 z-40 flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 transition-[width] duration-200 ${
-        collapsed ? "w-[68px]" : "w-60"
+      className={`fixed bottom-3 left-3 top-3 z-50 flex w-64 flex-col rounded-2xl bg-white shadow-xl ring-1 ring-slate-200/60 transition-transform duration-200 md:z-40 md:w-[68px] md:translate-x-0 md:shadow-sm ${
+        open ? "translate-x-0" : "-translate-x-[110%]"
       }`}
     >
       {/* Logo */}
       <div
-        className={`flex h-16 shrink-0 items-center ${
-          collapsed ? "justify-center px-0" : "px-4"
-        }`}
+        className="flex h-16 shrink-0 items-center justify-between px-4 md:justify-center md:px-0"
       >
         <Tip label="Admin Panel">
         <Link href="/admin" aria-label="Admin Panel" className="flex min-w-0 items-center gap-3">
@@ -87,8 +87,8 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
               className="h-9 w-9 object-contain"
             />
           </span>
-          {!collapsed && (
-            <span className="min-w-0 leading-tight">
+          {(
+            <span className="min-w-0 leading-tight md:hidden">
               <span className="block truncate text-sm font-bold text-gray-900">Admin Panel</span>
               <span className="block truncate text-[11px] text-gray-500">
                 Indonesia-Korea Business
@@ -97,15 +97,20 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
           )}
         </Link>
         </Tip>
+        <button
+          onClick={onClose}
+          aria-label="Tutup menu"
+          className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 md:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Menu */}
       <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-2">
-        {!collapsed && (
-          <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-            Menu
-          </p>
-        )}
+        <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 md:hidden">
+          Menu
+        </p>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -125,7 +130,7 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
                   <span className="absolute -left-3 top-2 h-7 w-1 rounded-r bg-[#0052A4]" />
                 )}
                 <Icon className="h-[19px] w-[19px] shrink-0" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
+                <span className="truncate md:hidden">{item.label}</span>
               </Link>
             </Tip>
           );
@@ -136,7 +141,7 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-function Header() {
+function Header({ onMenu }: { onMenu: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
@@ -171,9 +176,16 @@ function Header() {
   }
 
   return (
-    <header className="sticky top-3 z-30 flex h-16 items-center gap-4 rounded-2xl bg-white px-4 shadow-sm ring-1 ring-slate-200/60 sm:px-6">
-      <h1 className="shrink-0 text-lg font-bold text-slate-900">{title}</h1>
-      <form onSubmit={onSearch} className="relative ml-auto w-full max-w-xs">
+    <header className="sticky top-3 z-30 flex h-16 items-center gap-3 rounded-2xl bg-white px-3 sm:gap-4 shadow-sm ring-1 ring-slate-200/60 sm:px-6">
+      <button
+        onClick={onMenu}
+        aria-label="Buka menu"
+        className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-slate-600 hover:bg-slate-100 md:hidden"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      <h1 className="hidden shrink-0 text-lg font-bold text-slate-900 sm:block">{title}</h1>
+      <form onSubmit={onSearch} className="relative ml-auto w-full min-w-0 max-w-xs">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
@@ -241,8 +253,9 @@ function Header() {
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Sidebar selalu mode ikon (kecil) dan tidak bisa diperlebar.
-  const collapsed = true;
+  // Desktop: sidebar ikon kecil tetap. Mobile: tersembunyi, dibuka lewat tombol burger.
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   // Jangan tampilkan layout admin di halaman login
   if (pathname === "/admin/login") {
@@ -254,11 +267,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   return (
     <SessionProvider>
       <div className="min-h-screen bg-[#EEF1F8]">
-        <Sidebar collapsed={collapsed} />
-        <div
-          className={`pr-3 pt-3 transition-[padding] duration-200 ${collapsed ? "pl-[92px]" : "pl-[264px]"}`}
-        >
-          <Header />
+        {menuOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-slate-900/40 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+        )}
+        <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+        <div className="min-w-0 overflow-x-hidden px-3 pt-3 md:pl-[92px]">
+          <Header onMenu={() => setMenuOpen(true)} />
           <main
             className={
               fullWidth
