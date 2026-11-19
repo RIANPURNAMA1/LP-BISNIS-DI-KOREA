@@ -440,7 +440,7 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
           <SectionCard icon={Briefcase} title="Profil & Kesiapan">
             <dl>
               <InfoRow
-                label="Status"
+                label="Pekerjaan"
                 value={data.status ? <Badge tone="blue">{data.status}</Badge> : null}
               />
               <InfoRow
