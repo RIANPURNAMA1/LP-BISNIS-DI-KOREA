@@ -7,7 +7,7 @@ import {
   KEY_VIDEO_URL,
   getKontenPeserta,
   parseJam,
-  toEmbedUrl,
+  validVideoUrl,
 } from "@/lib/jadwal";
 
 export const dynamic = "force-dynamic";
@@ -32,19 +32,19 @@ export async function PUT(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const videoUrl = String(body?.videoUrl ?? "").trim();
     const arahan = String(body?.arahan ?? "").trim();
-    const jam = parseJam(String(body?.jam ?? ""));
+    const jamInput = String(body?.jam ?? "");
+    const jam = parseJam(jamInput);
 
-    if (videoUrl && !toEmbedUrl(videoUrl)) {
-      return fail("Link video harus berupa link YouTube atau Vimeo.", 400);
+    if (videoUrl && !validVideoUrl(videoUrl)) {
+      return fail("Video harus berupa file upload, link YouTube, atau Vimeo.", 400);
     }
     if (arahan.length > 1000) return fail("Teks arahan maksimal 1000 karakter.", 400);
-    if (!jam.length) return fail("Isi minimal satu jam sesi, contoh 09:00.", 400);
 
     const entries: [string, string][] = [
       [KEY_VIDEO_URL, videoUrl],
       [KEY_ARAHAN, arahan],
-      [KEY_JAM, jam.join(",")],
     ];
+    if (jam.length) entries.push([KEY_JAM, jam.join(",")]);
     await prisma.$transaction(
       entries.map(([key, value]) =>
         prisma.pengaturan.upsert({ where: { key }, create: { key, value }, update: { value } }),

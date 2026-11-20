@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
-import { KEY_GRUP_JABODETABEK, KEY_GRUP_LUAR, getGrupLinks } from "@/lib/grup";
+import { KEY_GRUP_KONSULTASI, KEY_GRUP_UMUM, getGrupLinks } from "@/lib/grup";
+import { KEY_REKENING, getRekening, type Rekening } from "@/lib/pembayaran";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +33,8 @@ export async function GET() {
   try {
     const session = await requireAdmin();
     if (!session?.user) return unauthorized();
-    const links = await getGrupLinks();
-    return NextResponse.json({ success: true, data: links });
+    const [links, rekening] = await Promise.all([getGrupLinks(), getRekening()]);
+    return NextResponse.json({ success: true, data: { ...links, rekening } });
   } catch (error) {
     console.error("GET /api/admin/pengaturan error:", error);
     return NextResponse.json(
@@ -49,29 +50,43 @@ export async function PUT(req: NextRequest) {
     if (!session?.user) return unauthorized();
 
     const body = await req.json();
-    const errJabo = validateLink(body.jabodetabek, "Link grup Jabodetabek");
-    const errLuar = validateLink(
-      body.luarJabodetabek,
-      "Link grup Luar Jabodetabek"
-    );
-    const error = errJabo || errLuar;
-    if (error) {
-      return NextResponse.json({ success: false, error }, { status: 400 });
+    if (Object.prototype.hasOwnProperty.call(body, "umum")) {
+      const error = validateLink(body.umum, "Link grup Korean Bisnis Klub");
+      if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+    }
+    if (Object.prototype.hasOwnProperty.call(body, "grupKonsultasi")) {
+      const error = validateLink(body.grupKonsultasi, "Link grup Konsultasi Online");
+      if (error) return NextResponse.json({ success: false, error }, { status: 400 });
     }
 
-    const entries: [string, string][] = [
-      [KEY_GRUP_JABODETABEK, String(body.jabodetabek).trim()],
-      [KEY_GRUP_LUAR, String(body.luarJabodetabek).trim()],
-    ];
-    await prisma.$transaction(
-      entries.map(([key, value]) =>
-        prisma.pengaturan.upsert({
-          where: { key },
-          create: { key, value },
-          update: { value },
-        })
-      )
-    );
+    const entries: [string, string][] = [];
+    if (Object.prototype.hasOwnProperty.call(body, "umum")) {
+      entries.push([KEY_GRUP_UMUM, String(body.umum ?? "").trim()]);
+    }
+    if (Object.prototype.hasOwnProperty.call(body, "grupKonsultasi")) {
+      entries.push([KEY_GRUP_KONSULTASI, String(body.grupKonsultasi ?? "").trim()]);
+    }
+    if (body.rekening && typeof body.rekening === "object") {
+      const r = body.rekening as Partial<Rekening>;
+      for (const [field, key] of Object.entries(KEY_REKENING)) {
+        if (Object.prototype.hasOwnProperty.call(r, field)) {
+          const value = String(r[field as keyof Rekening] ?? "").trim().slice(0, 150);
+          entries.push([key, value]);
+        }
+      }
+    }
+
+    if (entries.length) {
+      await prisma.$transaction(
+        entries.map(([key, value]) =>
+          prisma.pengaturan.upsert({
+            where: { key },
+            create: { key, value },
+            update: { value },
+          })
+        )
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

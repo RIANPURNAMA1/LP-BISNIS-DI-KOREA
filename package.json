@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@types/nodemailer": "^8.0.2",
     "@whiskeysockets/baileys": "^7.0.0-rc14",
     "bcryptjs": "^3.0.3",
     "exceljs": "^4.4.0",
@@ -20,6 +21,7 @@
     "lucide-react": "^1.67.0",
     "next": "14.2.15",
     "next-auth": "^5.0.0-beta.32",
+    "nodemailer": "^8.0.11",
     "pino": "^10.4.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",

@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
-import { getKontenPeserta, toEmbedUrl } from "@/lib/jadwal";
-import JadwalSesi from "./JadwalSesi";
+import prisma from "@/lib/db";
+import { getGrupKonsultasi, getGrupUmum } from "@/lib/grup";
+import { DEFAULT_ARAHAN, getKontenPeserta } from "@/lib/jadwal";
+import PesertaFlow from "./PesertaFlow";
 import LogoutButton from "./LogoutButton";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +11,36 @@ export default async function PesertaPage() {
   // Akses sudah dijaga middleware; sesi dipakai untuk menyapa peserta.
   const session = await auth();
   const nama = session?.user?.name || "Peserta";
-  const konten = await getKontenPeserta();
-  const embed = konten.videoUrl ? toEmbedUrl(konten.videoUrl) : "";
+  const id = parseInt((session?.user as { id?: string } | undefined)?.id ?? "", 10);
+  const [konten, p, pembayaran, grupKonsultasi] = await Promise.all([
+    getKontenPeserta(),
+    prisma.pendaftaran.findUnique({
+      where: { id },
+      select: {
+        nama: true,
+        whatsapp: true,
+        email: true,
+        kabupaten: true,
+        provinsi: true,
+        status: true,
+        ide: true,
+        wilayah: true,
+        videoSelesaiAt: true,
+        konsultasiAt: true,
+      },
+    }),
+    prisma.pembayaranKonsultasi.findFirst({
+      where: { pendaftaranId: id },
+      orderBy: { id: "desc" },
+      select: { status: true },
+    }),
+    getGrupKonsultasi(),
+  ]);
+  const konsultasiSelesai = !!p?.konsultasiAt;
+  const grupUmum = await getGrupUmum();
+  const statusPembayaran = pembayaran?.status ?? "";
+  const bolehGrupKonsultasi =
+    konsultasiSelesai || statusPembayaran === "menunggu" || statusPembayaran === "dikonfirmasi";
 
   return (
     <div className="min-h-screen bg-[#EEF1F8]">
@@ -25,32 +55,32 @@ export default async function PesertaPage() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:py-10">
-        <section>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Selamat datang, {nama}!
-          </h1>
-          <p className="mt-2 text-[15px] leading-7 text-slate-600">{konten.arahan}</p>
+        <section className="flex items-start gap-3">
+          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#0052A4] text-sm font-bold text-white">
+            4
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
+              Selamat datang di Ruang Member Bisnis di Korea
+            </h1>
+            <p className="mt-1.5 text-sm leading-6 text-slate-600 sm:text-[15px]">
+              Wajib tonton dan bereskan video ini dulu, sebelum melanjutkan.
+            </p>
+            {konten.arahan && konten.arahan !== DEFAULT_ARAHAN && (
+              <p className="mt-1.5 text-xs leading-5 text-slate-500">{konten.arahan}</p>
+            )}
+          </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
-          {embed ? (
-            <div className="aspect-video w-full bg-black">
-              <iframe
-                src={embed}
-                title="Video pengarahan"
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          ) : (
-            <div className="grid aspect-video place-items-center bg-slate-100 px-6 text-center text-sm text-slate-500">
-              Video belum tersedia. Silakan cek kembali nanti.
-            </div>
-          )}
-        </section>
-
-        <JadwalSesi />
+        <PesertaFlow
+          videoUrl={konten.videoUrl}
+          videoSelesai={!!p?.videoSelesaiAt}
+          konsultasiSelesai={konsultasiSelesai}
+          grupUmum={grupUmum}
+          grupKonsultasi={grupKonsultasi}
+          bolehGrupKonsultasi={bolehGrupKonsultasi}
+          statusPembayaran={statusPembayaran}
+        />
       </main>
     </div>
   );

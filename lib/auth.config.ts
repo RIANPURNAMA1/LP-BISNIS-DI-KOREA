@@ -13,7 +13,7 @@ const authConfig = {
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
   providers: [Credentials({})],
-  pages: { signIn: "/admin/login" },
+  pages: { signIn: "/login" },
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user, trigger, session }) {

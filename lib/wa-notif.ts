@@ -132,7 +132,7 @@ export async function notifyJadwalBaru(p: {
       `WhatsApp: ${p.whatsapp}`,
       `Waktu: ${p.tanggal} pukul ${p.jam} WIB`,
       ...(p.catatan ? [`Catatan: ${p.catatan}`] : []),
-      `${SITE_URL}/admin/jadwal`,
+      `${SITE_URL}/admin`,
     ];
     await sendWaText(settings.numbers, lines.join("\n"));
   } catch (e) {

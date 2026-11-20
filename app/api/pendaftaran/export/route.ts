@@ -37,6 +37,8 @@ const COLUMNS: Column[] = [
   { header: "Tanggal Daftar", width: 20, align: "center" },
   { header: "Wilayah Grup", width: 20, align: "center" },
   { header: "Status Event", width: 20, align: "center" },
+  { header: "Video Selesai", width: 20, align: "center" },
+  { header: "Meeting Lanjutan", width: 20, align: "center" },
 ];
 
 const WILAYAH_LABEL: Record<string, string> = {
@@ -49,6 +51,17 @@ const PROJECT_NAME = "INDONESIA-KOREA BUSINESS PROJECT";
 
 function tujuanText(value: unknown) {
   return parseTujuan(value).join("; ");
+}
+
+function progresText(value: Date | null) {
+  if (!value) return "Belum";
+  return new Date(value).toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function estimateRowHeight(values: string[]) {
@@ -84,6 +97,9 @@ export async function GET(req: NextRequest) {
           }
         : {}),
       ...eventWhere(req.nextUrl.searchParams.get("event")),
+      ...(req.nextUrl.searchParams.get("meeting") === "1"
+        ? { konsultasiAt: { not: null } }
+        : {}),
     };
 
     const data = await prisma.pendaftaran.findMany({
@@ -223,6 +239,8 @@ export async function GET(req: NextRequest) {
         row.createdAt,
         WILAYAH_LABEL[row.wilayah] ?? "",
         eventLabel(row.eventStatus),
+        progresText(row.videoSelesaiAt),
+        progresText(row.konsultasiAt),
       ];
 
       const excelRow = sheet.addRow(values);

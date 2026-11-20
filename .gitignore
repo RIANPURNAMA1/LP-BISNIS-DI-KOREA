@@ -11,3 +11,11 @@ next-env.d.ts
 
 # Sesi login WhatsApp (rahasia, jangan di-commit)
 .wa-session/
+
+# Video yang diunggah admin (disimpan di server, bukan di repo)
+storage/video/*
+!storage/video/.gitkeep
+
+# Bukti pembayaran konsultasi online (data peserta, jangan di-commit)
+storage/bukti-bayar/*
+!storage/bukti-bayar/.gitkeep

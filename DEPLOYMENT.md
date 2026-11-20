@@ -178,6 +178,9 @@ server {
 
     server_name bisnisdikorea.com www.bisnisdikorea.com;
 
+    # Izinkan upload video admin (batas aplikasi: 200 MB)
+    client_max_body_size 210M;
+
     location / {
         proxy_pass http://127.0.0.1:3002;
         proxy_http_version 1.1;
@@ -372,5 +375,28 @@ Pastikan:
 ### `/admin` tidak bisa dibuka / redirect terus
 - Pastikan `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, dan `AUTH_URL` sudah diisi domain
   production (`https://bisnisdikorea.com`), bukan `localhost`.
-- Hapus cookie lama di browser, lalu login ulang di `/admin/login`.
+- Hapus cookie lama di browser, lalu login ulang di `/login` (satu halaman untuk admin & peserta; `/admin/login` otomatis dialihkan ke `/login`).
 - Cek `pm2 logs bisnis-korea` jika login gagal.
+
+### Upload video admin gagal / video tidak tampil di peserta
+- Halaman kelola video ada di `/admin/video` (URL lama `/admin/jadwal` otomatis dialihkan).
+- File disimpan di folder `storage/video/` dan disajikan lewat `/api/video/<nama>`,
+  jadi **tidak perlu rebuild** setelah upload. Pastikan folder tersebut bisa ditulis
+  oleh user yang menjalankan PM2.
+- Batas ukuran aplikasi 200 MB. Jika memakai Nginx, pasang `client_max_body_size 210M;`
+  di blok `server`, lalu `nginx -t && systemctl reload nginx`.
+- Video aktif tersimpan di tabel `pengaturan` (`peserta_video_url`). Cek lewat
+  `GET /api/admin/konten` saat login sebagai admin.
+
+### Bukti pembayaran konsultasi online tidak tampil di admin
+- Bukti disimpan di folder `storage/bukti-bayar/` dan disajikan lewat
+  `/api/bukti-bayar/<nama>` (hanya untuk user yang sudah login). Pastikan folder
+  tersebut bisa ditulis oleh user PM2.
+- Rekening bank tujuan (metode pembayaran hanya transfer bank) dan dua link grup (Korean Bisnis Klub + Grup Konsultasi
+  Online) diatur di `/admin/pengaturan`; halaman checkout peserta ada di
+  `/peserta/konsultasi` (Rp49.000). Grup konsultasi baru muncul di dashboard setelah checkout.
+- Data pembayaran masuk ke tabel `pembayaran_konsultasi` dan diverifikasi di
+  `/admin/pembayaran`. Setelah disetujui, sistem mengirim email konfirmasi ke peserta.
+- Ukuran bukti maksimal 5 MB (format JPG/PNG/WebP).
+
+pass: email yjzqtuoyvxyzyghf

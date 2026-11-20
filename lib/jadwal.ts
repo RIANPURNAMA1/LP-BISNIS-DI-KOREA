@@ -7,7 +7,7 @@ export const KEY_JAM = "jadwal_jam";
 
 export const DEFAULT_JAM = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
 export const DEFAULT_ARAHAN =
-  "Silakan tonton video berikut sampai selesai. Setelah itu, jadwalkan sesi meeting online untuk membahas Project Indonesia-Korea.";
+  "Silakan tonton video berikut sampai selesai. Setelah itu, konfirmasi data diri Anda untuk melanjutkan program.";
 
 /** Hari ke depan yang bisa dipilih, dan hari kerja yang tersedia (0 = Minggu). */
 export const RANGE_HARI = 21;
@@ -40,18 +40,36 @@ export async function getKontenPeserta(): Promise<KontenPeserta> {
   };
 }
 
+/** File video hasil upload admin, disajikan melalui /api/video/:nama. */
+export const VIDEO_UPLOAD_PREFIX = "/api/video/";
+const VIDEO_EXT = "(?:mp4|webm|ogg|mov|m4v)";
+
+/** URL video valid: file hasil upload atau link YouTube/Vimeo. */
+export function validVideoUrl(raw: string): boolean {
+  const value = raw.trim();
+  if (new RegExp(`^${VIDEO_UPLOAD_PREFIX}[A-Za-z0-9._-]+\\.${VIDEO_EXT}$`, "i").test(value))
+    return true;
+  return !!toEmbedUrl(value);
+}
+
+export function isUploadedVideo(raw: string): boolean {
+  return raw.trim().startsWith(VIDEO_UPLOAD_PREFIX);
+}
+
 /** Ubah link YouTube/Vimeo ke URL embed. Mengembalikan "" jika bukan link yang dikenali. */
 export function toEmbedUrl(raw: string): string {
   try {
     const u = new URL(raw);
     const host = u.hostname.replace(/^www\./, "");
-    if (host === "youtu.be") return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+    if (host === "youtu.be" && u.pathname.length > 1)
+      return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
     if (host === "youtube.com" || host === "m.youtube.com") {
       if (u.pathname === "/watch") {
         const v = u.searchParams.get("v");
         return v ? `https://www.youtube.com/embed/${v}` : "";
       }
-      if (u.pathname.startsWith("/embed/")) return raw;
+      const m = u.pathname.match(/^\/(?:embed|shorts)\/([\w-]+)/);
+      if (m) return `https://www.youtube.com/embed/${m[1]}`;
     }
     if (host === "vimeo.com" && /^\/\d+$/.test(u.pathname))
       return `https://player.vimeo.com/video${u.pathname}`;

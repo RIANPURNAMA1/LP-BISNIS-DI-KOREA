@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
-import { getGrupUrlUntuk } from "@/lib/grup";
 import { eventWhere } from "@/lib/event";
 import { notifyPendaftaranBaru } from "@/lib/wa-notif";
+import { notifyPesertaTerdaftar } from "@/lib/email";
 import {
   pendaftaranSchema,
   listQuerySchema,
@@ -73,17 +73,11 @@ export async function POST(req: NextRequest) {
       createdAt: pendaftaran.createdAt,
     });
 
-    // Link grup WhatsApp dipilih di server sesuai wilayah pendaftar.
-    let groupUrl = "";
-    try {
-      groupUrl = await getGrupUrlUntuk(result.data.wilayah);
-    } catch (e) {
-      // Pendaftaran sudah tersimpan; kegagalan baca link tidak boleh menggagalkannya.
-      console.error("Gagal membaca link grup:", e);
-    }
+    // Email konfirmasi ke peserta (di latar belakang; gagal kirim tidak memengaruhi pendaftaran).
+    void notifyPesertaTerdaftar({ nama: pendaftaran.nama, email: pendaftaran.email });
 
     return NextResponse.json(
-      { success: true, id: pendaftaran.id, groupUrl },
+      { success: true, id: pendaftaran.id },
       { status: 201 }
     );
   } catch (error) {
@@ -109,7 +103,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = listQuerySchema.parse(Object.fromEntries(searchParams));
 
-    const where = {
+    const baseWhere = {
       ...(query.search
         ? {
             OR: [
@@ -121,8 +115,10 @@ export async function GET(req: NextRequest) {
         : {}),
       ...eventWhere(query.event),
     };
+    const meetingWhere = { ...baseWhere, konsultasiAt: { not: null } };
+    const where = query.meeting === "1" ? meetingWhere : baseWhere;
 
-    const [data, total] = await Promise.all([
+    const [data, totalSemua, totalMeeting] = await Promise.all([
       prisma.pendaftaran.findMany({
         omit: { password: true },
         where,
@@ -130,13 +126,17 @@ export async function GET(req: NextRequest) {
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
-      prisma.pendaftaran.count({ where }),
+      prisma.pendaftaran.count({ where: baseWhere }),
+      prisma.pendaftaran.count({ where: meetingWhere }),
     ]);
+    const total = query.meeting === "1" ? totalMeeting : totalSemua;
 
     return NextResponse.json({
       success: true,
       data: data.map((d) => ({ ...d, tujuan: parseTujuan(d.tujuan) })),
       total,
+      totalSemua,
+      totalMeeting,
       page: query.page,
       totalPages: Math.ceil(total / query.limit),
     });

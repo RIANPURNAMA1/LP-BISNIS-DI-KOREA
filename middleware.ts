@@ -24,7 +24,7 @@ export default auth((req) => {
 
   // Belum login
   if (!role) {
-    if (isAdminArea && !isAdminLogin) return go("/admin/login", true);
+    if (isAdminArea && !isAdminLogin) return go("/login", true);
     if (isPesertaArea) return go("/login", true);
     return undefined;
   }

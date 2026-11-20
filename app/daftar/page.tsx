@@ -26,16 +26,13 @@ export default function Daftar() {
         "Pendaftaran belum terkirim. Periksa koneksi Anda lalu coba lagi.",
       );
     }
-    const json = await res.json().catch(() => null);
-    // Langsung masuk sebagai peserta; jika gagal, peserta tetap bisa login manual.
-    await signIn("peserta", {
+    // Langsung masuk sebagai peserta; jika gagal, peserta diminta login manual.
+    const login = await signIn("peserta", {
       email: data.email,
       password: data.password,
       redirect: false,
     }).catch(() => null);
-    return {
-      groupUrl: typeof json?.groupUrl === "string" ? json.groupUrl : "",
-    };
+    return { loggedIn: !!login && !login.error };
   }
 
   return <DaftarPage onSubmit={handleSubmit} />;

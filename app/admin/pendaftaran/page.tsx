@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +38,8 @@ type PendaftarRow = {
   cerita: string;
   sumber: string;
   eventStatus?: string;
+  videoSelesaiAt?: string | null;
+  konsultasiAt?: string | null;
   createdAt?: string;
   created_at?: string;
 };
@@ -45,6 +48,8 @@ type ApiResp = {
   success: boolean;
   data: PendaftarRow[];
   total: number;
+  totalSemua: number;
+  totalMeeting: number;
   page: number;
   totalPages: number;
 };
@@ -81,8 +86,9 @@ function waLink(raw: string) {
   return `https://wa.me/${n}`;
 }
 
-function formatTanggal(r: PendaftarRow) {
-  const d = new Date(r.createdAt || r.created_at || "");
+function formatWaktu(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
   return isNaN(d.getTime())
     ? ""
     : d.toLocaleString("id-ID", {
@@ -92,6 +98,10 @@ function formatTanggal(r: PendaftarRow) {
         hour: "2-digit",
         minute: "2-digit",
       });
+}
+
+function formatTanggal(r: PendaftarRow) {
+  return formatWaktu(r.createdAt || r.created_at);
 }
 
 // Tinggi baris tabel (px) dan tinggi footer; dipakai menghitung berapa baris yang muat di layar.
@@ -127,6 +137,12 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
   },
   { key: "sumber", label: "Sumber Info", width: 140, get: (r) => r.sumber ?? "" },
   { key: "tanggal", label: "Tanggal Daftar", width: 160, get: formatTanggal },
+  {
+    key: "meeting",
+    label: "Meeting Lanjutan",
+    width: 150,
+    get: (r) => (r.konsultasiAt ? formatWaktu(r.konsultasiAt) : "Belum"),
+  },
 ];
 
 export default function PendaftaranPage() {
@@ -143,6 +159,9 @@ function PendaftaranList() {
   const urlEvent = searchParams.get("event") ?? "";
   const [data, setData] = useState<PendaftarRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [totalSemua, setTotalSemua] = useState(0);
+  const [totalMeeting, setTotalMeeting] = useState(0);
+  const [meeting, setMeeting] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
@@ -196,6 +215,7 @@ function PendaftaranList() {
     });
     if (search) params.set("search", search);
     if (eventFilter) params.set("event", eventFilter);
+    if (meeting) params.set("meeting", "1");
 
     fetch(`/api/pendaftaran?${params}`)
       .then((r) => {
@@ -206,11 +226,13 @@ function PendaftaranList() {
         setData(json.data);
         setSelected(new Set());
         setTotal(json.total);
+        setTotalSemua(json.totalSemua ?? json.total);
+        setTotalMeeting(json.totalMeeting ?? 0);
         setTotalPages(json.totalPages);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [page, search, eventFilter, limit]);
+  }, [page, search, eventFilter, meeting, limit]);
 
   useEffect(() => {
     fetchData();
@@ -286,6 +308,8 @@ function PendaftaranList() {
       "Sumber Informasi",
       "Tanggal Daftar",
       "Status Event",
+      "Video Selesai",
+      "Meeting Lanjutan",
     ];
 
     const rows = list.map((r, i) => {
@@ -321,6 +345,8 @@ function PendaftaranList() {
         r.sumber,
         tanggalText,
         eventLabel(r.eventStatus),
+        formatWaktu(r.videoSelesaiAt) || "Belum",
+        formatWaktu(r.konsultasiAt) || "Belum",
       ].map(csvCell);
     });
 
@@ -344,6 +370,7 @@ function PendaftaranList() {
       });
       if (search) params.set("search", search);
       if (eventFilter) params.set("event", eventFilter);
+      if (meeting) params.set("meeting", "1");
 
       const res = await fetch(`/api/pendaftaran?${params}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
@@ -383,6 +410,7 @@ function PendaftaranList() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (eventFilter) params.set("event", eventFilter);
+      if (meeting) params.set("meeting", "1");
 
       const res = await fetch(`/api/pendaftaran/export?${params}`);
       if (!res.ok) throw new Error("Gagal membuat file Excel");
@@ -418,19 +446,50 @@ function PendaftaranList() {
   return (
     <div className="flex h-[calc(100vh-6.5rem)] min-h-[520px] flex-col gap-4">
       {/* Tab */}
-      <div className="flex shrink-0 items-end gap-1 px-1">
-        <div className="flex items-center gap-2 rounded-t-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#0052A4]">
+      <div className="flex shrink-0 items-center gap-2 px-1">
+        <button
+          onClick={() => {
+            setMeeting(false);
+            setPage(1);
+          }}
+          className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
+            !meeting
+              ? "bg-white font-semibold text-[#0052A4] shadow-sm"
+              : "bg-white/60 font-medium text-slate-500 hover:bg-white"
+          }`}
+        >
           <Users className="h-4 w-4" />
           Semua pendaftar
           <span className="rounded-full bg-[#0052A4] px-2 py-0.5 text-[11px] font-semibold text-white">
-            {total}
+            {totalSemua}
           </span>
-        </div>
+        </button>
+        <button
+          onClick={() => {
+            setMeeting(true);
+            setPage(1);
+          }}
+          className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
+            meeting
+              ? "bg-white font-semibold text-[#0052A4] shadow-sm"
+              : "bg-white/60 font-medium text-slate-500 hover:bg-white"
+          }`}
+        >
+          <MessagesSquare className="h-4 w-4" />
+          Meeting lanjutan
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${
+              totalMeeting > 0 ? "bg-emerald-600" : "bg-slate-400"
+            }`}
+          >
+            {totalMeeting}
+          </span>
+        </button>
       </div>
 
       <div
         ref={cardRef}
-        className="-mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl rounded-tl-none bg-white shadow-sm ring-1 ring-slate-200/60"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60"
       >
         {/* Toolbar */}
         <div
@@ -625,6 +684,15 @@ function PendaftaranList() {
                             <span className="inline-block max-w-full truncate rounded-full bg-[#0052A4]/10 px-2.5 py-0.5 align-middle text-[11px] font-semibold uppercase tracking-wide text-[#0052A4]">
                               {text}
                             </span>
+                          );
+                        } else if (c.key === "meeting") {
+                          content = r.konsultasiAt ? (
+                            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 align-middle text-[11px] font-semibold text-emerald-700">
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                              <span className="truncate">{text}</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">Belum</span>
                           );
                         }
                         return (

@@ -30,7 +30,11 @@ model Pendaftaran {
   // Hash bcrypt untuk login peserta; null = belum punya akses (data lama).
   password    String? @db.VarChar(255)
   lastLoginAt DateTime? @map("last_login_at")
+  // Progres alur peserta: selesai menonton video, lalu konfirmasi konsultasi lanjutan.
+  videoSelesaiAt DateTime? @map("video_selesai_at")
+  konsultasiAt   DateTime? @map("konsultasi_at")
   jadwal      JadwalSesi[]
+  pembayaran  PembayaranKonsultasi[]
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -77,4 +81,32 @@ model JadwalSesi {
   @@index([pendaftaranId])
   @@index([tanggal])
   @@map("jadwal_sesi")
+}
+
+// Pembayaran konsultasi online (Rp49.000) yang dikirim peserta, lalu diverifikasi admin.
+model PembayaranKonsultasi {
+  id            Int         @id @default(autoincrement())
+  pendaftaranId Int         @map("pendaftaran_id")
+  // Snapshot data diri peserta saat checkout.
+  nama          String      @db.VarChar(255)
+  whatsapp      String      @db.VarChar(30)
+  email         String      @db.VarChar(255)
+  // bank | ewallet
+  metode        String      @db.VarChar(20)
+  // Nama bank / e-wallet yang dipilih (mis. BCA, DANA).
+  namaChannel   String      @map("nama_channel") @db.VarChar(100)
+  namaPengirim  String      @map("nama_pengirim") @db.VarChar(255)
+  buktiBayar    String      @map("bukti_bayar") @db.VarChar(500)
+  jumlah        Int         @default(49000)
+  // menunggu | dikonfirmasi | ditolak
+  status        String      @default("menunggu") @db.VarChar(20)
+  catatanAdmin  String?     @map("catatan_admin") @db.Text
+  verifiedAt    DateTime?   @map("verified_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  pendaftaran   Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+
+  @@index([pendaftaranId])
+  @@index([status])
+  @@map("pembayaran_konsultasi")
 }

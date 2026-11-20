@@ -57,12 +57,12 @@ type Pendaftar = {
 
 // Wilayah dari formulir, beserta grup WhatsApp yang diberikan ke pendaftar.
 const WILAYAH_INFO: Record<string, { label: string; grup: string }> = {
-  jabodetabek: { label: "Jabodetabek", grup: "Grup Jabodetabek" },
+  jabodetabek: { label: "Jabodetabek", grup: "Korean Bisnis Klub" },
   luar_jabodetabek: {
     label: "Luar Jabodetabek",
-    grup: "Grup Luar Jabodetabek",
+    grup: "Korean Bisnis Klub",
   },
-  luar_negeri: { label: "Luar Negeri", grup: "Grup Luar Jabodetabek" },
+  luar_negeri: { label: "Luar Negeri", grup: "Korean Bisnis Klub" },
 };
 
 function getInitials(name: string) {

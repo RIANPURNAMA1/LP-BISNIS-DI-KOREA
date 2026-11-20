@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, Loader2, Lock, Mail } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
-export default function PesertaLogin() {
+export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,13 +19,34 @@ export default function PesertaLogin() {
     setError("");
     setLoading(true);
     try {
-      const result = await signIn("peserta", { email, password, redirect: false });
-      if (result?.error) {
-        setError("Email atau password salah.");
-        return;
+      // Coba sebagai admin terlebih dahulu (provider "credentials"),
+      // lalu sebagai peserta (provider "peserta") jika bukan admin.
+      const adminResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      const isAdmin = !!adminResult?.ok && !adminResult?.error;
+
+      if (!isAdmin) {
+        const pesertaResult = await signIn("peserta", {
+          email,
+          password,
+          redirect: false,
+        });
+        if (!pesertaResult?.ok || pesertaResult?.error) {
+          setError("Email atau password salah.");
+          return;
+        }
       }
+
       const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
-      router.push(callbackUrl?.startsWith("/peserta") ? callbackUrl : "/peserta");
+      const prefix = isAdmin ? "/admin" : "/peserta";
+      const home = isAdmin ? "/admin" : "/peserta";
+      const destination =
+        callbackUrl && callbackUrl.startsWith(prefix) ? callbackUrl : home;
+
+      router.push(destination);
       router.refresh();
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
@@ -35,42 +56,73 @@ export default function PesertaLogin() {
   }
 
   const input =
-    "h-11 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
+    "mt-1.5 h-10 w-full rounded-md border border-[#D9DFF3] bg-white px-3 text-[13px] text-gray-900 placeholder:text-gray-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="mb-8 text-center">
+    <main className="min-h-screen bg-[#EEF3FD] p-3 sm:p-8">
+      <div className="relative flex min-h-[calc(100vh-1.5rem)] flex-col items-center overflow-hidden rounded-2xl bg-gradient-to-b from-white via-[#F6F9FE] to-[#D9E4FA] shadow-sm ring-1 ring-[#DCE4F7] sm:min-h-[calc(100vh-4rem)]">
+        {/* Latar pegunungan lembut */}
+        <svg
+          aria-hidden
+          viewBox="0 0 1200 420"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute bottom-0 left-0 h-[45%] w-full"
+        >
+          <path
+            d="M0 420V300L120 250L230 150L330 230L430 120L560 260L690 90L820 230L930 170L1060 260L1200 200V420Z"
+            fill="#0052A4"
+            fillOpacity="0.05"
+          />
+          <path
+            d="M0 420V340L150 290L300 230L420 300L560 200L700 290L860 220L1000 300L1200 250V420Z"
+            fill="#0052A4"
+            fillOpacity="0.07"
+          />
+          <path
+            d="M0 420V380L200 340L380 370L560 320L760 365L960 330L1200 370V420Z"
+            fill="#0052A4"
+            fillOpacity="0.08"
+          />
+        </svg>
+
+        {/* Logo */}
+        <header className="relative pt-10">
+          <Link href="/" aria-label="Kembali ke beranda">
             <Image
-              src="/logo.avif"
+              src="/logo/4.png"
               alt="Logo Indonesia-Korea Business Project"
-              width={160}
-              height={64}
+              width={1079}
+              height={1349}
               priority
-              className="mx-auto h-auto w-40"
+              className="h-auto w-16"
             />
-            <h1 className="mt-5 text-lg font-bold text-gray-900">Masuk Peserta</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Gunakan email dan password saat Anda mendaftar.
+          </Link>
+        </header>
+
+        {/* Form */}
+        <div className="relative flex w-full flex-1 items-center justify-center px-4 py-10">
+          <div className="w-full max-w-[312px] rounded-md border border-[#D9DFF3] bg-white/70 p-5 shadow-sm backdrop-blur-md">
+            <h1 className="text-sm font-semibold text-gray-900">Masuk</h1>
+            <p className="mt-0.5 text-xs leading-5 text-gray-500">
+              Peserta dan admin masuk dengan email dan password terdaftar.
             </p>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            {error && (
-              <div
-                role="alert"
-                className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
-              >
-                <AlertCircle className="h-4 w-4 shrink-0" /> {error}
-              </div>
-            )}
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+              {error && (
+                <div
+                  role="alert"
+                  className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+                >
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+                </div>
+              )}
 
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-gray-700">Email</span>
-              <span className="relative block">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div>
+                <label htmlFor="email" className="block text-xs font-medium text-gray-800">
+                  Email
+                </label>
                 <input
+                  id="email"
                   type="email"
                   autoComplete="email"
                   required
@@ -79,14 +131,14 @@ export default function PesertaLogin() {
                   placeholder="nama@email.com"
                   className={input}
                 />
-              </span>
-            </label>
+              </div>
 
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-gray-700">Password</span>
-              <span className="relative block">
-                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div>
+                <label htmlFor="password" className="block text-xs font-medium text-gray-800">
+                  Password
+                </label>
                 <input
+                  id="password"
                   type="password"
                   autoComplete="current-password"
                   required
@@ -94,35 +146,40 @@ export default function PesertaLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   className={input}
                 />
-              </span>
-            </label>
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#0052A4] text-sm font-semibold text-white transition-colors hover:bg-[#00438a] disabled:opacity-60"
-            >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Masuk
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-b from-[#1F6FC4] to-[#0052A4] text-[13px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0052A4] disabled:opacity-60"
+              >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Masuk
+              </button>
+            </form>
 
-          <p className="mt-6 text-center text-xs leading-5 text-gray-500">
-            Belum punya akun?{" "}
-            <Link href="/daftar" className="font-medium text-[#0052A4] hover:underline">
-              Daftar
-            </Link>
-            . Lupa password? Hubungi admin melalui grup WhatsApp.
-          </p>
+            <div className="mt-5 space-y-2 text-xs text-gray-800">
+              <p>
+                <Link href="/daftar" className="font-medium hover:underline">
+                  Buat akun peserta baru
+                </Link>
+              </p>
+              <p className="leading-5 text-gray-500">
+                Lupa password? Hubungi admin melalui grup WhatsApp.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <Link
-          href="/"
-          className="mt-5 flex items-center justify-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
-        >
-          <ArrowLeft className="h-4 w-4" /> Kembali ke beranda
-        </Link>
+        {/* Footer */}
+        <footer className="relative pb-8 text-xs text-gray-800">
+          <span>© {new Date().getFullYear()} Indonesia-Korea Business Project</span>
+          <span className="mx-3 text-gray-400">·</span>
+          <Link href="/" className="hover:underline">
+            Beranda
+          </Link>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }

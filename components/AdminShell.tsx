@@ -8,10 +8,12 @@ import { SessionProvider } from "next-auth/react";
 import {
   LayoutDashboard,
   ClipboardList,
+  CreditCard,
   Globe,
   LogOut,
   BellRing,
-  CalendarClock,
+  Mail,
+  Video,
   MessageCircle,
   UserCircle2,
   ChevronDown,
@@ -24,9 +26,11 @@ import {
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/pendaftaran", label: "Data Pendaftar", icon: ClipboardList },
-  { href: "/admin/jadwal", label: "Jadwal Sesi", icon: CalendarClock },
+  { href: "/admin/pembayaran", label: "Pembayaran", icon: CreditCard },
+  { href: "/admin/video", label: "Kelola Video", icon: Video },
   { href: "/admin/pengaturan", label: "Grup WhatsApp", icon: MessageCircle },
   { href: "/admin/notifikasi", label: "Notifikasi WA", icon: BellRing },
+  { href: "/admin/email", label: "Notifikasi Email", icon: Mail },
   { href: "/admin/profil", label: "Profil", icon: UserCircle2 },
 ];
 
@@ -151,12 +155,6 @@ function Header({ onMenu }: { onMenu: () => void }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const title =
-    NAV_ITEMS.slice()
-      .sort((a, b) => b.href.length - a.href.length)
-      .find((i) => (i.href === "/admin" ? pathname === "/admin" : pathname.startsWith(i.href)))
-      ?.label ?? "Admin Panel";
-
   const name = session?.user?.name || session?.user?.email || "Administrator";
   const email = session?.user?.email || "";
   const initial = name.trim().charAt(0).toUpperCase() || "A";
@@ -186,7 +184,6 @@ function Header({ onMenu }: { onMenu: () => void }) {
       >
         <Menu className="h-5 w-5" />
       </button>
-      <h1 className="hidden shrink-0 text-lg font-bold text-slate-900 sm:block">{title}</h1>
       <form onSubmit={onSearch} className="relative ml-auto w-full min-w-0 max-w-xs">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
@@ -281,8 +278,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <main
             className={
               fullWidth
-                ? "w-full py-4"
-                : "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
+                ? "mt-4 w-full pb-6"
+                : "mx-auto mt-6 max-w-7xl px-4 pb-8 sm:px-6 lg:px-8"
             }
           >
             {children}

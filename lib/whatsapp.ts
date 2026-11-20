@@ -33,7 +33,7 @@ type WaState = {
   timer: NodeJS.Timeout | null;
 };
 
-const g = globalThis as unknown as { __waState?: WaState };
+const g = globalThis as unknown as { __waState?: WaState; __waWatchdog?: NodeJS.Timeout };
 
 const state: WaState = (g.__waState ??= {
   sock: null,
@@ -120,6 +120,10 @@ export async function startWhatsApp() {
       browser: ["Admin Pendaftaran", "Chrome", "1.0.0"],
       markOnlineOnConnect: false,
       syncFullHistory: false,
+      // Ping berkala menjaga koneksi tetap hidup dan mendeteksi koneksi mati diam-diam.
+      keepAliveIntervalMs: 25_000,
+      connectTimeoutMs: 60_000,
+      defaultQueryTimeoutMs: 60_000,
     });
     state.sock = sock;
 
@@ -167,6 +171,17 @@ export async function startWhatsApp() {
           return;
         }
 
+        // 440 = sesi dipakai proses lain (mis. dua instance server jalan bersamaan).
+        // Beri jeda lebih lama agar dua proses tidak saling menendang terus-menerus.
+        if (code === DisconnectReason.connectionReplaced) {
+          console.warn(
+            "[wa] sesi digantikan koneksi lain. Pastikan hanya SATU instance server yang berjalan."
+          );
+          state.status = "connecting";
+          scheduleRestart(30_000);
+          return;
+        }
+
         // 515 = restart wajib setelah QR berhasil dipindai (normal).
         if (code === DisconnectReason.restartRequired) {
           state.status = "connecting";
@@ -190,10 +205,34 @@ export async function startWhatsApp() {
   } catch (e) {
     console.error("[wa] gagal memulai:", e);
     state.sock = null;
-    state.status = "disconnected";
+    // Kegagalan sementara (jaringan, dll) tidak boleh memutus permanen: coba lagi.
+    if (hasSavedSession()) {
+      state.status = "connecting";
+      state.retry += 1;
+      scheduleRestart(Math.min(2000 * state.retry, 30000));
+    } else {
+      state.status = "disconnected";
+    }
   } finally {
     state.starting = false;
   }
+}
+
+/**
+ * Penjaga koneksi: tiap 30 detik, jika sesi tersimpan tetapi tidak ada koneksi
+ * dan tidak ada percobaan sambung yang dijadwalkan, sambungkan lagi.
+ * Dihentikan otomatis saat admin menekan "Putuskan" (sesi dihapus).
+ */
+export function ensureWaWatchdog() {
+  if (g.__waWatchdog) return;
+  g.__waWatchdog = setInterval(() => {
+    if (!state.sock && !state.starting && !state.timer && hasSavedSession()) {
+      console.log("[wa] penjaga: koneksi mati, menyambung ulang");
+      state.retry = 0;
+      void startWhatsApp();
+    }
+  }, 30_000);
+  g.__waWatchdog.unref?.();
 }
 
 /** Putuskan koneksi dan hapus sesi (harus scan QR lagi untuk menyambung). */
