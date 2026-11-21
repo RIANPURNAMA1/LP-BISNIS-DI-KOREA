@@ -77,7 +77,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { id: peserta.id },
           data: { lastLoginAt: new Date() },
         });
-        return { id: String(peserta.id), email: peserta.email, name: peserta.nama, role: "peserta" };
+        return {
+          id: String(peserta.id),
+          email: peserta.email,
+          name: peserta.nama,
+          role: "peserta",
+          // Info untuk memilih tujuan setelah login. Akses tetap diverifikasi
+          // ulang dari DB oleh requirePesertaAktif().
+          aksesAktif: !!peserta.aksesAktifAt,
+        };
       },
     }),
   ],

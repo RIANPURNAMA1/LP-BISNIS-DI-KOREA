@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 
@@ -41,10 +41,17 @@ export default function LoginPage() {
       }
 
       const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+      const session = await getSession();
+      // Diambil dari JWT saat login; bukan satu-satunya otoritas akses.
+      const aksesAktif = !!(session?.user as { aksesAktif?: boolean } | undefined)?.aksesAktif;
+
       const prefix = isAdmin ? "/admin" : "/peserta";
-      const home = isAdmin ? "/admin" : "/peserta";
+      // Belum lunas => langsung ke gerbang pembayaran, bukan dashboard.
+      const home = isAdmin ? "/admin" : aksesAktif ? "/peserta" : "/pembayaran";
       const destination =
-        callbackUrl && callbackUrl.startsWith(prefix) ? callbackUrl : home;
+        callbackUrl && callbackUrl.startsWith(prefix) && (isAdmin || aksesAktif)
+          ? callbackUrl
+          : home;
 
       router.push(destination);
       router.refresh();

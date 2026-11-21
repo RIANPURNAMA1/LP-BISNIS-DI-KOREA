@@ -14,6 +14,7 @@ export default auth((req) => {
   const isAdminArea = path.startsWith("/admin");
   const isAdminLogin = path === "/admin/login";
   const isPesertaArea = path.startsWith("/peserta");
+  const isPembayaranArea = path.startsWith("/pembayaran");
   const isPesertaLogin = path === "/login";
 
   const go = (to: string, withCallback = false) => {
@@ -25,7 +26,7 @@ export default auth((req) => {
   // Belum login
   if (!role) {
     if (isAdminArea && !isAdminLogin) return go("/login", true);
-    if (isPesertaArea) return go("/login", true);
+    if (isPesertaArea || isPembayaranArea) return go("/login", true);
     return undefined;
   }
 
@@ -35,10 +36,16 @@ export default auth((req) => {
   // Role tidak boleh masuk area role lain
   if (isAdminArea && role !== "admin") return go(HOME[role]);
   if (isPesertaArea && role !== "peserta") return go(HOME[role]);
+  // Halaman pembayaran hanya untuk peserta (admin kembali ke dashboard-nya).
+  if (isPembayaranArea && role !== "peserta") return go(HOME[role]);
+
+  // Catatan: pengecekan status akses (sudah bayar/belum) sengaja tidak di sini.
+  // Middleware jalan di edge tanpa DB; otoritas ada di requirePesertaAktif()
+  // dan server layout /peserta yang mengecek aksesAktifAt langsung dari DB.
 
   return undefined;
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/peserta/:path*", "/login"],
+  matcher: ["/admin/:path*", "/peserta/:path*", "/pembayaran/:path*", "/login"],
 };

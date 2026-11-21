@@ -140,5 +140,33 @@ export async function notifyJadwalBaru(p: {
   }
 }
 
+/** Notifikasi bukti pembayaran baru ke admin. Tidak pernah melempar error. */
+export async function notifyPembayaranMasuk(p: {
+  nama: string;
+  whatsapp: string;
+  namaChannel: string;
+  namaPengirim: string;
+  jumlah: number;
+}) {
+  try {
+    if (getWaSnapshot().status !== "connected") return;
+    const settings = await getNotifSettings();
+    if (!settings.enabled || settings.numbers.length === 0) return;
+
+    const lines = [
+      "*Bukti pembayaran baru*",
+      `Nama: ${p.nama}`,
+      `WhatsApp: ${p.whatsapp}`,
+      `Bank: ${p.namaChannel}`,
+      `Nama pengirim: ${p.namaPengirim}`,
+      `Jumlah: Rp${new Intl.NumberFormat("id-ID").format(p.jumlah)}`,
+      `Verifikasi: ${SITE_URL}/admin/pembayaran`,
+    ];
+    await sendWaText(settings.numbers, lines.join("\n"));
+  } catch (e) {
+    console.error("[wa] notifikasi pembayaran error:", e);
+  }
+}
+
 export const TEST_MESSAGE =
   "*Tes notifikasi*\nWhatsApp berhasil terhubung. Notifikasi pendaftar baru akan dikirim ke nomor ini.";

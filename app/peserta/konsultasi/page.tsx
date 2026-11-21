@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Headphones } from "lucide-react";
 import prisma from "@/lib/db";
-import { requirePeserta } from "@/lib/guard";
+import { requirePesertaAktif } from "@/lib/guard";
 import { getGrupKonsultasi } from "@/lib/grup";
 import { getRekening } from "@/lib/pembayaran";
 import LogoutButton from "../LogoutButton";
@@ -11,8 +11,8 @@ import CheckoutKonsultasi from "./CheckoutKonsultasi";
 export const dynamic = "force-dynamic";
 
 export default async function KonsultasiOnlinePage() {
-  const peserta = await requirePeserta();
-  if (!peserta) redirect("/login");
+  const peserta = await requirePesertaAktif();
+  if (!peserta) redirect("/pembayaran");
 
   const [p, terakhir, rekening, grupKonsultasi] = await Promise.all([
     prisma.pendaftaran.findUnique({

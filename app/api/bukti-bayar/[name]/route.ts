@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { BUKTI_NAME_RE } from "@/lib/pembayaran";
+import prisma from "@/lib/db";
+import { BUKTI_NAME_RE, BUKTI_PREFIX } from "@/lib/pembayaran";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,14 +17,32 @@ const TYPES: Record<string, string> = {
   webp: "image/webp",
 };
 
-/** Bukti pembayaran hanya bisa dilihat oleh admin/peserta yang login. */
+/** Bukti pembayaran hanya bisa dilihat admin atau pemilik pembayarannya. */
 export async function GET(_req: Request, { params }: { params: { name: string } }) {
   try {
     const session = await auth();
-    if (!session?.user) return new NextResponse("Tidak terautentikasi.", { status: 401 });
+    const user = session?.user as { id?: string; role?: "admin" | "peserta" } | undefined;
+    if (!user?.role) return new NextResponse("Tidak terautentikasi.", { status: 401 });
 
     const name = decodeURIComponent(params.name);
     if (!BUKTI_NAME_RE.test(name)) return new NextResponse("Tidak ditemukan.", { status: 404 });
+
+    const pembayaran = await prisma.pembayaranKonsultasi.findFirst({
+      where: { buktiBayar: `${BUKTI_PREFIX}${name}` },
+      select: { pendaftaranId: true },
+    });
+    if (!pembayaran) return new NextResponse("Tidak ditemukan.", { status: 404 });
+
+    const idPeserta = parseInt(user.id ?? "", 10);
+    if (
+      user.role === "peserta" &&
+      (!Number.isFinite(idPeserta) || idPeserta !== pembayaran.pendaftaranId)
+    ) {
+      return new NextResponse("Tidak diizinkan.", { status: 403 });
+    }
+    if (user.role !== "admin" && user.role !== "peserta") {
+      return new NextResponse("Tidak diizinkan.", { status: 403 });
+    }
 
     const file = await readFile(path.join(UPLOAD_DIR, name));
     const ext = name.split(".").pop()!.toLowerCase();

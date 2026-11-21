@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import FlowbiteInit from "@/components/FlowbiteInit";
 import {
   SITE_DESCRIPTION,
@@ -10,11 +10,12 @@ import {
 } from "@/lib/site";
 import "./globals.css";
 
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const manrope = localFont({
+  src: "./fonts/Manrope-Variable.woff2",
   variable: "--font-manrope",
+  weight: "400 800",
   display: "swap",
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {

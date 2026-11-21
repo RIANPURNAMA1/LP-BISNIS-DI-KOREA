@@ -8,7 +8,8 @@ import LogoutButton from "./LogoutButton";
 export const dynamic = "force-dynamic";
 
 export default async function PesertaPage() {
-  // Akses sudah dijaga middleware; sesi dipakai untuk menyapa peserta.
+  // Akses penuh sudah dijaga layout /peserta (aksesAktifAt dari DB).
+  // Sesi dipakai untuk menyapa peserta.
   const session = await auth();
   const nama = session?.user?.name || "Peserta";
   const id = parseInt((session?.user as { id?: string } | undefined)?.id ?? "", 10);
@@ -25,6 +26,7 @@ export default async function PesertaPage() {
         status: true,
         ide: true,
         wilayah: true,
+        aksesAktifAt: true,
         videoSelesaiAt: true,
         konsultasiAt: true,
       },
@@ -39,8 +41,10 @@ export default async function PesertaPage() {
   const konsultasiSelesai = !!p?.konsultasiAt;
   const grupUmum = await getGrupUmum();
   const statusPembayaran = pembayaran?.status ?? "";
+  // Grup berbayar hanya boleh muncul setelah pembayaran benar-benar dikonfirmasi
+  // DAN akses member aktif. Status "menunggu" tidak lagi membuka fitur ini.
   const bolehGrupKonsultasi =
-    konsultasiSelesai || statusPembayaran === "menunggu" || statusPembayaran === "dikonfirmasi";
+    !!p?.aksesAktifAt && statusPembayaran === "dikonfirmasi";
 
   return (
     <div className="min-h-screen bg-[#EEF1F8]">

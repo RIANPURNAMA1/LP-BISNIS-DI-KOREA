@@ -27,7 +27,7 @@ const K = {
 
 export const DEFAULT_SUBJECT = "Selamat! Anda sudah terdaftar di Program Bisnis di Korea";
 export const DEFAULT_MESSAGE =
-  "Selamat, pendaftaran Anda sudah kami terima. Silakan login ke halaman peserta untuk menonton video pengarahan dan melanjutkan ke tahap berikutnya.";
+  "Selamat, pendaftaran Anda sudah kami terima. Silakan masuk dan selesaikan pembayaran untuk mengaktifkan akun. Setelah terverifikasi, Anda bisa masuk ke halaman peserta dan menonton video pengarahan.";
 
 export const DEFAULT_PAYMENT_SUBJECT = "Pembayaran Konsultasi Online Anda Dikonfirmasi";
 export const DEFAULT_PAYMENT_MESSAGE =
@@ -313,4 +313,90 @@ export async function notifyPembayaranDikonfirmasi(p: {
   } catch (e) {
     console.error("[email] gagal mengirim notifikasi pembayaran:", e);
   }
+}
+
+/* ---------------- email status pembayaran (gerbang akses) ---------------- */
+
+async function kirimEmailTransaksional(p: {
+  nama: string;
+  email: string;
+  subjek: string;
+  judul: string;
+  pesan: string;
+  ctaLabel: string;
+  ctaHref: string;
+  label: string;
+}) {
+  try {
+    const [s, m] = await Promise.all([getEmailSettings(), readRaw()]);
+    const rawPass = m.get(K.pass);
+    if (!s.host || !s.user || !s.fromEmail || !rawPass) {
+      throw new Error("Pengaturan email belum lengkap.");
+    }
+    const url = `${SITE_URL}${p.ctaHref}`;
+    const text = `${p.judul}\n\nHalo ${p.nama},\n\n${p.pesan}\n\n${p.ctaLabel}: ${url}`;
+    const html = `<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(p.subjek)}</title></head>
+<body style="margin:0;padding:0;background:#EEF1F8;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF1F8"><tr><td align="center" style="padding:32px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
+<tr><td style="background:#0052A4;padding:26px 32px">
+<p style="margin:0 0 6px;font-size:11px;font-weight:bold;letter-spacing:1.4px;text-transform:uppercase;color:#bfdbfe">${esc(SITE_NAME.toUpperCase())}</p>
+<p style="margin:0;font-size:20px;line-height:1.35;font-weight:bold;color:#ffffff">${esc(p.judul)}</p>
+</td></tr>
+<tr><td style="height:4px;background:#E3081C;font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td style="padding:30px 32px 8px">
+<p style="margin:0 0 10px;font-size:15px;color:#0f172a">Halo <b>${esc(p.nama)}</b>,</p>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.75;color:#334155;white-space:pre-line">${esc(p.pesan)}</p>
+<p style="margin:24px 0 0"><a href="${esc(url)}" style="display:inline-block;padding:14px 30px;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;background:#0052A4">${esc(p.ctaLabel)} &rarr;</a></p>
+<p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#94a3b8">Jika tombol tidak berfungsi, salin tautan ini ke browser:<br><span style="color:#0052A4;word-break:break-all">${esc(url)}</span></p>
+</td></tr>
+<tr><td style="padding:20px 32px 26px">
+<p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8">Email ini dikirim otomatis oleh ${esc(SITE_NAME)} terkait status pembayaran Anda.</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>`;
+    const t = await transport(s, decrypt(rawPass));
+    await t.sendMail({
+      from: { name: s.fromName || SITE_NAME, address: s.fromEmail },
+      to: p.email,
+      subject: p.subjek,
+      text,
+      html,
+    });
+  } catch (e) {
+    console.error(`[email] gagal mengirim notifikasi ${p.label}:`, e);
+  }
+}
+
+/** Dipanggil saat peserta mengirim bukti transfer. Tidak pernah melempar error. */
+export async function notifyBuktiDiterima(p: { nama: string; email: string }) {
+  await kirimEmailTransaksional({
+    ...p,
+    subjek: "Bukti pembayaran diterima — menunggu verifikasi",
+    judul: "Bukti Pembayaran Diterima",
+    pesan:
+      "Terima kasih. Bukti transfer Anda sudah kami terima dan sedang diverifikasi admin. Setelah disetujui, akun Anda aktif dan Anda bisa masuk ke halaman peserta.",
+    ctaLabel: "Cek status pembayaran",
+    ctaHref: "/pembayaran",
+    label: "bukti diterima",
+  });
+}
+
+/** Dipanggil saat admin menolak bukti pembayaran. Tidak pernah melempar error. */
+export async function notifyPembayaranDitolak(p: {
+  nama: string;
+  email: string;
+  catatan: string;
+}) {
+  await kirimEmailTransaksional({
+    nama: p.nama,
+    email: p.email,
+    subjek: "Bukti pembayaran perlu diperbaiki",
+    judul: "Pembayaran Belum Diverifikasi",
+    pesan: `Mohon maaf, bukti pembayaran Anda belum dapat diverifikasi.\n\nAlasan admin: ${p.catatan}\n\nSilakan unggah ulang bukti transfer yang benar di halaman pembayaran.`,
+    ctaLabel: "Unggah ulang bukti",
+    ctaHref: "/pembayaran",
+    label: "pembayaran ditolak",
+  });
 }

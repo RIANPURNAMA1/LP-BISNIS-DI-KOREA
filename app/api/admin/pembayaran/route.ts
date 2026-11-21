@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
         orderBy: { id: "desc" },
         include: {
           pendaftaran: {
-            select: { id: true, wilayah: true, konsultasiAt: true },
+            select: { id: true, wilayah: true, konsultasiAt: true, aksesAktifAt: true },
           },
         },
       }),

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { requirePeserta } from "@/lib/guard";
+import { requirePesertaAktif } from "@/lib/guard";
 import { jadwalSchema } from "@/lib/validations";
 import { notifyJadwalBaru } from "@/lib/wa-notif";
 import { STATUS_AKTIF, getKontenPeserta, slotKey, tanggalTersedia } from "@/lib/jadwal";
@@ -13,8 +13,8 @@ const fail = (error: string, status: number) =>
 // ─── GET — jadwal milik peserta + slot yang masih bisa dipilih ───
 export async function GET() {
   try {
-    const peserta = await requirePeserta();
-    if (!peserta) return fail("Tidak terautentikasi.", 401);
+    const peserta = await requirePesertaAktif();
+    if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
     const tanggal = tanggalTersedia();
     const [konten, jadwal, terisi] = await Promise.all([
@@ -43,8 +43,8 @@ export async function GET() {
 // ─── POST — buat jadwal sesi ─────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const peserta = await requirePeserta();
-    if (!peserta) return fail("Tidak terautentikasi.", 401);
+    const peserta = await requirePesertaAktif();
+    if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
     const parsed = jadwalSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Data tidak valid.", 400);
@@ -101,8 +101,8 @@ export async function POST(req: NextRequest) {
 // ─── DELETE — batalkan jadwal milik sendiri (?id=) ───────────────
 export async function DELETE(req: NextRequest) {
   try {
-    const peserta = await requirePeserta();
-    if (!peserta) return fail("Tidak terautentikasi.", 401);
+    const peserta = await requirePesertaAktif();
+    if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
     const id = parseInt(new URL(req.url).searchParams.get("id") ?? "", 10);
     if (!Number.isFinite(id)) return fail("ID tidak valid.", 400);

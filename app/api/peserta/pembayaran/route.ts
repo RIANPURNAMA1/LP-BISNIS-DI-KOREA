@@ -3,7 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { requirePeserta } from "@/lib/guard";
+import { requirePesertaAktif } from "@/lib/guard";
 import {
   BUKTI_EXTENSIONS,
   HARGA_KONSULTASI,
@@ -25,8 +25,8 @@ const fail = (error: string, status = 400) =>
 /** Status pembayaran peserta yang sedang login. */
 export async function GET() {
   try {
-    const peserta = await requirePeserta();
-    if (!peserta) return fail("Tidak terautentikasi.", 401);
+    const peserta = await requirePesertaAktif();
+    if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
     const [p, terakhir] = await Promise.all([
       prisma.pendaftaran.findUnique({
@@ -79,8 +79,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   let filePath = "";
   try {
-    const peserta = await requirePeserta();
-    if (!peserta) return fail("Tidak terautentikasi.", 401);
+    const peserta = await requirePesertaAktif();
+    if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
     const p = await prisma.pendaftaran.findUnique({
       where: { id: peserta.id },

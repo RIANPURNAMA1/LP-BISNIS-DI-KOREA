@@ -36,7 +36,12 @@ type Pembayaran = {
   catatanAdmin: string | null;
   createdAt: string;
   verifiedAt: string | null;
-  pendaftaran: { id: number; wilayah: string; konsultasiAt: string | null };
+  pendaftaran: {
+    id: number;
+    wilayah: string;
+    konsultasiAt: string | null;
+    aksesAktifAt: string | null;
+  };
 };
 
 type Counts = Record<StatusBayar | "all", number>;
@@ -52,6 +57,14 @@ const btnPrimary =
   "inline-flex items-center justify-center gap-2 rounded-full bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60";
 const btnGhost =
   "inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+
+// Tombol ringkas khusus baris tabel.
+const btnTableGhost =
+  "inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-50";
+const btnTablePrimary =
+  "inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-[#0052A4] px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#004080]";
+const btnTableDanger =
+  "inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-red-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition-colors hover:bg-red-50";
 
 function tanggal(iso: string) {
   try {
@@ -77,6 +90,22 @@ function StatusBadge({ status }: { status: StatusBayar }) {
   return (
     <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${style}`}>
       {STATUS_BAYAR[status]}
+    </span>
+  );
+}
+
+/** Status akses member: hanya aktif setelah admin mengonfirmasi pembayaran. */
+function AksesBadge({ aktif }: { aktif: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${
+        aktif
+          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+          : "bg-slate-100 text-slate-600 ring-slate-200"
+      }`}
+    >
+      {aktif ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+      {aktif ? "Aktif" : "Terkunci"}
     </span>
   );
 }
@@ -122,6 +151,10 @@ export default function AdminPembayaran() {
 
   async function proses(status: "dikonfirmasi" | "ditolak") {
     if (!dialog) return;
+    if (status === "ditolak" && !catatan.trim()) {
+      setToast({ type: "error", text: "Alasan penolakan wajib diisi." });
+      return;
+    }
     setBusy(true);
     setToast(null);
     try {
@@ -243,100 +276,121 @@ export default function AdminPembayaran() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {items.map((item) => (
-            <article
-              key={item.id}
-              className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60"
-            >
-              <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0052A4]/10 text-sm font-bold text-[#0052A4]">
-                    {item.nama.trim().charAt(0).toUpperCase() || "P"}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-900">{item.nama}</p>
-                    <p className="truncate text-[11px] text-slate-500">
-                      {item.whatsapp} · {item.email}
-                    </p>
-                  </div>
-                </div>
-                <StatusBadge status={item.status} />
-              </div>
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-3 font-semibold">Peserta</th>
+                  <th className="px-4 py-3 font-semibold">Pembayaran</th>
+                  <th className="px-4 py-3 font-semibold">Waktu</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Akses</th>
+                  <th className="px-5 py-3 text-right font-semibold">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {items.map((item) => (
+                  <tr key={item.id} className="align-top transition-colors hover:bg-slate-50/60">
+                    <td className="px-5 py-4">
+                      <div className="flex min-w-[190px] items-center gap-3">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0052A4]/10 text-sm font-bold text-[#0052A4]">
+                          {item.nama.trim().charAt(0).toUpperCase() || "P"}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate font-bold text-slate-900">{item.nama}</p>
+                          <p className="truncate text-[11px] text-slate-500">{item.whatsapp}</p>
+                          <p className="truncate text-[11px] text-slate-500">{item.email}</p>
+                        </div>
+                      </div>
+                    </td>
 
-              <div className="space-y-3 p-5">
-                <div className="flex items-start gap-3 rounded-xl bg-[#0052A4]/[0.04] p-3 ring-1 ring-[#0052A4]/10">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white text-[#0052A4] shadow-sm">
-                    <Banknote className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-slate-800">
-                      Transfer bank · {item.namaChannel}
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      Pengirim: <b>{item.namaPengirim}</b>
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-sm font-bold text-[#0052A4]">
-                    {formatRupiah(item.jumlah)}
-                  </p>
-                </div>
+                    <td className="px-4 py-4">
+                      <div className="flex min-w-[180px] items-start gap-2">
+                        <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#0052A4]/10 text-[#0052A4]">
+                          <Banknote className="h-3.5 w-3.5" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#0052A4]">{formatRupiah(item.jumlah)}</p>
+                          <p className="text-[11px] text-slate-600">Transfer · {item.namaChannel}</p>
+                          <p className="text-[11px] text-slate-500">Pengirim: {item.namaPengirim}</p>
+                        </div>
+                      </div>
+                    </td>
 
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-                  <div>
-                    <dt className="text-slate-400">Dikirim</dt>
-                    <dd className="font-medium text-slate-700">{tanggal(item.createdAt)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-slate-400">Diverifikasi</dt>
-                    <dd className="font-medium text-slate-700">
-                      {item.verifiedAt ? tanggal(item.verifiedAt) : "-"}
-                    </dd>
-                  </div>
-                </dl>
+                    <td className="whitespace-nowrap px-4 py-4 text-[11px]">
+                      <p className="text-slate-400">Dikirim</p>
+                      <p className="font-medium text-slate-700">{tanggal(item.createdAt)}</p>
+                      <p className="mt-2 text-slate-400">Diverifikasi</p>
+                      <p className="font-medium text-slate-700">
+                        {item.verifiedAt ? tanggal(item.verifiedAt) : "-"}
+                      </p>
+                    </td>
 
-                {item.catatanAdmin && (
-                  <p className="rounded-lg bg-red-50 px-3 py-2 text-[11px] leading-5 text-red-700">
-                    Catatan: {item.catatanAdmin}
-                  </p>
-                )}
+                    <td className="px-4 py-4">
+                      <StatusBadge status={item.status} />
+                      {item.catatanAdmin && (
+                        <p
+                          className="mt-2 max-w-[220px] rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] leading-4 text-red-700"
+                          title={item.catatanAdmin}
+                        >
+                          Catatan: {item.catatanAdmin}
+                        </p>
+                      )}
+                    </td>
 
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <button
-                    onClick={() => {
-                      setDialog({ item, mode: "bukti" });
-                      setCatatan("");
-                    }}
-                    className={btnGhost}
-                  >
-                    <Eye className="h-4 w-4" /> Lihat bukti
-                  </button>
-                  {item.status !== "dikonfirmasi" && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setDialog({ item, mode: "konfirmasi" });
-                          setCatatan("");
-                        }}
-                        className={btnPrimary}
-                      >
-                        <CheckCircle2 className="h-4 w-4" /> Konfirmasi
-                      </button>
-                      <button
-                        onClick={() => {
-                          setDialog({ item, mode: "tolak" });
-                          setCatatan("");
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
-                      >
-                        <XCircle className="h-4 w-4" /> Tolak
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
+                    <td className="px-4 py-4">
+                      <AksesBadge aktif={!!item.pendaftaran?.aksesAktifAt} />
+                      <p className="mt-1.5 text-[10px] leading-4 text-slate-400">
+                        {item.pendaftaran?.aksesAktifAt
+                          ? "Boleh masuk ruang member"
+                          : "Menunggu verifikasi"}
+                      </p>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => {
+                            setDialog({ item, mode: "bukti" });
+                            setCatatan("");
+                          }}
+                          className={btnTableGhost}
+                        >
+                          <Eye className="h-3.5 w-3.5" /> Bukti
+                        </button>
+                        {item.status !== "dikonfirmasi" && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setDialog({ item, mode: "konfirmasi" });
+                                setCatatan("");
+                              }}
+                              className={btnTablePrimary}
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Konfirmasi
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDialog({ item, mode: "tolak" });
+                                setCatatan("");
+                              }}
+                              className={btnTableDanger}
+                            >
+                              <XCircle className="h-3.5 w-3.5" /> Tolak
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-3 text-[11px] text-slate-500">
+            Menampilkan {items.length} pembayaran
+          </div>
         </div>
       )}
 
@@ -430,7 +484,7 @@ export default function AdminPembayaran() {
                 {dialog.mode === "tolak" && (
                   <button
                     onClick={() => void proses("ditolak")}
-                    disabled={busy}
+                    disabled={busy || !catatan.trim()}
                     className="inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
                   >
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}

@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 
 export type Role = "admin" | "peserta";
 
-type RoleUser = { id?: string; role?: Role };
+type RoleUser = { id?: string; role?: Role; aksesAktif?: boolean };
 
 /**
  * Konfigurasi yang aman dipakai di middleware (edge): tanpa akses database.
@@ -21,7 +21,8 @@ const authConfig = {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
-        token.role = (user as RoleUser).role ?? "admin";
+        token.role = (user as RoleUser).role;
+        token.aksesAktif = (user as RoleUser).aksesAktif === true;
       }
 
       // Dipanggil dari useSession().update() setelah admin mengubah profil.
@@ -36,8 +37,11 @@ const authConfig = {
       if (session.user) {
         const u = session.user as RoleUser;
         u.id = token.id as string;
-        // Token lama (sebelum ada peserta) hanya milik admin.
-        u.role = (token.role as Role | undefined) ?? "admin";
+        // Token tanpa role dianggap belum terautentikasi (lebih aman dari fallback admin).
+        u.role = token.role as Role | undefined;
+        // Dipakai login page untuk memilih tujuan: /peserta atau /pembayaran.
+        // Bukan otoritas akses; guard server tetap mengecek DB.
+        (u as RoleUser).aksesAktif = token.aksesAktif === true;
       }
       return session;
     },

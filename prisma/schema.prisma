@@ -30,6 +30,9 @@ model Pendaftaran {
   // Hash bcrypt untuk login peserta; null = belum punya akses (data lama).
   password    String? @db.VarChar(255)
   lastLoginAt DateTime? @map("last_login_at")
+  // Gerbang akses member: HANYA diisi admin saat pembayaran terverifikasi.
+  // null = peserta belum boleh masuk area /peserta.
+  aksesAktifAt DateTime? @map("akses_aktif_at")
   // Progres alur peserta: selesai menonton video, lalu konfirmasi konsultasi lanjutan.
   videoSelesaiAt DateTime? @map("video_selesai_at")
   konsultasiAt   DateTime? @map("konsultasi_at")

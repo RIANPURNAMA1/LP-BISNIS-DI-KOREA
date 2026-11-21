@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
-import { notifyPembayaranDikonfirmasi } from "@/lib/email";
+import {
+  notifyPembayaranDikonfirmasi,
+  notifyPembayaranDitolak,
+} from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -21,42 +24,55 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (status !== "dikonfirmasi" && status !== "ditolak")
       return fail("Status harus dikonfirmasi atau ditolak.");
     const catatan = String(body?.catatan ?? "").trim().slice(0, 500);
+    if (status === "ditolak" && !catatan)
+      return fail("Catatan penolakan wajib diisi agar peserta bisa memperbaiki bukti.");
 
     const pembayaran = await prisma.pembayaranKonsultasi.findUnique({
       where: { id },
-      include: { pendaftaran: { select: { nama: true, email: true, konsultasiAt: true } } },
+      include: { pendaftaran: { select: { nama: true, email: true } } },
     });
     if (!pembayaran) return fail("Data pembayaran tidak ditemukan.", 404);
 
-    const sudahDikonfirmasi = pembayaran.status === "dikonfirmasi";
+    const statusSebelumnya = pembayaran.status;
     const verifiedAt = status === "dikonfirmasi" ? new Date() : null;
 
+    // Satu transaksi: status pembayaran dan akses member harus selalu konsisten.
     const updated = await prisma.$transaction(async (tx) => {
       const row = await tx.pembayaranKonsultasi.update({
         where: { id },
         data: {
           status,
-          verifiedAt: status === "dikonfirmasi" ? verifiedAt : null,
-          catatanAdmin: status === "ditolak" ? catatan || "Pembayaran ditolak admin." : "",
+          verifiedAt,
+          catatanAdmin: status === "ditolak" ? catatan : null,
         },
       });
-      if (status === "dikonfirmasi" && !pembayaran.pendaftaran.konsultasiAt) {
-        await tx.pendaftaran.update({
-          where: { id: pembayaran.pendaftaranId },
-          data: { konsultasiAt: verifiedAt! },
-        });
-      }
+
+      await tx.pendaftaran.update({
+        where: { id: pembayaran.pendaftaranId },
+        data:
+          status === "dikonfirmasi"
+            ? { aksesAktifAt: verifiedAt, konsultasiAt: verifiedAt }
+            : { aksesAktifAt: null, konsultasiAt: null },
+      });
+
       return row;
     });
 
-    // Email konfirmasi hanya dikirim sekali, saat status berubah menjadi dikonfirmasi.
-    if (status === "dikonfirmasi" && !sudahDikonfirmasi) {
+    const berubah = statusSebelumnya !== status;
+    if (berubah && status === "dikonfirmasi") {
       await notifyPembayaranDikonfirmasi({
         nama: pembayaran.nama,
         email: pembayaran.email,
         metode: pembayaran.metode,
         namaChannel: pembayaran.namaChannel,
         namaPengirim: pembayaran.namaPengirim,
+      });
+    }
+    if (berubah && status === "ditolak") {
+      await notifyPembayaranDitolak({
+        nama: pembayaran.nama,
+        email: pembayaran.email,
+        catatan,
       });
     }
 
