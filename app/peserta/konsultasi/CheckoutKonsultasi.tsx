@@ -48,10 +48,10 @@ type Props = {
 type Langkah = "detail" | "form" | "menunggu" | "verified";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
-const labelCls = "mb-1.5 block text-xs font-semibold text-slate-600";
+  "w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
+const labelCls = "mb-1.5 block text-sm font-medium text-slate-700";
 const btnPrimary =
-  "inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-60";
 
 function tanggal(iso: string) {
   try {
@@ -69,9 +69,9 @@ function tanggal(iso: string) {
 
 function Baris({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-2.5 last:border-0">
-      <span className="text-xs text-slate-500">{label}</span>
-      <span className="text-right text-xs font-semibold text-slate-900">{value || "-"}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-slate-200 py-3 last:border-0">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="text-right text-sm font-medium text-slate-900">{value || "-"}</span>
     </div>
   );
 }
@@ -83,9 +83,9 @@ function GrupKonsultasiLink({ grup }: { grup: Props["grupKonsultasi"] }) {
       href={grup.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1EBE5A]"
+      className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
     >
-      <Users className="h-4 w-4" /> Gabung {grup.nama}
+      <Users className="h-4 w-4 text-[#1B9A4B]" /> Gabung {grup.nama}
     </a>
   );
 }
@@ -166,40 +166,46 @@ export default function CheckoutKonsultasi({
 
   if (langkah === "verified") {
     return (
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
-        <div className="bg-emerald-500 px-5 py-6 text-center text-white">
-          <BadgeCheck className="mx-auto h-10 w-10" />
-          <h2 className="mt-2 text-lg font-bold">Pembayaran dikonfirmasi</h2>
-          <p className="mt-1 text-sm text-emerald-50">
-            Konsultasi online Anda sudah aktif. Email konfirmasi telah dikirim.
-          </p>
-        </div>
-        <div className="p-5">
-          <div className="rounded-xl bg-slate-50 px-4 py-1 ring-1 ring-slate-200">
+      <div className="space-y-5">
+        <section className="rounded-md border border-slate-200 bg-white p-6">
+          <div className="flex items-start gap-4">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-600">
+              <BadgeCheck className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Pembayaran dikonfirmasi</h2>
+              <p className="mt-1.5 text-sm leading-6 text-slate-600">
+                Konsultasi online Anda sudah aktif. Email konfirmasi telah dikirim.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-md border border-slate-200 bg-white p-6">
+          <h3 className="text-sm font-semibold text-slate-900">Detail pembayaran</h3>
+          <div className="mt-3">
             <Baris label="Layanan" value={NAMA_LAYANAN} />
             <Baris label="Jumlah" value={formatRupiah(pembayaran?.jumlah ?? HARGA_KONSULTASI)} />
-            <Baris
-              label="Metode"
-              value={`Transfer bank — ${pembayaran?.namaChannel || "-"}`}
-            />
+            <Baris label="Metode" value={`Transfer bank — ${pembayaran?.namaChannel || "-"}`} />
             <Baris label="Status" value={STATUS_BAYAR.dikonfirmasi} />
           </div>
-          <GrupKonsultasiLink grup={grupKonsultasi} />
-          <Link href="/peserta" className={`${btnPrimary} mt-5`}>
-            Kembali ke dashboard <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
+        </section>
+
+        <GrupKonsultasiLink grup={grupKonsultasi} />
+        <Link href="/peserta" className={btnPrimary}>
+          Kembali ke dashboard <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
     );
   }
 
   if (langkah === "menunggu") {
     const info = pembayaran ?? kiriman;
     return (
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+      <section className="rounded-md border border-slate-200 bg-white">
         <div className="bg-amber-50 px-5 py-6 text-center">
           <Clock3 className="mx-auto h-10 w-10 text-amber-500" />
-          <h2 className="mt-2 text-lg font-bold text-amber-900">
+          <h2 className="mt-2 text-lg font-semibold text-amber-900">
             {sent ? "Bukti berhasil dikirim" : "Menunggu verifikasi admin"}
           </h2>
           <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-amber-800">
@@ -208,7 +214,7 @@ export default function CheckoutKonsultasi({
           </p>
         </div>
         <div className="space-y-4 p-5">
-          <div className="rounded-xl bg-slate-50 px-4 py-1 ring-1 ring-slate-200">
+          <div className="rounded-md border border-slate-200 px-4 py-1">
             <Baris label="Layanan" value={NAMA_LAYANAN} />
             <Baris label="Jumlah" value={formatRupiah(pembayaran?.jumlah ?? HARGA_KONSULTASI)} />
             <Baris
@@ -225,7 +231,7 @@ export default function CheckoutKonsultasi({
               <img
                 src={info.buktiBayar}
                 alt="Bukti pembayaran"
-                className="mx-auto max-h-80 w-auto rounded-xl border border-slate-200"
+                className="mx-auto max-h-80 w-auto rounded-md border border-slate-200"
               />
             </div>
           )}
@@ -242,7 +248,7 @@ export default function CheckoutKonsultasi({
     return (
       <form onSubmit={kirim} className="space-y-5">
         {pembayaran?.status === "ditolak" && (
-          <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
               <b>Pembayaran sebelumnya ditolak.</b>
@@ -251,10 +257,10 @@ export default function CheckoutKonsultasi({
           </div>
         )}
 
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+        <section className="rounded-md border border-slate-200 bg-white">
           <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-bold text-slate-900">Konfirmasi data diri</h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">Data ini otomatis terisi dari pendaftaran.</p>
+            <h2 className="text-sm font-semibold text-slate-900">Konfirmasi data diri</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Data ini otomatis terisi dari pendaftaran.</p>
           </div>
           <div className="px-5 py-1">
             <Baris label="Nama" value={profil.nama} />
@@ -263,15 +269,15 @@ export default function CheckoutKonsultasi({
           </div>
         </section>
 
-        <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60">
+        <section className="space-y-4 rounded-md border border-slate-200 bg-white p-5">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Detail pembayaran</h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">Isi data pengirim dan unggah bukti transfer.</p>
+            <h2 className="text-sm font-semibold text-slate-900">Detail pembayaran</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Isi data pengirim dan unggah bukti transfer.</p>
           </div>
 
           <div>
             <span className={labelCls}>Metode pembayaran</span>
-            <p className="flex items-center gap-2 rounded-xl border border-[#0052A4]/20 bg-[#0052A4]/5 px-3.5 py-3 text-sm font-semibold text-[#0052A4]">
+            <p className="flex items-center gap-2 rounded-md border border-[#0052A4]/20 bg-[#0052A4]/5 px-3.5 py-3 text-sm font-semibold text-[#0052A4]">
               <Banknote className="h-4 w-4" /> Transfer bank
             </p>
           </div>
@@ -308,18 +314,18 @@ export default function CheckoutKonsultasi({
             <label className={labelCls} htmlFor="bukti">Upload bukti pembayaran</label>
             <label
               htmlFor="bukti"
-              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition-colors hover:border-[#0052A4]/50 hover:bg-[#0052A4]/5"
+              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition-colors hover:border-[#0052A4]/50 hover:bg-[#0052A4]/5"
             >
               {preview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="Pratinjau bukti" className="max-h-56 rounded-lg" />
+                <img src={preview} alt="Pratinjau bukti" className="max-h-56 rounded-md" />
               ) : (
                 <FileImage className="h-8 w-8 text-slate-400" />
               )}
               <span className="text-xs font-semibold text-slate-700">
                 {bukti ? bukti.name : "Klik untuk pilih gambar bukti transfer"}
               </span>
-              <span className="text-[11px] text-slate-500">JPG, PNG, atau WebP • maks. 5 MB</span>
+              <span className="text-xs text-slate-500">JPG, PNG, atau WebP • maks. 5 MB</span>
             </label>
             <input
               id="bukti"
@@ -355,7 +361,7 @@ export default function CheckoutKonsultasi({
   return (
     <div className="space-y-5">
       {pembayaran?.status === "ditolak" && (
-        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
             <b>Pembayaran sebelumnya ditolak.</b>
@@ -364,19 +370,19 @@ export default function CheckoutKonsultasi({
         </div>
       )}
 
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
-        <div className="flex items-start gap-3 border-b border-slate-100 bg-[#0052A4]/[0.04] px-5 py-5">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#0052A4] text-white">
+      <section className="rounded-md border border-slate-200 bg-white">
+        <div className="flex items-start gap-3 border-b border-slate-200 bg-[#0052A4]/[0.04] px-5 py-5">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#0052A4] text-white">
             <HeadphonesIcon />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="text-base font-bold text-slate-900">{NAMA_LAYANAN}</h2>
+            <h2 className="text-base font-semibold text-slate-900">{NAMA_LAYANAN}</h2>
             <p className="mt-0.5 text-xs leading-5 text-slate-500">
               Sesi konsultasi personal bersama mentor Indonesia-Korea Business Project.
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-xl font-bold text-[#0052A4] sm:text-2xl">
+            <p className="text-xl font-semibold text-[#0052A4] sm:text-2xl">
               {formatRupiah(HARGA_KONSULTASI)}
             </p>
             <p className="text-[10px] text-slate-400">sekali bayar</p>
@@ -385,7 +391,7 @@ export default function CheckoutKonsultasi({
 
         <div className="space-y-5 p-5">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Cara pembayaran</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Cara pembayaran</h3>
             <ol className="mt-3 space-y-2.5">
               {[
                 "Transfer Rp49.000 ke rekening bank di bawah ini.",
@@ -393,7 +399,7 @@ export default function CheckoutKonsultasi({
                 "Admin akan memverifikasi bukti dan mengirim email konfirmasi ke Anda.",
               ].map((text, i) => (
                 <li key={text} className="flex items-start gap-2.5 text-xs leading-5 text-slate-600">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0052A4]/10 text-[10px] font-bold text-[#0052A4]">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0052A4]/10 text-[10px] font-semibold text-[#0052A4]">
                     {i + 1}
                   </span>
                   {text}
@@ -402,8 +408,8 @@ export default function CheckoutKonsultasi({
             </ol>
           </div>
 
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="flex items-center gap-2 text-xs font-bold text-slate-800">
+          <div className="rounded-md border border-slate-200 p-4">
+            <p className="flex items-center gap-2 text-xs font-semibold text-slate-800">
               <Banknote className="h-4 w-4 text-[#0052A4]" /> Rekening tujuan transfer bank
             </p>
             {rekeningBank ? (
@@ -411,7 +417,7 @@ export default function CheckoutKonsultasi({
                 <p>
                   <b>{rekening.bankNama || "Bank"}</b>
                 </p>
-                <p className="font-mono text-sm font-bold text-slate-900">
+                <p className="font-mono text-sm font-semibold text-slate-900">
                   {rekening.bankNo || "-"}
                 </p>
                 <p>a.n. {rekening.bankAtasNama || "-"}</p>
@@ -422,14 +428,14 @@ export default function CheckoutKonsultasi({
           </div>
 
           {!rekeningBank && (
-            <p className="flex items-start gap-2 rounded-xl bg-amber-50 px-3.5 py-2.5 text-[11px] leading-5 text-amber-800 ring-1 ring-amber-200">
+            <p className="flex items-start gap-2 rounded-md bg-amber-50 px-3.5 py-2.5 text-xs leading-5 text-amber-800 border border-amber-200">
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Admin belum mengatur rekening tujuan. Hubungi admin sebelum melakukan pembayaran.
             </p>
           )}
 
           {!videoSelesai && (
-            <p className="flex items-start gap-2 rounded-xl bg-amber-50 px-3.5 py-2.5 text-[11px] leading-5 text-amber-800 ring-1 ring-amber-200">
+            <p className="flex items-start gap-2 rounded-md bg-amber-50 px-3.5 py-2.5 text-xs leading-5 text-amber-800 border border-amber-200">
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Selesaikan video pengarahan di dashboard terlebih dulu sebelum checkout.
             </p>
@@ -443,7 +449,7 @@ export default function CheckoutKonsultasi({
           >
             Lanjut Cekout <ArrowRight className="h-4 w-4" />
           </button>
-          <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          <p className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
             <MailCheck className="h-3.5 w-3.5" /> Konfirmasi dikirim ke email setelah verifikasi
           </p>
         </div>

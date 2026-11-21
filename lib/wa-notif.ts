@@ -147,19 +147,33 @@ export async function notifyPembayaranMasuk(p: {
   namaChannel: string;
   namaPengirim: string;
   jumlah: number;
+  buktiBayar?: string;
 }) {
   try {
     if (getWaSnapshot().status !== "connected") return;
     const settings = await getNotifSettings();
     if (!settings.enabled || settings.numbers.length === 0) return;
 
+    const waNumber = normalizeNumber(p.whatsapp);
+    const waktu = new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
     const lines = [
       "*Bukti pembayaran baru*",
+      `_${waktu} WIB_`,
+      "",
       `Nama: ${p.nama}`,
-      `WhatsApp: ${p.whatsapp}`,
+      `WhatsApp: ${p.whatsapp}${waNumber ? ` (https://wa.me/${waNumber})` : ""}`,
       `Bank: ${p.namaChannel}`,
       `Nama pengirim: ${p.namaPengirim}`,
       `Jumlah: Rp${new Intl.NumberFormat("id-ID").format(p.jumlah)}`,
+      ...(p.buktiBayar ? [`Lihat bukti: ${SITE_URL}${p.buktiBayar}`] : []),
       `Verifikasi: ${SITE_URL}/admin/pembayaran`,
     ];
     await sendWaText(settings.numbers, lines.join("\n"));
@@ -169,4 +183,4 @@ export async function notifyPembayaranMasuk(p: {
 }
 
 export const TEST_MESSAGE =
-  "*Tes notifikasi*\nWhatsApp berhasil terhubung. Notifikasi pendaftar baru akan dikirim ke nomor ini.";
+  "*Tes notifikasi*\nWhatsApp berhasil terhubung. Notifikasi pendaftar baru dan bukti pembayaran akan dikirim ke nomor ini.";

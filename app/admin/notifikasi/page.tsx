@@ -155,7 +155,8 @@ export default function NotifikasiWA() {
       <div>
         <h2 className="text-lg font-bold text-slate-900">Notifikasi WhatsApp</h2>
         <p className="text-sm text-slate-500">
-          Hubungkan WhatsApp admin, lalu atur nomor yang menerima pemberitahuan setiap ada pendaftar baru.
+          Hubungkan WhatsApp admin, lalu atur nomor yang menerima pemberitahuan setiap ada pendaftar
+          baru dan bukti pembayaran masuk.
         </p>
       </div>
 
@@ -249,7 +250,7 @@ export default function NotifikasiWA() {
         {/* Langkah 2 */}
         <section className={`${card} ${connected ? "" : "opacity-60"}`}>
           <header className="border-b border-slate-100 px-5 py-4">
-            <h3 className="text-sm font-bold text-slate-900">2. Notifikasi pendaftar baru</h3>
+            <h3 className="text-sm font-bold text-slate-900">2. Notifikasi masuk</h3>
             {!connected && (
               <p className="mt-0.5 text-xs text-slate-500">Aktif setelah WhatsApp terhubung.</p>
             )}
@@ -258,7 +259,7 @@ export default function NotifikasiWA() {
           <form onSubmit={save} className="space-y-4 px-5 py-5">
             <label className="flex cursor-pointer items-center justify-between gap-4">
               <span className="text-sm font-medium text-slate-800">
-                Kirim notifikasi setiap ada pendaftar baru
+                Kirim notifikasi pendaftar baru &amp; pembayaran masuk
               </span>
               <input
                 type="checkbox"
@@ -268,6 +269,10 @@ export default function NotifikasiWA() {
                 className="h-5 w-5 rounded border-slate-300 text-[#0052A4]"
               />
             </label>
+            <p className="-mt-2 text-xs leading-5 text-slate-500">
+              Pesan dikirim otomatis saat: <b>1)</b> peserta menyelesaikan pendaftaran, dan{" "}
+              <b>2)</b> peserta mengunggah bukti pembayaran.
+            </p>
 
             <div>
               <label htmlFor="numbers" className="mb-1.5 block text-sm font-medium text-slate-800">
@@ -325,20 +330,40 @@ export default function NotifikasiWA() {
         <header className="border-b border-slate-100 px-5 py-3">
           <h3 className="text-sm font-bold text-slate-900">Contoh pesan yang diterima admin</h3>
         </header>
-        <pre className="whitespace-pre-wrap px-5 py-4 font-sans text-sm leading-relaxed text-slate-700">{`*Pendaftar baru*
+        <div className="grid gap-6 px-5 py-4 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#0052A4]">
+              1. Saat pendaftar baru
+            </p>
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700">{`*Pendaftar baru*
 _17 Nov 2026, 10.46 WIB_
 
 Nama: Rian Purnama
 WhatsApp: +6282118364415 (https://wa.me/6282118364415)
 Email: rian@example.com
-Domisili: Kota Administrasi Jakarta Pusat, DKI Jakarta
+Domisili: Jakarta Pusat, DKI Jakarta
 Status: Karyawan
 Ide bisnis: Sudah memiliki ide bisnis
-Personal income: Under 5jt
-Tujuan: Mencari peluang bisnis di Korea, Mengembangkan ide startup
-Sumber info: TikTok
 
 Detail: https://domain-anda/admin/pendaftaran/12`}</pre>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-emerald-600">
+              2. Saat bukti pembayaran masuk
+            </p>
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700">{`*Bukti pembayaran baru*
+_17 Nov 2026, 11.20 WIB_
+
+Nama: Rian Purnama
+WhatsApp: +6282118364415 (https://wa.me/6282118364415)
+Bank: BCA
+Nama pengirim: RIAN PURNAMA
+Jumlah: Rp49.000
+
+Lihat bukti: https://domain-anda/api/bukti-bayar/xxx.jpg
+Verifikasi: https://domain-anda/admin/pembayaran`}</pre>
+          </div>
+        </div>
       </section>
     </div>
   );

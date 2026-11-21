@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
       namaChannel,
       namaPengirim,
       jumlah: HARGA_KONSULTASI,
+      buktiBayar: pembayaran.buktiBayar,
     });
     void notifyBuktiDiterima({ nama: p.nama, email: p.email });
 

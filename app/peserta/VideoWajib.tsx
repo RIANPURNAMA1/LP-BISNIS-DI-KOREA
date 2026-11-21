@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Lock, Pause, Play } from "lucide-react";
+import { Loader2, Lock, Maximize2, Minimize2, Pause, Play, X } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /* Video wajib tonton: tidak bisa di-skip maupun dipercepat.            */
@@ -207,7 +207,10 @@ export default function VideoWajib({
   /** Dipanggil sekali ketika video diputar sampai habis. */
   onDone: () => void;
 }) {
-  const hostRef = useRef<HTMLDivElement>(null);
+  const inlineHostRef = useRef<HTMLDivElement>(null);
+  const modalHostRef = useRef<HTMLDivElement>(null);
+  /** Elemen pemutar yang sama dipakai ulang di tampilan biasa maupun di modal. */
+  const playerHostRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
   const maxRef = useRef(0); // posisi terjauh yang sudah ditonton
   const doneRef = useRef(false);
@@ -219,9 +222,23 @@ export default function VideoWajib({
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [warn, setWarn] = useState("");
+  const [expanded, setExpanded] = useState(false);
+
+  // Host dibuat sekali. Memindahkannya (bukan membuat pemutar baru) membuat
+  // posisi tonton tetap tersimpan saat video diperbesar / dikecilkan.
+  useEffect(() => {
+    const host = document.createElement("div");
+    host.className =
+      "absolute inset-0 [&>div]:h-full [&>div]:w-full [&_iframe]:h-full [&_iframe]:w-full";
+    playerHostRef.current = host;
+    return () => {
+      host.remove();
+      playerHostRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
-    const host = hostRef.current;
+    const host = playerHostRef.current;
     const source = parseSource(url);
     if (!host || !source) {
       setStatus("error");
@@ -263,6 +280,8 @@ export default function VideoWajib({
         if (doneRef.current) return;
         doneRef.current = true;
         setPlaying(false);
+        // Tutup modal lebih dulu agar popup "video selesai" terlihat.
+        setExpanded(false);
         onDoneRef.current();
       },
     };
@@ -292,16 +311,39 @@ export default function VideoWajib({
     };
   }, [url]);
 
+  // Pindahkan pemutar yang sama masuk/keluar modal sesuai status.
+  useEffect(() => {
+    const host = playerHostRef.current;
+    const target = expanded ? modalHostRef.current : inlineHostRef.current;
+    if (host && target && host.parentElement !== target) target.appendChild(host);
+  }, [expanded]);
+
+  // Tutup dengan Esc dan kunci scroll halaman saat modal terbuka.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [expanded]);
+
   const toggle = () => (playing ? engineRef.current?.pause() : engineRef.current?.play());
   const pct = duration ? Math.min(100, (current / duration) * 100) : 0;
 
-  return (
-    <div>
-      <div className="relative aspect-video w-full overflow-hidden bg-black">
-        <div
-          ref={hostRef}
-          className="absolute inset-0 [&>div]:h-full [&>div]:w-full [&_iframe]:h-full [&_iframe]:w-full"
-        />
+  const stage = (hostRef: React.RefObject<HTMLDivElement>, besar: boolean) => (
+    <>
+      <div
+        className={`relative aspect-video w-full overflow-hidden bg-black ${
+          besar ? "max-h-[74vh]" : ""
+        }`}
+      >
+        <div ref={hostRef} className="absolute inset-0" />
 
         {/* Lapisan penghalang: pemutar tidak bisa diklik/diseret langsung. */}
         <button
@@ -356,8 +398,57 @@ export default function VideoWajib({
         <span className="shrink-0 text-xs tabular-nums text-white/80">
           {fmt(current)} / {fmt(duration)}
         </span>
-        <Lock className="h-3.5 w-3.5 shrink-0 text-white/50" aria-label="Tidak dapat di-skip" />
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-label={besar ? "Kecilkan video" : "Perbesar video"}
+          title={besar ? "Kecilkan" : "Perbesar video"}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/10 px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 sm:px-2.5"
+        >
+          {besar ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          <span className="hidden sm:inline">{besar ? "Kecilkan" : "Perbesar"}</span>
+        </button>
+        <Lock
+          className={`${besar ? "" : "hidden sm:block"} h-3.5 w-3.5 shrink-0 text-white/50`}
+          aria-label="Tidak dapat di-skip"
+        />
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      <div>{stage(inlineHostRef, false)}</div>
+
+      {expanded && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video pengarahan"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-sm sm:p-6"
+          onClick={(e) => e.target === e.currentTarget && setExpanded(false)}
+        >
+          <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-slate-900 shadow-2xl ring-1 ring-white/10">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-white">Video pengarahan</p>
+                <p className="truncate text-[11px] text-white/50">
+                  Wajib tonton sampai selesai sebelum melanjutkan
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                aria-label="Tutup video"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {stage(modalHostRef, true)}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

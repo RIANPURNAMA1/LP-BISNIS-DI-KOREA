@@ -75,7 +75,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
 
   return (
     <aside
-      className={`fixed bottom-3 left-3 top-3 z-50 flex w-64 flex-col rounded-2xl bg-white shadow-xl ring-1 ring-slate-200/60 transition-transform duration-200 md:z-40 md:w-[68px] md:translate-x-0 md:shadow-sm ${
+      className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 md:z-40 md:w-[68px] md:translate-x-0 ${
         open ? "translate-x-0" : "-translate-x-[110%]"
       }`}
     >
@@ -133,7 +133,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
                 }`}
               >
                 {isActive && (
-                  <span className="absolute -left-3 top-2 h-7 w-1 rounded-r bg-[#0052A4]" />
+                  <span className="absolute -left-2 top-2 h-7 w-1 rounded-r bg-[#0052A4]" />
                 )}
                 <Icon className="h-[19px] w-[19px] shrink-0" />
                 <span className="truncate md:hidden">{item.label}</span>
@@ -176,7 +176,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
   }
 
   return (
-    <header className="sticky top-3 z-30 flex h-16 items-center gap-3 rounded-2xl bg-white px-3 sm:gap-4 shadow-sm ring-1 ring-slate-200/60 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-3 sm:gap-4 sm:px-6">
       <button
         onClick={onMenu}
         aria-label="Buka menu"
@@ -273,12 +273,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           />
         )}
         <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-        <div className="min-w-0 overflow-x-hidden px-3 pt-3 md:pl-[92px]">
+        <div className="min-w-0 overflow-x-hidden md:pl-[68px]">
           <Header onMenu={() => setMenuOpen(true)} />
           <main
             className={
               fullWidth
-                ? "mt-4 w-full pb-6"
+                ? "mt-4 w-full px-3 pb-6 sm:px-4"
                 : "mx-auto mt-6 max-w-7xl px-4 pb-8 sm:px-6 lg:px-8"
             }
           >
