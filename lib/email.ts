@@ -260,6 +260,48 @@ async function transport(s: EmailSettings, pass: string) {
   });
 }
 
+const domainEmail = (alamat: string) => alamat.trim().toLowerCase().split("@")[1] ?? "";
+
+/**
+ * Alamat From harus selaras dengan akun SMTP yang dipakai login (SPF/DMARC).
+ * Kalau "Email pengirim" diisi domain lain (mis. info@bisnisdikorea.com) sementara
+ * login SMTP-nya gmail.com, Gmail tetap mengirim, tetapi server penerima melihat
+ * DMARC gagal dan memindahkan email ke Spam.
+ * Solusinya: From memakai username SMTP; alamat pilihan admin jadi Reply-To.
+ */
+function identitasPengirim(s: EmailSettings) {
+  const selaras = domainEmail(s.fromEmail) === domainEmail(s.user);
+  return {
+    from: {
+      name: s.fromName || SITE_NAME,
+      address: selaras ? s.fromEmail : s.user,
+    },
+    ...(selaras || !s.fromEmail ? {} : { replyTo: s.fromEmail }),
+  };
+}
+
+/** Satu jalur pengiriman agar header anti-spam konsisten di semua notifikasi. */
+async function kirim(
+  s: EmailSettings,
+  pass: string,
+  mail: { to: string; subject: string; text: string; html: string }
+) {
+  const identitas = identitasPengirim(s);
+  const t = await transport(s, pass);
+  const domain = domainEmail(identitas.from.address) || new URL(SITE_URL).hostname;
+  await t.sendMail({
+    ...identitas,
+    ...mail,
+    date: new Date(),
+    // Message-ID memakai domain From yang sama, bukan hostname mesin/server.
+    messageId: `<${crypto.randomUUID()}@${domain}>`,
+    headers: {
+      // Mencegah auto-reply out-of-office membalas email sistemik.
+      "X-Auto-Response-Suppress": "OOF, AutoReply",
+    },
+  });
+}
+
 /** Kirim email ke satu penerima. Melempar error jika SMTP belum lengkap / gagal. */
 export async function sendEmail(to: string, nama: string) {
   const [s, m] = await Promise.all([getEmailSettings(), readRaw()]);
@@ -267,13 +309,7 @@ export async function sendEmail(to: string, nama: string) {
   if (!s.host || !s.user || !s.fromEmail || !rawPass) {
     throw new Error("Pengaturan email belum lengkap.");
   }
-  const mail = buildMail(s, nama);
-  const t = await transport(s, decrypt(rawPass));
-  await t.sendMail({
-    from: { name: s.fromName || SITE_NAME, address: s.fromEmail },
-    to,
-    ...mail,
-  });
+  await kirim(s, decrypt(rawPass), { to, ...buildMail(s, nama) });
 }
 
 /** Dipanggil setelah pendaftaran: tidak pernah melempar error (hanya dicatat). */
@@ -303,13 +339,7 @@ export async function notifyPembayaranDikonfirmasi(p: {
     if (!s.host || !s.user || !s.fromEmail || !rawPass) {
       throw new Error("Pengaturan email belum lengkap.");
     }
-    const mail = buildPaymentMail(s, p);
-    const t = await transport(s, decrypt(rawPass));
-    await t.sendMail({
-      from: { name: s.fromName || SITE_NAME, address: s.fromEmail },
-      to: p.email,
-      ...mail,
-    });
+    await kirim(s, decrypt(rawPass), { to: p.email, ...buildPaymentMail(s, p) });
   } catch (e) {
     console.error("[email] gagal mengirim notifikasi pembayaran:", e);
   }
@@ -356,9 +386,7 @@ async function kirimEmailTransaksional(p: {
 </td></tr>
 </table>
 </td></tr></table></body></html>`;
-    const t = await transport(s, decrypt(rawPass));
-    await t.sendMail({
-      from: { name: s.fromName || SITE_NAME, address: s.fromEmail },
+    await kirim(s, decrypt(rawPass), {
       to: p.email,
       subject: p.subjek,
       text,

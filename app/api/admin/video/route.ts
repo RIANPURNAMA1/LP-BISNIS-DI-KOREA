@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requireAdmin } from "@/lib/guard";
@@ -69,7 +72,18 @@ export async function POST(req: NextRequest) {
 
     await mkdir(UPLOAD_DIR, { recursive: true });
     const fileName = `${randomUUID()}.${ext}`;
-    await writeFile(path.join(UPLOAD_DIR, fileName), Buffer.from(await blob.arrayBuffer()));
+    const filePath = path.join(UPLOAD_DIR, fileName);
+    try {
+      // Tulis streaming dari Blob ke disk. Tidak perlu menampung seluruh file
+      // (112 MB) di Buffer lagi, jadi lebih cepat dan hemat memori.
+      await pipeline(
+        Readable.fromWeb(blob.stream() as unknown as import("node:stream/web").ReadableStream),
+        createWriteStream(filePath),
+      );
+    } catch (e) {
+      await unlink(filePath).catch(() => undefined);
+      throw e;
+    }
     const url = `${VIDEO_UPLOAD_PREFIX}${fileName}`;
 
     const lama = await videoUrlSaatIni();

@@ -152,6 +152,11 @@ export default function NotifikasiEmail() {
   const previewSubject = form.subject.replace(/\{nama\}/gi, "Nama Peserta");
   const previewMessage = form.message.replace(/\{nama\}/gi, "Nama Peserta");
 
+  // From yang beda domain dengan akun SMTP = penyebab paling umum email masuk Spam.
+  const domainSmtp = form.user.trim().toLowerCase().split("@")[1] ?? "";
+  const domainFrom = form.fromEmail.trim().toLowerCase().split("@")[1] ?? "";
+  const domainTidakCocok = !!domainSmtp && !!domainFrom && domainSmtp !== domainFrom;
+
   return (
     <div className="space-y-5">
       <div className="flex items-start gap-3">
@@ -299,6 +304,23 @@ export default function NotifikasiEmail() {
               </div>
             </div>
 
+            {domainTidakCocok && (
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-xl bg-amber-50 px-3.5 py-2.5 text-[11px] leading-5 text-amber-900 ring-1 ring-amber-200"
+              >
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                <span>
+                  <b>Perhatian — email berisiko masuk Spam.</b> Email pengirim Anda{" "}
+                  <b>{form.fromEmail}</b> beda domain dengan akun SMTP <b>{form.user}</b>, sehingga
+                  pemeriksaan SPF/DMARC penerima gagal. Sistem akan mengirim dari <b>{form.user}</b>{" "}
+                  dan menjadikan <b>{form.fromEmail}</b> sebagai alamat balasan (Reply-To). Agar
+                  nama domain tetap terlihat, gunakan SMTP Google Workspace/milik sendiri dengan
+                  email pengirim di domain yang sama.
+                </span>
+              </p>
+            )}
+
             <p className="flex items-start gap-2 rounded-xl bg-[#0052A4]/[0.06] px-3.5 py-2.5 text-[11px] leading-5 text-slate-600 ring-1 ring-[#0052A4]/10">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0052A4]" />
               <span>
@@ -307,6 +329,30 @@ export default function NotifikasiEmail() {
                 disimpan terenkripsi.
               </span>
             </p>
+
+            <details className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[11px] leading-5 text-slate-600">
+              <summary className="cursor-pointer font-semibold text-slate-700">
+                Kenapa email bisa masuk folder Spam?
+              </summary>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>
+                  Domain <b>Email pengirim</b> tidak sama dengan domain akun SMTP → SPF/DMARC gagal
+                  (paling sering terjadi).
+                </li>
+                <li>
+                  Belum ada catatan DNS <b>SPF</b>, <b>DKIM</b>, dan <b>DMARC</b> untuk domain
+                  pengirim. Tambahkan di pengaturan DNS domain Anda.
+                </li>
+                <li>
+                  Memakai email pribadi @gmail.com untuk pengiriman massal, kata subjek seperti
+                  “promosi/gratis/urgent”, atau penerima menandai email Anda sebagai Spam.
+                </li>
+                <li>
+                  Setelah diperbaiki, buka email tersebut di folder Spam dan pilih{" "}
+                  <b>Not spam</b> agar pengirim dipercaya kembali.
+                </li>
+              </ul>
+            </details>
           </div>
         </section>
 
@@ -473,7 +519,8 @@ export default function NotifikasiEmail() {
             </button>
           </div>
           <p className="text-[11px] text-slate-500">
-            Simpan pengaturan dulu, lalu kirim contoh email ke alamat Anda.
+            Simpan pengaturan dulu, lalu kirim contoh email ke alamat Anda. Jika tidak masuk Inbox,
+            cek folder Spam/Promotions dan lihat alasan di tab “Show original”.
           </p>
         </div>
       </section>
