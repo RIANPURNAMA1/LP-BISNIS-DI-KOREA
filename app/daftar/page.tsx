@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import DaftarPage from "@/components/DaftarPage";
 import { RegistrationFieldError } from "@/components/DaftarPage";
@@ -8,7 +10,10 @@ import type {
   RegistrationResult,
 } from "@/components/DaftarPage";
 
-export default function Daftar() {
+function DaftarDenganReferral() {
+  const params = useSearchParams();
+  const kodeAfiliasi = (params.get("ref") ?? "").trim().toUpperCase();
+
   async function handleSubmit(
     data: RegistrationPayload,
   ): Promise<RegistrationResult> {
@@ -35,5 +40,19 @@ export default function Daftar() {
     return { loggedIn: !!login && !login.error };
   }
 
-  return <DaftarPage onSubmit={handleSubmit} />;
+  return <DaftarPage onSubmit={handleSubmit} kodeAfiliasi={kodeAfiliasi} />;
+}
+
+export default function Daftar() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">
+          Memuat formulir pendaftaran...
+        </div>
+      }
+    >
+      <DaftarDenganReferral />
+    </Suspense>
+  );
 }

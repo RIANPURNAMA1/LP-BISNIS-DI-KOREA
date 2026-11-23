@@ -10,10 +10,20 @@ import {
   Loader2,
   MessageCircle,
   Save,
+  Gift,
 } from "lucide-react";
 import type { Rekening } from "@/lib/pembayaran-konstanta";
+import {
+  DEFAULT_KOMISI,
+  DEFAULT_MIN_PENCAIRAN,
+} from "@/lib/afiliasi-konstanta";
 
-type Settings = { umum: string; grupKonsultasi: string; rekening: Rekening };
+type Settings = {
+  umum: string;
+  grupKonsultasi: string;
+  rekening: Rekening;
+  afiliasi: { komisi: number; minimalPencairan: number };
+};
 type Message = { type: "success" | "error"; text: string };
 
 const inputCls =
@@ -35,6 +45,7 @@ export default function PengaturanGrup() {
     umum: "",
     grupKonsultasi: "",
     rekening: rekeningKosong,
+    afiliasi: { komisi: DEFAULT_KOMISI, minimalPencairan: DEFAULT_MIN_PENCAIRAN },
   });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -58,6 +69,11 @@ export default function PengaturanGrup() {
           umum: json.data.umum ?? "",
           grupKonsultasi: json.data.grupKonsultasi ?? "",
           rekening: { ...rekeningKosong, ...(json.data.rekening ?? {}) },
+          afiliasi: {
+            komisi: json.data.afiliasi?.komisi ?? DEFAULT_KOMISI,
+            minimalPencairan:
+              json.data.afiliasi?.minimalPencairan ?? DEFAULT_MIN_PENCAIRAN,
+          },
         });
       })
       .catch((err) => {
@@ -88,6 +104,10 @@ export default function PengaturanGrup() {
           umum: form.umum.trim(),
           grupKonsultasi: form.grupKonsultasi.trim(),
           rekening: form.rekening,
+          afiliasi: {
+            komisi: Number(form.afiliasi.komisi) || 0,
+            minimalPencairan: Number(form.afiliasi.minimalPencairan) || 0,
+          },
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -229,6 +249,72 @@ export default function PengaturanGrup() {
               placeholder="Nama pemilik rekening"
               onChange={(e) => setRek("bankAtasNama", e.target.value)}
             />
+          </div>
+        </div>
+      </section>
+
+      <section className={card}>
+        <div className={cardHead}>
+          <span className={iconBox}>
+            <Gift className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Afiliasi</h3>
+            <p className="text-[11px] text-slate-500">
+              Komisi per peserta terverifikasi dan batas minimal pencairan.
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-4 p-5 sm:grid-cols-2">
+          <div>
+            <label className={labelCls} htmlFor="afiliasi-komisi">
+              Nominal komisi per referral (Rp)
+            </label>
+            <input
+              id="afiliasi-komisi"
+              type="number"
+              min={0}
+              step={1000}
+              className={inputCls}
+              value={form.afiliasi.komisi}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  afiliasi: {
+                    ...form.afiliasi,
+                    komisi: Number(e.target.value),
+                  },
+                })
+              }
+            />
+            <p className="mt-1.5 text-xs leading-5 text-slate-500">
+              Dibayarkan sekali per peserta yang pembayarannya disetujui admin.
+            </p>
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="afiliasi-min-pencairan">
+              Minimal pencairan (Rp)
+            </label>
+            <input
+              id="afiliasi-min-pencairan"
+              type="number"
+              min={0}
+              step={1000}
+              className={inputCls}
+              value={form.afiliasi.minimalPencairan}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  afiliasi: {
+                    ...form.afiliasi,
+                    minimalPencairan: Number(e.target.value),
+                  },
+                })
+              }
+            />
+            <p className="mt-1.5 text-xs leading-5 text-slate-500">
+              Affiliate baru bisa mengajukan pencairan setelah saldo mencapai nominal ini.
+            </p>
           </div>
         </div>
       </section>

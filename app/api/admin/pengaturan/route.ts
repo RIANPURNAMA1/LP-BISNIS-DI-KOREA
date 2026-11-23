@@ -3,6 +3,11 @@ import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { KEY_GRUP_KONSULTASI, KEY_GRUP_UMUM, getGrupLinks } from "@/lib/grup";
 import { KEY_REKENING, getRekening, type Rekening } from "@/lib/pembayaran";
+import {
+  KEY_AFILIASI_KOMISI,
+  KEY_AFILIASI_MIN_PENCAIRAN,
+  getAfiliasiSettings,
+} from "@/lib/afiliasi";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +38,15 @@ export async function GET() {
   try {
     const session = await requireAdmin();
     if (!session?.user) return unauthorized();
-    const [links, rekening] = await Promise.all([getGrupLinks(), getRekening()]);
-    return NextResponse.json({ success: true, data: { ...links, rekening } });
+    const [links, rekening, afiliasi] = await Promise.all([
+      getGrupLinks(),
+      getRekening(),
+      getAfiliasiSettings(),
+    ]);
+    return NextResponse.json({
+      success: true,
+      data: { ...links, rekening, afiliasi },
+    });
   } catch (error) {
     console.error("GET /api/admin/pengaturan error:", error);
     return NextResponse.json(
@@ -58,6 +70,22 @@ export async function PUT(req: NextRequest) {
       const error = validateLink(body.grupKonsultasi, "Link grup Konsultasi Online");
       if (error) return NextResponse.json({ success: false, error }, { status: 400 });
     }
+    if (body.afiliasi && typeof body.afiliasi === "object") {
+      for (const [field, label] of [
+        ["komisi", "Nominal komisi affiliate"],
+        ["minimalPencairan", "Minimal pencairan affiliate"],
+      ] as const) {
+        if (!Object.prototype.hasOwnProperty.call(body.afiliasi, field)) continue;
+        const raw = body.afiliasi[field];
+        const n = typeof raw === "number" ? raw : parseInt(String(raw ?? ""), 10);
+        if (!Number.isFinite(n) || n < 0 || n > 100_000_000) {
+          return NextResponse.json(
+            { success: false, error: `${label} harus berupa angka 0–100.000.000.` },
+            { status: 400 }
+          );
+        }
+      }
+    }
 
     const entries: [string, string][] = [];
     if (Object.prototype.hasOwnProperty.call(body, "umum")) {
@@ -65,6 +93,18 @@ export async function PUT(req: NextRequest) {
     }
     if (Object.prototype.hasOwnProperty.call(body, "grupKonsultasi")) {
       entries.push([KEY_GRUP_KONSULTASI, String(body.grupKonsultasi ?? "").trim()]);
+    }
+    if (body.afiliasi && typeof body.afiliasi === "object") {
+      const a = body.afiliasi as { komisi?: unknown; minimalPencairan?: unknown };
+      if (a.komisi !== undefined) {
+        entries.push([KEY_AFILIASI_KOMISI, String(parseInt(String(a.komisi), 10))]);
+      }
+      if (a.minimalPencairan !== undefined) {
+        entries.push([
+          KEY_AFILIASI_MIN_PENCAIRAN,
+          String(parseInt(String(a.minimalPencairan), 10)),
+        ]);
+      }
     }
     if (body.rekening && typeof body.rekening === "object") {
       const r = body.rekening as Partial<Rekening>;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { KODE_AFILIASI_RE } from "./afiliasi-konstanta";
 
 // ─── Validasi Pendaftaran (dari formulir) ────────────────────────
 export const pendaftaranSchema = z.object({
@@ -32,6 +33,15 @@ export const pendaftaranSchema = z.object({
     .array(z.string())
     .min(1, "Pilih minimal satu tujuan."),
   sumber: z.string().optional().default(""),
+  // Kode affiliate dari tautan /daftar?ref=IKXXXXXX. Kosong boleh.
+  kodeAfiliasi: z
+    .string()
+    .trim()
+    .max(30)
+    .optional()
+    .default("")
+    .transform((v) => v.toUpperCase())
+    .refine((v) => !v || KODE_AFILIASI_RE.test(v), "Kode afiliasi tidak valid."),
   wilayah: z.enum(["jabodetabek", "luar_jabodetabek", "luar_negeri"], {
     message: "Wilayah domisili wajib dipilih.",
   }),
@@ -124,4 +134,52 @@ export const konsultasiPosisiSchema = z
 // ─── Waitinglist ─────────────────────────────────────────────────
 export const waitinglistSchema = z.object({
   catatan: z.string().max(500, "Catatan maksimal 500 karakter.").optional().default(""),
+});
+
+// ─── Afiliasi ────────────────────────────────────────────────────
+export const affiliateDaftarSchema = z.object({
+  nama: z
+    .string()
+    .trim()
+    .min(1, "Nama wajib diisi.")
+    .max(255, "Nama terlalu panjang."),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, "Email wajib diisi.")
+    .email("Masukkan alamat email yang valid."),
+  whatsapp: z
+    .string()
+    .trim()
+    .min(1, "Nomor WhatsApp wajib diisi.")
+    .regex(/^\+?[0-9][0-9\s-]{6,24}$/, "Masukkan nomor WhatsApp yang valid."),
+  password: passwordSchema,
+});
+
+export const affiliateProfilSchema = z.object({
+  bankNama: z.string().trim().max(100, "Nama bank terlalu panjang.").default(""),
+  bankNo: z
+    .string()
+    .trim()
+    .max(100, "Nomor rekening terlalu panjang.")
+    .default(""),
+  bankAtasNama: z
+    .string()
+    .trim()
+    .max(150, "Atas nama terlalu panjang.")
+    .default(""),
+});
+
+export const affiliatePencairanSchema = z.object({
+  konfirmasi: z.literal(true, {
+    message: "Konfirmasi pencairan wajib dicentang.",
+  }),
+});
+
+export const adminPencairanSchema = z.object({
+  status: z.enum(["dibayar", "ditolak"], {
+    message: "Status harus dibayar atau ditolak.",
+  }),
+  catatan: z.string().trim().max(500, "Catatan maksimal 500 karakter.").default(""),
 });

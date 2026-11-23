@@ -34,6 +34,8 @@ export type RegistrationPayload = {
   pendapatan: string;
   tujuan: string[];
   sumber: string;
+  /** Kode affiliate dari tautan undangan (/daftar?ref=...), boleh kosong. */
+  kodeAfiliasi: string;
   /** jabodetabek | luar_jabodetabek | luar_negeri — menentukan grup WhatsApp. */
   wilayah: "jabodetabek" | "luar_jabodetabek" | "luar_negeri";
 };
@@ -549,6 +551,7 @@ const simple = (list: string[]) => list.map((v) => ({ value: v, label: v }));
 export default function DaftarPage({
   onSubmit,
   homeHref = "/",
+  kodeAfiliasi = "",
 }: {
   /** Kirim data ke backend. Jika tidak diisi, data hanya ditampilkan di console. */
   onSubmit?: (
@@ -556,6 +559,8 @@ export default function DaftarPage({
   ) => Promise<RegistrationResult> | RegistrationResult;
   /** Tujuan tautan "Kembali ke beranda". */
   homeHref?: string;
+  /** Kode affiliate yang terbawa dari query string ?ref=. */
+  kodeAfiliasi?: string;
 }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialForm);
@@ -758,6 +763,7 @@ export default function DaftarPage({
       tujuan: tujuanLain ? [...form.tujuan, tujuanLain] : form.tujuan,
       sumber:
         form.sumber === STATUS_LAIN ? form.sumberLain.trim() : form.sumber,
+      kodeAfiliasi,
       wilayah: isLuar
         ? "luar_negeri"
         : JABODETABEK_KABUPATEN_IDS.has(form.kabupatenId)
@@ -865,6 +871,11 @@ export default function DaftarPage({
                   Isi data berikut dengan benar. Hanya membutuhkan beberapa
                   menit.
                 </p>
+                {kodeAfiliasi && (
+                  <p className="mt-3 inline-flex rounded-full bg-[#0052A4]/10 px-3 py-1 text-xs font-semibold text-[#0052A4]">
+                    Anda mendaftar melalui undangan affiliate · {kodeAfiliasi}
+                  </p>
+                )}
 
                 <ol
                   className="mt-6 flex items-center"

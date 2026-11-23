@@ -88,5 +88,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    // Login affiliate (akun terpisah dari peserta)
+    Credentials({
+      id: "afiliasi",
+      name: "afiliasi",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const email = String(credentials.email).trim().toLowerCase();
+        const key = `afiliasi:${email}`;
+        if (isLocked(key)) return null;
+
+        const affiliate = await prisma.affiliate.findUnique({ where: { email } });
+        const ok =
+          !!affiliate?.aktif &&
+          !!affiliate.password &&
+          (await bcrypt.compare(String(credentials.password), affiliate.password));
+        if (!affiliate || !ok) {
+          recordFail(key);
+          return null;
+        }
+
+        fails.delete(key);
+        await prisma.affiliate.update({
+          where: { id: affiliate.id },
+          data: { lastLoginAt: new Date() },
+        });
+        return {
+          id: String(affiliate.id),
+          email: affiliate.email,
+          name: affiliate.nama,
+          role: "afiliasi",
+        };
+      },
+    }),
   ],
 });

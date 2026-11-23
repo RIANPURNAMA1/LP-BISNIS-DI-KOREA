@@ -35,3 +35,16 @@ export async function requirePesertaAktif() {
   });
   return row?.aksesAktifAt ? peserta : null;
 }
+
+/** Sesi affiliate beserta id-nya. Status aktif dicek ulang dari DB. */
+export async function requireAfiliasi() {
+  const session = await requireRole("afiliasi");
+  const id = parseInt((session?.user as SessionUser | undefined)?.id ?? "", 10);
+  if (!session || !Number.isFinite(id)) return null;
+
+  const row = await prisma.affiliate.findUnique({
+    where: { id },
+    select: { id: true, aktif: true },
+  });
+  return row?.aktif ? { session, id } : null;
+}

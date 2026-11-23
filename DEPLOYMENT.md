@@ -305,6 +305,22 @@ Build gagal	npm ci, periksa environment dan error build
 Domain tidak bisa diakses	Periksa DNS, firewall, dan konfigurasi Nginx
 SSL gagal	Pastikan DNS mengarah ke VPS dan port 80 terbuka
 PM2 tidak aktif setelah reboot	Jalankan ulang pm2 startup, kemudian pm2 save
+16. Catatan setup fitur afiliasi
+Migration 20261123000000_afiliasi dijalankan otomatis oleh npx prisma migrate deploy (langkah 12). Migration ini membuat tabel affiliate, referral, komisi, payout, dan dua baris pengaturan awal.
+
+Halaman yang tersedia:
+- /afiliasi — pendaftaran affiliate (publik, langsung aktif tanpa persetujuan admin)
+- /afiliasi/login — login affiliate (akun terpisah dari peserta)
+- /afiliasi/dashboard — kode undangan, saldo, referral, komisi, pencairan, rekening
+- /admin/afiliasi — daftar affiliate, detail, dan pemrosesan pencairan (menu "Afiliasi" di sidebar admin)
+
+Pengaturan admin: buka /admin/pengaturan, kartu "Afiliasi". Nominal komisi per referral terverifikasi (default Rp10.000) dan minimal pencairan (default Rp50.000) dapat diubah kapan saja. Perubahan komisi hanya berlaku untuk pembayaran yang diverifikasi setelahnya.
+
+Izin folder: aplikasi menulis bukti transfer pencairan ke storage/bukti-pencairan/. Pastikan folder tersebut dapat ditulis oleh user PM2 (perlakuan sama seperti storage/bukti-bayar/).
+
+Alur komisi: affiliate membagikan /daftar?ref=KODE. Saat peserta mendaftar dan admin menyetujui pembayaran aktivasi Rp49.000, satu komisi otomatis dibuat (idempoten). Self-referral diblokir berdasarkan email dan nomor WhatsApp. Pencairan diambil manual oleh affiliate, lalu admin mengunggah bukti transfer di /admin/afiliasi.
+
+Notifikasi: email affiliate memakai konfigurasi SMTP di /admin/email; notifikasi WA admin mengikuti pengaturan nomor WA dan status koneksi WhatsApp. Jika email belum dikonfigurasi, pengiriman notifikasi hanya dicatat di log (tidak menggagalkan transaksi).
 
 <!-- backup -->
 

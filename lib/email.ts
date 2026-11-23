@@ -443,3 +443,90 @@ export async function notifyWaitinglistDiterima(p: { nama: string; email: string
     console.error("[email] notifikasi waitinglist gagal:", e);
   }
 }
+
+/* ---------------- afiliasi ---------------- */
+
+/** Affiliate baru mendaftar (langsung aktif tanpa persetujuan admin). */
+export async function notifyAfiliasiTerdaftar(p: {
+  nama: string;
+  email: string;
+  kode: string;
+}) {
+  await kirimEmailTransaksional({
+    nama: p.nama,
+    email: p.email,
+    subjek: "Akun affiliate Anda sudah aktif",
+    judul: "Selamat Bergabung sebagai Affiliate",
+    pesan: `Pendaftaran affiliate Anda berhasil. Kode undangan Anda: ${p.kode}\n\nBagikan tautan undangan Anda dari dashboard affiliate. Komisi dihitung otomatis saat pembayaran peserta yang Anda undang terverifikasi admin.`,
+    ctaLabel: "Buka Dashboard Affiliate",
+    ctaHref: "/afiliasi/dashboard",
+    label: "afiliasi terdaftar",
+  });
+}
+
+/** Komisi affiliate muncul setelah pembayaran referral disetujui admin. */
+export async function notifyKomisiDiperoleh(p: {
+  nama: string;
+  email: string;
+  whatsapp: string;
+  jumlah: number;
+  referralNama: string;
+}) {
+  await kirimEmailTransaksional({
+    nama: p.nama,
+    email: p.email,
+    subjek: "Komisi affiliate baru untuk Anda",
+    judul: "Komisi Affiliate Diterima",
+    pesan: `Selamat! Pembayaran peserta ${p.referralNama} yang mendaftar melalui tautan Anda sudah terverifikasi. Komisi sebesar ${formatRupiah(p.jumlah)} telah ditambahkan ke saldo Anda.\n\nSaldo dapat diajukan pencairan setelah mencapai minimal yang ditetapkan admin.`,
+    ctaLabel: "Lihat saldo affiliate",
+    ctaHref: "/afiliasi/dashboard",
+    label: "komisi affiliate",
+  });
+}
+
+/** Affiliate mengajukan pencairan saldo. */
+export async function notifyPencairanDiajukan(p: {
+  nama: string;
+  email: string;
+  jumlah: number;
+  bankNama: string;
+  bankNo: string;
+}) {
+  await kirimEmailTransaksional({
+    nama: p.nama,
+    email: p.email,
+    subjek: "Pengajuan pencairan komisi diterima",
+    judul: "Pencairan Komisi Diajukan",
+    pesan: `Pengajuan pencairan sebesar ${formatRupiah(p.jumlah)} ke rekening ${p.bankNama} ${p.bankNo} sudah kami terima. Admin akan memproses transfer dan mengunggah buktinya.`,
+    ctaLabel: "Cek status pencairan",
+    ctaHref: "/afiliasi/dashboard",
+    label: "pencairan diajukan",
+  });
+}
+
+/** Admin memproses pencairan (dibayar / ditolak). */
+export async function notifyPencairanDiproses(p: {
+  nama: string;
+  email: string;
+  status: "dibayar" | "ditolak";
+  jumlah: number;
+  bukti?: string | null;
+  catatan?: string;
+}) {
+  const dibayar = p.status === "dibayar";
+  const bukti = p.bukti ? `\n\nBukti transfer: ${SITE_URL}${p.bukti}` : "";
+  await kirimEmailTransaksional({
+    nama: p.nama,
+    email: p.email,
+    subjek: dibayar
+      ? "Komisi affiliate sudah ditransfer"
+      : "Pengajuan pencairan komisi ditolak",
+    judul: dibayar ? "Pencairan Komisi Berhasil" : "Pencairan Komisi Ditolak",
+    pesan: dibayar
+      ? `Pencairan komisi Anda sebesar ${formatRupiah(p.jumlah)} sudah ditransfer admin. Terima kasih atas kerjasamanya.${bukti}`
+      : `Pengajuan pencairan komisi sebesar ${formatRupiah(p.jumlah)} belum dapat diproses.${p.catatan ? `\n\nCatatan admin: ${p.catatan}` : ""}\n\nKomisi Anda dikembalikan ke saldo dan dapat diajukan kembali.`,
+    ctaLabel: "Buka Dashboard Affiliate",
+    ctaHref: "/afiliasi/dashboard",
+    label: "pencairan diproses",
+  });
+}

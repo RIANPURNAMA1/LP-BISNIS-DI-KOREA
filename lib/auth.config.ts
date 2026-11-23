@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-export type Role = "admin" | "peserta";
+export type Role = "admin" | "peserta" | "afiliasi";
 
 type RoleUser = { id?: string; role?: Role; aksesAktif?: boolean };
 

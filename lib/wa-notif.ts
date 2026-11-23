@@ -208,5 +208,123 @@ export async function notifyWaitinglistBaru(p: {
   }
 }
 
+/* ---------------- afiliasi ---------------- */
+
+async function kirimWaKe(
+  numbers: string[],
+  lines: string[],
+  label: string
+) {
+  try {
+    if (!numbers.length || getWaSnapshot().status !== "connected") return;
+    const hasil = await sendWaText(numbers, lines.join("\n"));
+    const gagal = hasil.filter((r) => !r.ok);
+    if (gagal.length) console.error(`[wa] ${label} gagal:`, gagal);
+  } catch (e) {
+    console.error(`[wa] ${label} error:`, e);
+  }
+}
+
+async function nomorWaAdmin() {
+  const settings = await getNotifSettings();
+  return settings.enabled ? settings.numbers : [];
+}
+
+function nomorWaAfiliasi(raw: string) {
+  const n = normalizeNumber(raw);
+  return n.length >= 8 && n.length <= 15 ? [n] : [];
+}
+
+/** Affiliate baru (inkom WA ke admin). */
+export async function notifyAfiliasiBaru(p: {
+  nama: string;
+  whatsapp: string;
+  email: string;
+  kode: string;
+}) {
+  await kirimWaKe(
+    await nomorWaAdmin(),
+    [
+      "*Affiliate baru*",
+      `Nama: ${p.nama}`,
+      `WhatsApp: ${p.whatsapp}`,
+      `Email: ${p.email}`,
+      `Kode: ${p.kode}`,
+      `${SITE_URL}/admin/afiliasi`,
+    ],
+    "afiliasi baru"
+  );
+}
+
+/** Komisi baru masuk (WA langsung ke affiliate). */
+export async function notifyKomisiAfiliasi(p: {
+  nama: string;
+  whatsapp: string;
+  jumlah: number;
+  referralNama: string;
+}) {
+  const rupiah = new Intl.NumberFormat("id-ID").format(p.jumlah);
+  await kirimWaKe(
+    nomorWaAfiliasi(p.whatsapp),
+    [
+      "*Komisi affiliate baru*",
+      `Halo ${p.nama},`,
+      `Pembayaran peserta ${p.referralNama} sudah terverifikasi.`,
+      `Komisi: Rp${rupiah}`,
+      `Saldo bisa dilihat di ${SITE_URL}/afiliasi/dashboard`,
+    ],
+    "komisi affiliate"
+  );
+}
+
+/** Pengajuan pencairan baru (WA ke admin). */
+export async function notifyPencairanAfiliasi(p: {
+  nama: string;
+  whatsapp: string;
+  jumlah: number;
+}) {
+  const rupiah = new Intl.NumberFormat("id-ID").format(p.jumlah);
+  await kirimWaKe(
+    await nomorWaAdmin(),
+    [
+      "*Pengajuan pencairan affiliate*",
+      `Nama: ${p.nama}`,
+      `WhatsApp: ${p.whatsapp}`,
+      `Jumlah: Rp${rupiah}`,
+      `Proses: ${SITE_URL}/admin/afiliasi`,
+    ],
+    "pencairan affiliate"
+  );
+}
+
+/** Hasil pencairan (WA langsung ke affiliate). */
+export async function notifyPencairanDiprosesAfiliasi(p: {
+  nama: string;
+  whatsapp: string;
+  status: "dibayar" | "ditolak";
+  jumlah: number;
+  catatan?: string;
+}) {
+  const rupiah = new Intl.NumberFormat("id-ID").format(p.jumlah);
+  const lines =
+    p.status === "dibayar"
+      ? [
+          "*Pencairan komisi berhasil*",
+          `Halo ${p.nama}, komisi sebesar Rp${rupiah} sudah ditransfer.`,
+          `Cek bukti transfer di ${SITE_URL}/afiliasi/dashboard`,
+        ]
+      : [
+          "*Pencairan komisi ditolak*",
+          `Halo ${p.nama}, pengajuan pencairan Rp${rupiah} belum dapat diproses.`,
+          ...(p.catatan ? [`Catatan admin: ${p.catatan}`] : []),
+          `Saldo Anda dikembalikan. Ajukan lagi di ${SITE_URL}/afiliasi/dashboard`,
+        ];
+  await kirimWaKe(
+    nomorWaAfiliasi(p.whatsapp),
+    lines,
+    "pencairan diproses"
+  );
+}
+
 export const TEST_MESSAGE =
   "*Tes notifikasi*\nWhatsApp berhasil terhubung. Notifikasi pendaftar baru dan bukti pembayaran akan dikirim ke nomor ini.";

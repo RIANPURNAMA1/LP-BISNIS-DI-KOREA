@@ -45,6 +45,7 @@ model Pendaftaran {
   jadwal      JadwalSesi[]
   waitinglist Waitinglist?
   pembayaran  PembayaranKonsultasi[]
+  referral    Referral?
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -147,8 +148,106 @@ model PembayaranKonsultasi {
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   pendaftaran   Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+  referral      Referral?
+  komisi        Komisi?
 
   @@index([pendaftaranId])
   @@index([status])
   @@map("pembayaran_konsultasi")
+}
+
+// ─── Afiliasi (terpisah dari peserta) ────────────────────────────
+// Siapa saja boleh mendaftar, langsung aktif, login memakai password sendiri.
+model Affiliate {
+  id           Int       @id @default(autoincrement())
+  nama         String    @db.VarChar(255)
+  email        String    @unique @db.VarChar(255)
+  whatsapp     String    @db.VarChar(30)
+  password     String    @db.VarChar(255)
+  kode         String    @unique @db.VarChar(30)
+  bankNama     String    @default("") @map("bank_nama") @db.VarChar(100)
+  bankNo       String    @default("") @map("bank_no") @db.VarChar(100)
+  bankAtasNama String    @default("") @map("bank_atas_nama") @db.VarChar(150)
+  aktif        Boolean   @default(true)
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  referrals Referral[]
+  komisi    Komisi[]
+  payouts   Payout[]
+
+  @@index([aktif])
+  @@map("affiliate")
+}
+
+// Atribusi: satu pendaftaran hanya bisa diklaim satu affiliate (1 level).
+// pembayaranId diisi saat admin menyetujui pembayaran Rp49.000.
+model Referral {
+  id             Int                   @id @default(autoincrement())
+  affiliateId    Int                   @map("affiliate_id")
+  pendaftaranId  Int                   @unique @map("pendaftaran_id")
+  pembayaranId   Int?                  @unique @map("pembayaran_id")
+  kode           String                @db.VarChar(30)
+  // terdaftar | terverifikasi | batal
+  status         String                @default("terdaftar") @db.VarChar(20)
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  affiliate    Affiliate               @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  pendaftaran  Pendaftaran             @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+  pembayaran   PembayaranKonsultasi?   @relation(fields: [pembayaranId], references: [id], onDelete: SetNull)
+  komisi       Komisi[]
+
+  @@index([affiliateId])
+  @@index([status])
+  @@map("referral")
+}
+
+// Jurnal komisi. Satu pembayaran terverifikasi = tepat satu komisi.
+model Komisi {
+  id           Int                   @id @default(autoincrement())
+  affiliateId  Int                   @map("affiliate_id")
+  referralId   Int                   @map("referral_id")
+  pembayaranId Int                   @unique @map("pembayaran_id")
+  payoutId     Int?                  @map("payout_id")
+  jumlah       Int
+  // tersedia | diproses | dibayar | dibatalkan
+  status       String                @default("tersedia") @db.VarChar(20)
+  keterangan   String?               @db.VarChar(255)
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  affiliate  Affiliate               @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referral   Referral                @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  pembayaran PembayaranKonsultasi    @relation(fields: [pembayaranId], references: [id], onDelete: Cascade)
+  payout     Payout?                 @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateId, status])
+  @@map("komisi")
+}
+
+// Pengajuan pencairan manual oleh affiliate; admin mengunggah bukti transfer.
+model Payout {
+  id           Int       @id @default(autoincrement())
+  affiliateId  Int       @map("affiliate_id")
+  jumlah       Int
+  // Snapshot rekening saat pengajuan (boleh diubah affiliate setelahnya).
+  bankNama     String    @map("bank_nama") @db.VarChar(100)
+  bankNo       String    @map("bank_no") @db.VarChar(100)
+  bankAtasNama String    @map("bank_atas_nama") @db.VarChar(150)
+  // menunggu | dibayar | ditolak
+  status       String    @default("menunggu") @db.VarChar(20)
+  bukti        String?   @db.VarChar(500)
+  catatanAdmin String?   @map("catatan_admin") @db.Text
+  diprosesAt   DateTime? @map("diproses_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  komisi    Komisi[]
+
+  @@index([affiliateId])
+  @@index([status])
+  @@map("payout")
 }

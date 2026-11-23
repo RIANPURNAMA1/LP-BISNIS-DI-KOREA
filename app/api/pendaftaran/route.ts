@@ -45,15 +45,60 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Simpan ke database via Prisma (password disimpan sebagai hash)
-    const { password, ...data } = result.data;
-    const pendaftaran = await prisma.pendaftaran.create({
-      data: {
-        ...data,
-        email,
-        password: await bcrypt.hash(password, 10),
-        tujuan: serializeTujuan(result.data.tujuan),
-      },
+    // Kode afiliasi dari tautan undangan. Kode tidak dikenal = tolak,
+    // self-referral = atribusi diabaikan (pendaftaran tetap berjalan).
+    const kodeAfiliasi = result.data.kodeAfiliasi;
+    let affiliate: { id: number; nama: string; email: string; whatsapp: string } | null = null;
+    if (kodeAfiliasi) {
+      const candidates = await prisma.affiliate.findUnique({
+        where: { kode: kodeAfiliasi },
+        select: { id: true, nama: true, email: true, whatsapp: true, aktif: true },
+      });
+      if (!candidates || !candidates.aktif) {
+        return NextResponse.json(
+          {
+            success: false,
+            field: "kodeAfiliasi",
+            error: "Kode afiliasi tidak ditemukan atau tidak aktif.",
+          },
+          { status: 400 }
+        );
+      }
+      const waPendaftar = result.data.whatsapp.replace(/\D/g, "");
+      const waAfiliasi = candidates.whatsapp.replace(/\D/g, "");
+      const selfReferral =
+        candidates.email === email ||
+        (waPendaftar.length >= 8 && waPendaftar === waAfiliasi);
+      affiliate = selfReferral ? null : candidates;
+    }
+
+    // Sumber akuisisi mengikuti atribusi affiliate agar masuk statistik admin.
+    const sumber = affiliate ? `Afiliasi: ${affiliate.nama}` : result.data.sumber;
+
+    // Simpan ke database via Prisma (password disimpan sebagai hash).
+    // Pendaftaran + atribusi dibuat dalam satu transaksi.
+    const { password, kodeAfiliasi: _kode, ...data } = result.data;
+    const pendaftaran = await prisma.$transaction(async (tx) => {
+      const row = await tx.pendaftaran.create({
+        data: {
+          ...data,
+          sumber,
+          email,
+          password: await bcrypt.hash(password, 10),
+          tujuan: serializeTujuan(result.data.tujuan),
+        },
+      });
+      if (affiliate) {
+        await tx.referral.create({
+          data: {
+            affiliateId: affiliate.id,
+            pendaftaranId: row.id,
+            kode: kodeAfiliasi,
+            status: "terdaftar",
+          },
+        });
+      }
+      return row;
     });
 
     // Notifikasi WhatsApp ke admin (di latar belakang; tidak menunda/menggagalkan respons).
