@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
+  CalendarClock,
   Check,
   Lock,
   Mail,
@@ -15,10 +15,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import VideoWajib from "./VideoWajib";
+import JadwalSesi from "./JadwalSesi";
 
 export type Grup = { nama: string; deskripsi: string; url: string }[];
 
-type Popup = "grupAwal" | "video" | null;
+type Popup = "grupAwal" | "video" | "posisi" | "jadwal" | "selamat" | null;
 
 type Kontak = {
   whatsapp: string;
@@ -32,6 +33,14 @@ const WILAYAH_LABEL: Record<string, string> = {
   luar_negeri: "Luar Negeri",
 };
 
+/** Opsi posisi peserta. Teks ini bisa diganti di satu tempat bila ada revisi redaksi. */
+const POSISI_OPSI = [
+  { kode: "A", label: "Belum punya usaha / baru mau mulai" },
+  { kode: "B", label: "Sudah punya usaha kecil" },
+  { kode: "C", label: "Sudah jalankan bisnis & ingin ekspansi ke Korea" },
+  { kode: "D", label: "Lulusan S1 (wajib centang ijazah S1)" },
+] as const;
+
 const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4] focus-visible:ring-offset-2";
 
@@ -41,10 +50,12 @@ function Modal({
   title,
   children,
   onClose,
+  size = "md",
 }: {
   title: string;
   children: ReactNode;
   onClose?: () => void;
+  size?: "md" | "lg";
 }) {
   return (
     <div
@@ -54,7 +65,11 @@ function Modal({
       className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-900/60 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose?.()}
     >
-      <div className="relative w-full max-w-md rounded-md bg-white p-6 shadow-xl">
+      <div
+        className={`relative my-4 w-full rounded-md bg-white p-6 shadow-xl ${
+          size === "lg" ? "max-w-2xl" : "max-w-md"
+        }`}
+      >
         {onClose && (
           <button
             onClick={onClose}
@@ -79,7 +94,7 @@ const WaIcon = () => (
   </svg>
 );
 
-function GrupList({ grup }: { grup: Grup }) {
+function GrupList({ grup, terkunci = false }: { grup: Grup; terkunci?: boolean }) {
   return (
     <ul className="divide-y divide-slate-200 rounded-md border border-slate-200">
       {grup.map((g) => (
@@ -91,7 +106,11 @@ function GrupList({ grup }: { grup: Grup }) {
             <p className="text-sm font-semibold text-slate-900">{g.nama}</p>
             <p className="mt-0.5 text-sm leading-6 text-slate-600">{g.deskripsi}</p>
           </div>
-          {g.url ? (
+          {terkunci ? (
+            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400">
+              <Lock className="h-4 w-4" /> Terkunci
+            </span>
+          ) : g.url ? (
             <a
               href={g.url}
               target="_blank"
@@ -193,40 +212,55 @@ export default function PesertaFlow({
   videoUrl,
   videoSelesai,
   konsultasiSelesai,
+  posisi,
+  jadwalSelesai,
   grupUmum,
   grupKonsultasi,
   bolehGrupKonsultasi,
-  statusPembayaran,
+  terkunci,
   nama,
   kontak,
 }: {
   videoUrl: string;
   videoSelesai: boolean;
+  /** Konfirmasi posisi konsultasi lanjutan sudah dikirim. */
   konsultasiSelesai: boolean;
+  posisi: string | null;
+  /** Peserta sudah mengirim jadwal atau masuk waitinglist. */
+  jadwalSelesai: boolean;
   /** Grup umum Korean Bisnis Klub, ditampilkan ke semua peserta. */
   grupUmum: Grup[number];
-  /** Grup khusus konsultasi online, muncul setelah checkout. */
+  /** Grup khusus konsultasi lanjutan. */
   grupKonsultasi: Grup[number];
   bolehGrupKonsultasi: boolean;
-  statusPembayaran: string;
+  /** Bukti pembayaran sudah dikirim, tapi admin belum verifikasi. */
+  terkunci: boolean;
   nama: string;
   kontak: Kontak;
 }) {
   const [videoDone, setVideoDone] = useState(videoSelesai);
+  const [konsultasiDone, setKonsultasiDone] = useState(konsultasiSelesai);
+  const [posisiTerpilih, setPosisiTerpilih] = useState(posisi);
+  const [jadwalDone, setJadwalDone] = useState(jadwalSelesai);
   const [popup, setPopup] = useState<Popup>(null);
+  const [infoVideo, setInfoVideo] = useState("");
+  const [pilihanPosisi, setPilihanPosisi] = useState(posisi ?? "");
+  const [ijazahS1, setIjazahS1] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [jenisSelesai, setJenisSelesai] = useState<"jadwal" | "waitinglist">("jadwal");
 
   // Sebelum menonton video, peserta diminta gabung ke grup umum (sekali per sesi browser).
+  // Saat terkunci, popup tidak muncul: video & grup hanya bisa dilihat, belum dipakai.
   useEffect(() => {
-    if (videoSelesai) return;
+    if (terkunci || videoSelesai) return;
     try {
       if (sessionStorage.getItem("grup-umum-dilihat")) return;
     } catch {
       /* penyimpanan tidak tersedia: tetap tampilkan popup */
     }
     setPopup("grupAwal");
-  }, [videoSelesai]);
+  }, [videoSelesai, terkunci]);
 
   function tutupPopupGrupAwal() {
     try {
@@ -238,7 +272,7 @@ export default function PesertaFlow({
   }
 
   async function handleVideoDone() {
-    if (videoDone) return;
+    if (terkunci || videoDone) return;
     setSaving(true);
     setError("");
     try {
@@ -258,12 +292,76 @@ export default function PesertaFlow({
     }
   }
 
-  const done = [true, videoDone, konsultasiSelesai];
-  const doneCount = done.filter(Boolean).length;
-  const konsultasiAktif = konsultasiSelesai || statusPembayaran === "dikonfirmasi";
+  function bukaPosisi() {
+    setPilihanPosisi(posisiTerpilih ?? "");
+    setIjazahS1(false);
+    setError("");
+    setPopup("posisi");
+  }
 
-  const stateVideo: StepState = videoDone ? "done" : "active";
-  const stateKonsultasi: StepState = konsultasiSelesai ? "done" : videoDone ? "active" : "locked";
+  function bukaKonsultasi() {
+    if (terkunci) return;
+    if (!videoDone) {
+      setInfoVideo("silahkan tonton dulu video diatas");
+      return;
+    }
+    setInfoVideo("");
+    if (!konsultasiDone) {
+      bukaPosisi();
+      return;
+    }
+    setPopup("jadwal");
+  }
+
+  async function submitPosisi(e: React.FormEvent) {
+    e.preventDefault();
+    if (terkunci) return;
+    if (!pilihanPosisi) {
+      setError("Pilih salah satu posisi terlebih dulu.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/peserta/konsultasi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posisi: pilihanPosisi, ijazahS1 }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error || "Konfirmasi belum tersimpan. Coba lagi.");
+      setPosisiTerpilih(pilihanPosisi);
+      setKonsultasiDone(true);
+      setPopup("jadwal");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Konfirmasi belum tersimpan. Coba lagi.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function onJadwalSelesai(jenis: "jadwal" | "waitinglist") {
+    setJadwalDone(true);
+    setJenisSelesai(jenis);
+    setPopup("selamat");
+  }
+
+  const done = [true, videoDone, konsultasiDone && jadwalDone];
+  const doneCount = done.filter(Boolean).length;
+
+  // Saat menunggu verifikasi, tidak ada popup interaktif yang boleh muncul.
+  const popupTampil = terkunci ? null : popup;
+
+  const stateGrup: StepState = terkunci ? "locked" : "done";
+  const stateVideo: StepState = terkunci ? "locked" : videoDone ? "done" : "active";
+  const stateKonsultasi: StepState = terkunci
+    ? "locked"
+    : konsultasiDone && jadwalDone
+      ? "done"
+      : videoDone
+        ? "active"
+        : "locked";
+  const labelPosisi = POSISI_OPSI.find((o) => o.kode === posisiTerpilih)?.label ?? posisiTerpilih ?? "-";
 
   return (
     <>
@@ -286,11 +384,16 @@ export default function PesertaFlow({
 
           <ol>
             {/* 1. Grup */}
-            <Step no={1} title="Gabung grup Korean Bisnis Klub" state="done" status="Selesai">
+            <Step
+              no={1}
+              title="Gabung grup Korean Bisnis Klub"
+              state={stateGrup}
+              status={terkunci ? "Terkunci" : "Selesai"}
+            >
               <p className="mb-3 max-w-prose text-sm leading-6 text-slate-600">
                 Info program dan diskusi antar peserta ada di grup ini.
               </p>
-              <GrupList grup={[grupUmum]} />
+              <GrupList grup={[grupUmum]} terkunci={terkunci} />
             </Step>
 
             {/* 2. Video */}
@@ -298,10 +401,20 @@ export default function PesertaFlow({
               no={2}
               title="Tonton video pengarahan"
               state={stateVideo}
-              status={videoDone ? "Selesai" : "Belum ditonton"}
+              status={terkunci ? "Terkunci" : videoDone ? "Selesai" : "Belum ditonton"}
             >
               <div className="overflow-hidden rounded-md border border-slate-200">
-                {videoUrl ? (
+                {terkunci ? (
+                  <div className="relative grid aspect-video place-items-center bg-slate-900 px-6 text-center">
+                    <div>
+                      <Lock className="mx-auto h-8 w-8 text-white/60" />
+                      <p className="mt-3 text-sm font-semibold text-white">Video pengarahan</p>
+                      <p className="mt-1 text-xs leading-5 text-white/60">
+                        Terkunci sampai pembayaran terverifikasi.
+                      </p>
+                    </div>
+                  </div>
+                ) : videoUrl ? (
                   <VideoWajib url={videoUrl} onDone={handleVideoDone} />
                 ) : (
                   <div className="grid aspect-video place-items-center bg-slate-50 px-6 text-center text-sm text-slate-500">
@@ -310,23 +423,30 @@ export default function PesertaFlow({
                 )}
               </div>
               <p className="mt-3 flex max-w-prose items-start gap-2 text-sm leading-6 text-slate-600">
-                {videoDone ? (
+                {terkunci ? (
+                  <>
+                    <Lock className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
+                    <span>
+                      Video dan grup akan terbuka otomatis setelah admin memverifikasi pembayaran.
+                    </span>
+                  </>
+                ) : videoDone ? (
                   <>
                     <Check className="mt-1 h-4 w-4 shrink-0 text-[#0052A4]" />
-                    Video selesai ditonton. Konsultasi online sekarang sudah terbuka.
+                    Video selesai ditonton. Konsultasi lanjutan sekarang sudah bisa diisi.
                   </>
                 ) : (
                   <>
                     <Lock className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
                     <span>
                       <b>Wajib tonton sampai selesai video ini dulu sebelum melanjutkan.</b> Setelah
-                      selesai, konsultasi online akan terbuka.
+                      selesai, konfirmasi data diri dan pilih jadwal konsultasi lanjutan.
                     </span>
                   </>
                 )}
               </p>
               {saving && <p className="mt-2 text-sm text-slate-500">Menyimpan progres…</p>}
-              {error && !popup && (
+              {error && !popupTampil && (
                 <div
                   role="alert"
                   className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
@@ -336,56 +456,88 @@ export default function PesertaFlow({
               )}
             </Step>
 
-            {/* 3. Konsultasi */}
+            {/* 3. Konsultasi lanjutan */}
             <Step
               no={3}
-              title="Konsultasi online"
+              title="Konsultasi lanjutan"
               state={stateKonsultasi}
               status={
-                konsultasiSelesai ? "Aktif" : videoDone ? "Rp49.000" : "Terbuka setelah video selesai"
+                terkunci
+                  ? "Terkunci"
+                  : jadwalDone
+                    ? "Jadwal dikirim"
+                    : konsultasiDone
+                      ? "Belum pilih jadwal"
+                      : videoDone
+                        ? "Belum dikonfirmasi"
+                        : "Terbuka setelah video selesai"
               }
               last
             >
-              {konsultasiSelesai ? (
-                <>
-                  <p className="max-w-prose text-sm leading-6 text-slate-600">
-                    Pembayaran sudah dikonfirmasi. Detail sesi ada di halaman konsultasi.
-                  </p>
-                  <Link
-                    href="/peserta/konsultasi"
-                    className={`mt-3 inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
-                  >
-                    Lihat detail sesi <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </>
-              ) : videoDone ? (
-                <>
-                  <p className="max-w-prose text-sm leading-6 text-slate-600">
-                    Biaya layanan Rp49.000. Transfer, lalu unggah bukti pembayaran di halaman
-                    checkout.
-                  </p>
-                  <Link
-                    href="/peserta/konsultasi"
-                    className={`mt-3 inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
-                  >
-                    Bayar konsultasi <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </>
-              ) : (
-                <p className="max-w-prose text-sm leading-6 text-slate-500">
-                  Selesaikan video pengarahan dulu, lalu pembayaran bisa dilakukan.
+              <p className="max-w-prose text-sm leading-6 text-slate-600">
+                {terkunci ? (
+                  <>Tonton video dan gabung grup setelah admin memverifikasi pembayaran Anda.</>
+                ) : videoDone ? (
+                  konsultasiDone ? (
+                    <>
+                      Posisi kamu: <b>{labelPosisi}</b>. Silakan pilih jadwal konsultasi lanjutan
+                      yang sudah ditetapkan admin.
+                    </>
+                  ) : (
+                    <>
+                      Konfirmasi data diri dan pilih posisi kamu saat ini, lalu jadwalkan konsultasi
+                      lanjutan bersama tim Bisnis di Korea.
+                    </>
+                  )
+                ) : (
+                  <>Tonton video pengarahan sampai selesai untuk membuka tahap ini.</>
+                )}
+              </p>
+
+              <button
+                type="button"
+                onClick={bukaKonsultasi}
+                disabled={terkunci}
+                title={terkunci ? "Menunggu verifikasi admin" : undefined}
+                className={`mt-3 inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] disabled:cursor-not-allowed disabled:bg-slate-300 ${FOCUS}`}
+              >
+                {terkunci ? (
+                  <Lock className="h-4 w-4" />
+                ) : null}
+                Konsultasi lanjutan
+                {terkunci ? null : <ArrowRight className="h-4 w-4" />}
+              </button>
+              {terkunci && (
+                <p className="mt-2 flex items-center gap-2 text-sm font-medium text-amber-700">
+                  <Lock className="h-4 w-4 shrink-0" /> Menunggu verifikasi admin.
                 </p>
               )}
 
-              {bolehGrupKonsultasi && (
+              {infoVideo && (
+                <p
+                  role="status"
+                  className="mt-3 flex items-center gap-2 text-sm font-medium text-amber-700"
+                >
+                  <Lock className="h-4 w-4 shrink-0" /> {infoVideo}
+                </p>
+              )}
+
+              {konsultasiDone && jadwalDone && (
+                <p className="mt-3 flex items-center gap-2 text-sm text-emerald-700">
+                  <Check className="h-4 w-4 shrink-0" /> Data sudah kami terima. Admin akan
+                  menghubungi Anda untuk informasi selanjutnya.
+                </p>
+              )}
+
+              {(bolehGrupKonsultasi || terkunci) && (
                 <div className="mt-6">
                   <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4">
-                    <h3 className="text-sm font-semibold text-slate-900">Grup konsultasi online</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">Grup konsultasi lanjutan</h3>
                     <span className="text-sm text-slate-500">
-                      {konsultasiAktif ? "Aktif" : "Menunggu verifikasi pembayaran"}
+                      {terkunci ? "Terkunci" : "Aktif"}
                     </span>
                   </div>
-                  <GrupList grup={[grupKonsultasi]} />
+                  <GrupList grup={[grupKonsultasi]} terkunci={terkunci} />
                 </div>
               )}
             </Step>
@@ -411,12 +563,12 @@ export default function PesertaFlow({
           <section className="border-t border-slate-200 pt-6">
             <h3 className="text-sm font-semibold text-slate-900">Butuh bantuan?</h3>
             <p className="mt-1.5 text-sm leading-6 text-slate-600">
-              Tanyakan seputar program atau pembayaran di grup WhatsApp. Tim kami akan menjawab di
-              sana.
+              Tanyakan seputar program atau konsultasi lanjutan di grup WhatsApp. Tim kami akan
+              menjawab di sana.
             </p>
             <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
-              <li>Selesaikan video sebelum membayar.</li>
-              <li>Simpan bukti transfer supaya verifikasi lebih cepat.</li>
+              <li>Selesaikan video sebelum mengisi konfirmasi.</li>
+              <li>Pilih jadwal yang masih tersedia (maks. 5 peserta per jadwal).</li>
               <li>Cek grup secara berkala untuk info terbaru.</li>
             </ul>
           </section>
@@ -424,7 +576,7 @@ export default function PesertaFlow({
       </div>
 
       {/* Popup: masuk grup umum (sebelum video) */}
-      {popup === "grupAwal" && (
+      {popupTampil === "grupAwal" && (
         <Modal title="Gabung grup dulu" onClose={tutupPopupGrupAwal}>
           <p className="mb-4 mt-2 text-sm leading-6 text-slate-600">
             Pendaftaran Anda berhasil. Gabung ke grup <b>Korean Bisnis Klub</b>, lalu lanjut
@@ -441,23 +593,139 @@ export default function PesertaFlow({
       )}
 
       {/* Popup: video selesai */}
-      {popup === "video" && (
+      {popupTampil === "video" && (
         <Modal title="Video selesai ditonton" onClose={() => setPopup(null)}>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Langkah berikutnya: konsultasi online. Transfer Rp49.000, lalu unggah bukti
-            pembayaran Anda.
+            Langkah berikutnya: konfirmasi data diri dan pilih posisi kamu saat ini, lalu jadwalkan
+            konsultasi lanjutan bersama tim Bisnis di Korea.
           </p>
-          <Link
-            href="/peserta/konsultasi"
+          <button
+            onClick={bukaPosisi}
             className={`mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-3 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
           >
-            Bayar konsultasi <ArrowRight className="h-4 w-4" />
-          </Link>
+            Lanjut konsultasi lanjutan <ArrowRight className="h-4 w-4" />
+          </button>
           <button
             onClick={() => setPopup(null)}
             className={`mt-2 w-full rounded-md py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 ${FOCUS}`}
           >
             Nanti saja
+          </button>
+        </Modal>
+      )}
+
+      {/* Popup: konfirmasi data diri + opsi posisi A–D */}
+      {popupTampil === "posisi" && (
+        <Modal
+          title="Konfirmasi konsultasi lanjutan"
+          onClose={() => setPopup(null)}
+          size="lg"
+        >
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Silakan cek kembali data Anda di bawah ini sebelum melanjutkan.
+          </p>
+          <dl className="mt-3 divide-y divide-slate-100 rounded-md border border-slate-200 px-4">
+            <InfoRow icon={Check} label="Nama" value={nama} />
+            <InfoRow icon={Phone} label="WhatsApp" value={kontak?.whatsapp ?? ""} />
+            <InfoRow icon={Mail} label="Email" value={kontak?.email ?? ""} />
+            <InfoRow
+              icon={MapPin}
+              label="Wilayah"
+              value={WILAYAH_LABEL[kontak?.wilayah ?? ""] || kontak?.wilayah || "-"}
+            />
+          </dl>
+          <p className="mt-4 text-sm font-semibold leading-6 text-slate-900">
+            Sebelum melanjutkan konsultasi lanjutan bersama tim Bisnis di Korea silahkan pilih posisi
+            kamu saat ini
+          </p>
+
+          <form onSubmit={submitPosisi} className="mt-3 space-y-2">
+            {POSISI_OPSI.map((o) => (
+              <label
+                key={o.kode}
+                className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors ${
+                  pilihanPosisi === o.kode
+                    ? "border-[#0052A4] bg-[#0052A4]/5 text-slate-900"
+                    : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="posisi"
+                  value={o.kode}
+                  checked={pilihanPosisi === o.kode}
+                  onChange={() => {
+                    setPilihanPosisi(o.kode);
+                    setError("");
+                  }}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#0052A4]"
+                />
+                <span>
+                  <b className="mr-1.5">{o.kode}.</b>
+                  {o.label}
+                </span>
+              </label>
+            ))}
+
+            {pilihanPosisi === "D" && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-md bg-amber-50 px-3 py-2.5 text-sm text-amber-900 ring-1 ring-amber-200">
+                <input
+                  type="checkbox"
+                  checked={ijazahS1}
+                  onChange={(e) => {
+                    setIjazahS1(e.target.checked);
+                    setError("");
+                  }}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#0052A4]"
+                />
+                <span>
+                  <b>Saya memiliki ijazah S1.</b> Wajib dicentang untuk memilih opsi D.
+                </span>
+              </label>
+            )}
+
+            {error && (
+              <p role="alert" className="flex items-start gap-2 text-sm text-red-600">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={saving}
+              className={`mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-3 text-sm font-medium text-white hover:bg-[#00438a] disabled:opacity-60 ${FOCUS}`}
+            >
+              {saving ? "Menyimpan…" : "Jadwalkan konsultasi sekarang"}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* Popup: pilih jadwal fix dari admin / waitinglist */}
+      {popupTampil === "jadwal" && (
+        <Modal
+          title="Pilih jadwal konsultasi lanjutan"
+          onClose={() => setPopup(null)}
+          size="lg"
+        >
+          <JadwalSesi onSelesai={onJadwalSelesai} />
+        </Modal>
+      )}
+
+      {/* Popup: jadwal / waitinglist berhasil dikirim */}
+      {popupTampil === "selamat" && (
+        <Modal title="Selamat!" onClose={() => setPopup(null)}>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {jenisSelesai === "jadwal"
+              ? "Jadwal konsultasi lanjutan Anda sudah kami terima. Admin akan menghubungi Anda untuk informasi selanjutnya."
+              : "Data Anda sudah masuk waitinglist. Admin akan menghubungi Anda untuk informasi selanjutnya."}
+          </p>
+          <button
+            onClick={() => setPopup(null)}
+            className={`mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-3 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
+          >
+            <CalendarClock className="h-4 w-4" /> Selesai
           </button>
         </Modal>
       )}

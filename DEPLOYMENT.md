@@ -379,7 +379,7 @@ Pastikan:
 - Cek `pm2 logs bisnis-korea` jika login gagal.
 
 ### Upload video admin gagal / video tidak tampil di peserta
-- Halaman kelola video ada di `/admin/video` (URL lama `/admin/jadwal` otomatis dialihkan).
+- Halaman kelola video ada di `/admin/video`. Atur jadwal konsultasi lanjutan di `/admin/jadwal`.
 - File disimpan di folder `storage/video/` dan disajikan lewat `/api/video/<nama>`,
   jadi **tidak perlu rebuild** setelah upload. Pastikan folder tersebut bisa ditulis
   oleh user yang menjalankan PM2.
@@ -388,15 +388,23 @@ Pastikan:
 - Video aktif tersimpan di tabel `pengaturan` (`peserta_video_url`). Cek lewat
   `GET /api/admin/konten` saat login sebagai admin.
 
-### Bukti pembayaran konsultasi online tidak tampil di admin
+### Bukti pembayaran aktivasi akun tidak tampil di admin
 - Bukti disimpan di folder `storage/bukti-bayar/` dan disajikan lewat
   `/api/bukti-bayar/<nama>` (hanya untuk user yang sudah login). Pastikan folder
   tersebut bisa ditulis oleh user PM2.
 - Rekening bank tujuan (metode pembayaran hanya transfer bank) dan dua link grup (Korean Bisnis Klub + Grup Konsultasi
-  Online) diatur di `/admin/pengaturan`; halaman checkout peserta ada di
-  `/peserta/konsultasi` (Rp49.000). Grup konsultasi baru muncul di dashboard setelah checkout.
-- Data pembayaran masuk ke tabel `pembayaran_konsultasi` dan diverifikasi di
+  Lanjutan) diatur di `/admin/pengaturan`; halaman pembayaran aktivasi peserta ada di
+  `/pembayaran`. Setelah terverifikasi, peserta boleh masuk `/peserta`.
+- Pembayaran konsultasi Rp49.000 yang lama sudah dihapus dari alur member; URL
+  `/peserta/konsultasi` kini dialihkan ke `/peserta`.
+- Data pembayaran aktivasi masuk ke tabel `pembayaran_konsultasi` dan diverifikasi di
   `/admin/pembayaran`. Setelah disetujui, sistem mengirim email konfirmasi ke peserta.
 - Ukuran bukti maksimal 5 MB (format JPG/PNG/WebP).
+
+### Alur konsultasi lanjutan
+- Peserta wajib menonton video sampai selesai, lalu mengisi konfirmasi data diri dan
+  memilih posisi A–D (opsi D wajib memiliki ijazah S1).
+- Admin menetapkan slot fix di `/admin/jadwal` dengan kuota 5 peserta per slot.
+- Jika semua slot penuh, peserta masuk tabel `waitinglist` dan admin akan menghubungi.
 
 pass: email yjzqtuoyvxyzyghf

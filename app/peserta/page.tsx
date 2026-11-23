@@ -3,47 +3,62 @@ import prisma from "@/lib/db";
 import { getGrupKonsultasi, getGrupUmum } from "@/lib/grup";
 import { DEFAULT_ARAHAN, getKontenPeserta } from "@/lib/jadwal";
 import PesertaFlow from "./PesertaFlow";
+import StatusVerifikasi from "./StatusVerifikasi";
 import LogoutButton from "./LogoutButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function PesertaPage() {
-  // Akses penuh sudah dijaga layout /peserta (aksesAktifAt dari DB).
-  // Sesi dipakai untuk menyapa peserta.
+  // Gerbang akses dijaga layout /peserta. Sesi dipakai untuk menyapa peserta.
   const session = await auth();
   const id = parseInt((session?.user as { id?: string } | undefined)?.id ?? "", 10);
-  const [konten, p, pembayaran, grupKonsultasi] = await Promise.all([
-    getKontenPeserta(),
-    prisma.pendaftaran.findUnique({
-      where: { id },
-      select: {
-        nama: true,
-        whatsapp: true,
-        email: true,
-        kabupaten: true,
-        provinsi: true,
-        status: true,
-        ide: true,
-        wilayah: true,
-        aksesAktifAt: true,
-        videoSelesaiAt: true,
-        konsultasiAt: true,
-      },
-    }),
-    prisma.pembayaranKonsultasi.findFirst({
-      where: { pendaftaranId: id },
-      orderBy: { id: "desc" },
-      select: { status: true },
-    }),
-    getGrupKonsultasi(),
-  ]);
+  const [konten, p, jadwalAktif, waitinglist, grupKonsultasi, pembayaranTerakhir] =
+    await Promise.all([
+      getKontenPeserta(),
+      prisma.pendaftaran.findUnique({
+        where: { id },
+        select: {
+          nama: true,
+          whatsapp: true,
+          email: true,
+          kabupaten: true,
+          provinsi: true,
+          status: true,
+          ide: true,
+          wilayah: true,
+          aksesAktifAt: true,
+          videoSelesaiAt: true,
+          konsultasiAt: true,
+          posisiKonsultasi: true,
+        },
+      }),
+      prisma.jadwalSesi.findFirst({
+        where: { pendaftaranId: id, status: { in: ["menunggu", "dikonfirmasi"] } },
+        select: { id: true },
+      }),
+      prisma.waitinglist.findUnique({
+        where: { pendaftaranId: id },
+        select: { id: true },
+      }),
+      getGrupKonsultasi(),
+      prisma.pembayaranKonsultasi.findFirst({
+        where: { pendaftaranId: id },
+        orderBy: { id: "desc" },
+        select: { status: true, createdAt: true },
+      }),
+    ]);
   const nama = p?.nama || session?.user?.name || "Peserta";
-  const konsultasiSelesai = !!p?.konsultasiAt;
+  // Data lama mungkin punya konsultasiAt dari checkout Rp49.000: tanpa posisi,
+  // peserta tetap harus mengisi konfirmasi posisi terlebih dahulu.
+  const konsultasiSelesai = !!p?.konsultasiAt && !!p?.posisiKonsultasi;
+  const jadwalSelesai = !!jadwalAktif || !!waitinglist;
   const grupUmum = await getGrupUmum();
-  const statusPembayaran = pembayaran?.status ?? "";
-  // Grup berbayar hanya boleh muncul setelah pembayaran benar-benar dikonfirmasi
-  // DAN akses member aktif. Status "menunggu" tidak lagi membuka fitur ini.
-  const bolehGrupKonsultasi = !!p?.aksesAktifAt && statusPembayaran === "dikonfirmasi";
+  // Akses member sudah diverifikasi admin lewat aksesAktifAt (satu-satunya pembayaran).
+  const bolehGrupKonsultasi = !!p?.aksesAktifAt;
+  // Bukti sudah dikirim tetapi belum disetujui: video & grup tetap tampil,
+  // terkunci, dengan card status di paling atas.
+  const menungguVerifikasi =
+    !p?.aksesAktifAt && pembayaranTerakhir?.status === "menunggu";
 
   return (
     <div className="min-h-screen bg-white">
@@ -67,13 +82,17 @@ export default async function PesertaPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+        {menungguVerifikasi && pembayaranTerakhir && (
+          <StatusVerifikasi createdAt={pembayaranTerakhir.createdAt.toISOString()} />
+        )}
+
         {/* Sapaan */}
         <div className="mb-10 max-w-2xl">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
             Halo, {nama}
           </h1>
           <p className="mt-2 text-base leading-7 text-slate-600">
-            Selamat datang di ruang member Bisnis di Korea.
+            Selamat datang di Ruang Member Bisnis di Korea.
           </p>
           {konten.arahan && konten.arahan !== DEFAULT_ARAHAN && (
             <div className="mt-5 border-l-2 border-[#0052A4] bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
@@ -87,10 +106,12 @@ export default async function PesertaPage() {
           videoUrl={konten.videoUrl}
           videoSelesai={!!p?.videoSelesaiAt}
           konsultasiSelesai={konsultasiSelesai}
+          posisi={p?.posisiKonsultasi ?? null}
+          jadwalSelesai={jadwalSelesai}
           grupUmum={grupUmum}
           grupKonsultasi={grupKonsultasi}
           bolehGrupKonsultasi={bolehGrupKonsultasi}
-          statusPembayaran={statusPembayaran}
+          terkunci={menungguVerifikasi}
           nama={nama}
           kontak={{
             whatsapp: p?.whatsapp ?? "",

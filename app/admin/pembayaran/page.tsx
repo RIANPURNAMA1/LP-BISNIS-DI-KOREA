@@ -586,7 +586,7 @@ export default function AdminPembayaran() {
                 <>
                   <p className="text-sm leading-6 text-slate-600">
                     Pastikan bukti transfer sesuai. Setelah dikonfirmasi, peserta akan mendapat
-                    email pemberitahuan dan sesi konsultasi online aktif.
+                    email pemberitahuan dan akses Ruang Member aktif.
                   </p>
                   <div className="flex justify-center rounded-xl bg-slate-50 p-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

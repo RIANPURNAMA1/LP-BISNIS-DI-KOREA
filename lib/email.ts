@@ -25,13 +25,13 @@ const K = {
   paymentMessage: "email_pembayaran_message",
 } as const;
 
-export const DEFAULT_SUBJECT = "Selamat! Anda sudah terdaftar di Program Bisnis di Korea";
+export const DEFAULT_SUBJECT = "Selamat anda sudah terdaftar silahkan login disini";
 export const DEFAULT_MESSAGE =
-  "Selamat, pendaftaran Anda sudah kami terima. Silakan masuk dan selesaikan pembayaran untuk mengaktifkan akun. Setelah terverifikasi, Anda bisa masuk ke halaman peserta dan menonton video pengarahan.";
+  "Selamat anda sudah terdaftar silahkan login disini. Selesaikan pembayaran aktivasi akun terlebih dahulu sebelum masuk ke Ruang Member Bisnis di Korea.";
 
-export const DEFAULT_PAYMENT_SUBJECT = "Pembayaran Konsultasi Online Anda Dikonfirmasi";
+export const DEFAULT_PAYMENT_SUBJECT = "Pembayaran aktivasi akun Anda dikonfirmasi";
 export const DEFAULT_PAYMENT_MESSAGE =
-  "Halo {nama}, pembayaran Rp49.000 untuk Konsultasi Online sudah kami verifikasi. Terima kasih! Silakan login ke halaman peserta untuk melihat detail konsultasi Anda.";
+  "Halo {nama}, pembayaran aktivasi akun sudah kami verifikasi. Terima kasih! Silakan login ke Ruang Member Bisnis di Korea untuk menonton video dan melanjutkan konsultasi lanjutan.";
 
 export type EmailSettings = {
   enabled: boolean;
@@ -151,7 +151,7 @@ function buildMail(s: EmailSettings, nama: string) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
 <tr><td style="background:#0052A4;padding:26px 32px">
 <p style="margin:0 0 6px;font-size:11px;font-weight:bold;letter-spacing:1.4px;text-transform:uppercase;color:#bfdbfe">${esc(SITE_NAME.toUpperCase())}</p>
-<p style="margin:0;font-size:20px;line-height:1.35;font-weight:bold;color:#ffffff">Selamat datang di Ruang Member</p>
+<p style="margin:0;font-size:20px;line-height:1.35;font-weight:bold;color:#ffffff">Selamat datang di Ruang Member Bisnis di Korea</p>
 </td></tr>
 <tr><td style="height:4px;background:#E3081C;font-size:0;line-height:0">&nbsp;</td></tr>
 <tr><td style="padding:30px 32px 8px">
@@ -399,4 +399,47 @@ export async function notifyPembayaranDitolak(p: {
     ctaHref: "/pembayaran",
     label: "pembayaran ditolak",
   });
+}
+
+/* ---------------- konsultasi lanjutan ---------------- */
+
+/** Jadwal konsultasi lanjutan berhasil dipilih peserta. */
+export async function notifyJadwalKonsultasi(p: {
+  nama: string;
+  email: string;
+  tanggal: string;
+  jam: string;
+}) {
+  try {
+    await kirimEmailTransaksional({
+      nama: p.nama,
+      email: p.email,
+      subjek: "Jadwal konsultasi lanjutan Anda sudah kami terima",
+      judul: "Jadwal Konsultasi Diterima",
+      pesan: `Jadwal konsultasi lanjutan Anda pada ${p.tanggal} pukul ${p.jam} WIB sudah kami terima. Admin akan menghubungi Anda untuk informasi selanjutnya.`,
+      ctaLabel: "Lihat halaman peserta",
+      ctaHref: "/peserta",
+      label: "jadwal konsultasi",
+    });
+  } catch (e) {
+    console.error("[email] notifikasi jadwal gagal:", e);
+  }
+}
+
+/** Peserta masuk waitinglist karena slot jadwal sudah penuh. */
+export async function notifyWaitinglistDiterima(p: { nama: string; email: string }) {
+  try {
+    await kirimEmailTransaksional({
+      nama: p.nama,
+      email: p.email,
+      subjek: "Anda masuk waitinglist konsultasi lanjutan",
+      judul: "Waitinglist Konsultasi",
+      pesan: "Semua jadwal sudah penuh. Data Anda sudah kami simpan di waitinglist dan akan kami prioritaskan. Admin akan menghubungi Anda untuk informasi selanjutnya.",
+      ctaLabel: "Lihat halaman peserta",
+      ctaHref: "/peserta",
+      label: "waitinglist",
+    });
+  } catch (e) {
+    console.error("[email] notifikasi waitinglist gagal:", e);
+  }
 }

@@ -9,8 +9,8 @@ const fail = (error: string, status: number) =>
 
 // ─── POST — catat progres video pengarahan ────────────────────────
 // Aksi "konsultasi" sengaja dihapus: dulu aksi itu bisa menset konsultasiAt
-// tanpa pembayaran, sehingga peserta mengira pembayarannya sudah lunas.
-// Sekarang konsultasiAt/aksesAktifAt hanya ditulis admin saat verifikasi.
+// tanpa konfirmasi posisi. Sekarang konsultasiAt ditulis endpoint
+// /api/peserta/konsultasi setelah video selesai dan posisi dipilih.
 export async function POST(req: NextRequest) {
   try {
     const peserta = await requirePesertaAktif();

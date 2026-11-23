@@ -355,7 +355,7 @@ export default function NotifikasiEmail() {
             <div>
               <h3 className="text-sm font-bold text-slate-900">Email konfirmasi pembayaran</h3>
               <p className="text-[11px] text-slate-500">
-                Dikirim otomatis setelah pembayaran konsultasi online diverifikasi.
+                Dikirim otomatis setelah pembayaran aktivasi akun terverifikasi.
               </p>
             </div>
           </div>
@@ -416,7 +416,7 @@ export default function NotifikasiEmail() {
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-blue-200">
                 {SITE_NAME}
               </p>
-              <p className="mt-1 text-sm font-bold text-white">Selamat datang di Ruang Member</p>
+              <p className="mt-1 text-sm font-bold text-white">Selamat datang di Ruang Member Bisnis di Korea</p>
             </div>
             <div className="h-1 bg-[#E3081C]" />
             <div className="space-y-3 px-5 py-5">

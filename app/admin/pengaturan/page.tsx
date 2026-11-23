@@ -134,7 +134,7 @@ export default function PengaturanGrup() {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Pengaturan Peserta</h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Link grup umum dan rekening tujuan pembayaran konsultasi online.
+            Link grup umum dan rekening tujuan pembayaran aktivasi akun.
           </p>
         </div>
       </div>
@@ -180,7 +180,7 @@ export default function PengaturanGrup() {
               className={inputCls}
             />
             <p className="mt-1.5 text-xs leading-5 text-slate-500">
-              Grup ini hanya muncul di dashboard peserta setelah mereka checkout konsultasi online.
+              Grup ini muncul di dashboard peserta setelah akun aktif (pembayaran terverifikasi).
             </p>
           </div>
         </div>

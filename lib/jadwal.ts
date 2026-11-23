@@ -105,3 +105,89 @@ export function tanggalTersedia(): string[] {
 }
 
 export const slotKey = (tanggal: string, jam: string) => `${tanggal}_${jam}`;
+
+/* ------------------------------------------------------------------ */
+/* Jadwal fix dari admin, kuota 5 peserta per slot                      */
+/* ------------------------------------------------------------------ */
+
+export const DEFAULT_KUOTA = 5;
+
+export type SlotTersedia = {
+  id: number;
+  tanggal: string;
+  jam: string;
+  kuota: number;
+  terisi: number;
+  sisa: number;
+};
+
+/** Prefix kunci kursi: "tanggal_jam_". Diikuti nomor kursi 1..kuota. */
+export const slotPrefix = (tanggal: string, jam: string) => `${tanggal}_${jam}_`;
+export const slotSeatKey = (tanggal: string, jam: string, kursi: number) =>
+  `${slotPrefix(tanggal, jam)}${kursi}`;
+
+/**
+ * Slot yang ditetapkan admin, masih aktif, dan belum lewat.
+ * `terisi` dihitung dari jadwal aktif (menunggu/dikonfirmasi).
+ */
+export async function getSlotTersedia(): Promise<SlotTersedia[]> {
+  const slots = await prisma.jadwalSlot.findMany({
+    where: { aktif: true, tanggal: { gte: wibToday() } },
+    orderBy: [{ tanggal: "asc" }, { jam: "asc" }],
+  });
+  if (!slots.length) return [];
+
+  const tanggal = Array.from(new Set(slots.map((s) => s.tanggal)));
+  const jam = Array.from(new Set(slots.map((s) => s.jam)));
+  const dipakai = await prisma.jadwalSesi.findMany({
+    where: {
+      status: { in: [...STATUS_AKTIF] },
+      tanggal: { in: tanggal },
+      jam: { in: jam },
+      slotKey: { not: null },
+    },
+    select: { slotKey: true },
+  });
+  const hitung = new Map<string, number>();
+  for (const d of dipakai) {
+    const prefix = (d.slotKey ?? "").replace(/_[0-9]+$/, "") + "_";
+    hitung.set(prefix, (hitung.get(prefix) ?? 0) + 1);
+  }
+
+  return slots.map((s) => {
+    const terisi = hitung.get(slotPrefix(s.tanggal, s.jam)) ?? 0;
+    return {
+      id: s.id,
+      tanggal: s.tanggal,
+      jam: s.jam,
+      kuota: s.kuota,
+      terisi,
+      sisa: Math.max(0, s.kuota - terisi),
+    };
+  });
+}
+
+/** Cek apakah tanggal+jam termasuk slot fix yang masih bisa dipilih. */
+export async function cariSlot(tanggal: string, jam: string) {
+  if (tanggal < wibToday()) return null;
+  return prisma.jadwalSlot.findFirst({ where: { tanggal, jam, aktif: true } });
+}
+
+/** Nomor kursi yang masih kosong pada sebuah slot (1..kuota). */
+export async function kursiTersedia(tanggal: string, jam: string): Promise<number[]> {
+  const slot = await cariSlot(tanggal, jam);
+  if (!slot) return [];
+  const dipakai = await prisma.jadwalSesi.findMany({
+    where: {
+      tanggal,
+      jam,
+      status: { in: [...STATUS_AKTIF] },
+      slotKey: { startsWith: slotPrefix(tanggal, jam) },
+    },
+    select: { slotKey: true },
+  });
+  const used = new Set(dipakai.map((d) => d.slotKey));
+  return Array.from({ length: slot.kuota }, (_, i) => i + 1).filter(
+    (n) => !used.has(slotSeatKey(tanggal, jam, n)),
+  );
+}

@@ -99,3 +99,29 @@ export const jadwalSchema = z.object({
   jam: z.string().regex(/^\d{2}:\d{2}$/, "Jam tidak valid."),
   catatan: z.string().max(500, "Catatan maksimal 500 karakter.").optional().default(""),
 });
+
+// ─── Slot jadwal yang ditetapkan admin ───────────────────────────
+export const jadwalSlotSchema = z.object({
+  tanggal: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid."),
+  jam: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Jam tidak valid."),
+  kuota: z.coerce.number().int().min(1, "Kuota minimal 1.").max(50, "Kuota maksimal 50.").default(5),
+});
+
+// ─── Konfirmasi konsultasi lanjutan (opsi A–D) ───────────────────
+export const POSISI_KONSULTASI = ["A", "B", "C", "D"] as const;
+export type PosisiKonsultasi = (typeof POSISI_KONSULTASI)[number];
+
+export const konsultasiPosisiSchema = z
+  .object({
+    posisi: z.enum(POSISI_KONSULTASI, { message: "Pilih salah satu posisi." }),
+    ijazahS1: z.boolean().default(false),
+  })
+  .refine((v) => v.posisi !== "D" || v.ijazahS1, {
+    message: "Opsi D wajib memiliki ijazah S1.",
+    path: ["ijazahS1"],
+  });
+
+// ─── Waitinglist ─────────────────────────────────────────────────
+export const waitinglistSchema = z.object({
+  catatan: z.string().max(500, "Catatan maksimal 500 karakter.").optional().default(""),
+});

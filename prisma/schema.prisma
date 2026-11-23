@@ -35,8 +35,15 @@ model Pendaftaran {
   aksesAktifAt DateTime? @map("akses_aktif_at")
   // Progres alur peserta: selesai menonton video, lalu konfirmasi konsultasi lanjutan.
   videoSelesaiAt DateTime? @map("video_selesai_at")
+  // Diisi saat peserta mengirim konfirmasi konsultasi lanjutan (bukan lagi oleh pembayaran).
   konsultasiAt   DateTime? @map("konsultasi_at")
+  // Posisi peserta: A | B | C | D (lihat redaksi di modal konsultasi lanjutan).
+  posisiKonsultasi String?  @map("posisi_konsultasi") @db.VarChar(10)
+  posisiDijawabAt  DateTime? @map("posisi_dijawab_at")
+  // Opsi D hanya boleh dipilih jika peserta memiliki ijazah S1.
+  ijazahS1        Boolean   @default(false) @map("ijazah_s1")
   jadwal      JadwalSesi[]
+  waitinglist Waitinglist?
   pembayaran  PembayaranKonsultasi[]
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -64,10 +71,41 @@ model AdminUser {
   @@map("admin_users")
 }
 
-// Jadwal sesi meeting online yang dipilih peserta.
+// Slot jadwal konsultasi lanjutan yang ditetapkan admin (fix).
+// Satu slot bisa diisi sampai `kuota` peserta (default 5).
+model JadwalSlot {
+  id        Int      @id @default(autoincrement())
+  tanggal   String   @db.VarChar(10)
+  jam       String   @db.VarChar(5)
+  kuota     Int      @default(5)
+  aktif     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([tanggal, jam])
+  @@map("jadwal_slot")
+}
+
+// Antrean peserta saat semua slot jadwal sudah penuh.
+model Waitinglist {
+  id            Int      @id @default(autoincrement())
+  pendaftaranId Int      @unique @map("pendaftaran_id")
+  posisi        String?  @db.VarChar(10)
+  catatan       String?  @db.VarChar(500)
+  // menunggu | diproses | ditambahkan | batal
+  status        String   @default("menunggu") @db.VarChar(20)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  pendaftaran   Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("waitinglist")
+}
+
+// Jadwal sesi konsultasi lanjutan yang dipilih peserta.
 // tanggal "YYYY-MM-DD" & jam "HH:mm" dalam WIB.
-// slotKey = "tanggal_jam" selama jadwal aktif, NULL jika batal/ditolak,
-// sehingga satu slot tidak bisa diambil dua peserta (unique mengizinkan banyak NULL).
+// slotKey = "tanggal_jam_kursi" (kursi 1..kuota) selama jadwal aktif,
+// NULL jika batal/ditolak. Unique mencegah satu kursi diambil dua peserta.
 model JadwalSesi {
   id            Int         @id @default(autoincrement())
   pendaftaranId Int         @map("pendaftaran_id")
@@ -86,7 +124,8 @@ model JadwalSesi {
   @@map("jadwal_sesi")
 }
 
-// Pembayaran konsultasi online (Rp49.000) yang dikirim peserta, lalu diverifikasi admin.
+// Pembayaran aktivasi akun (Rp49.000) — satu-satunya pembayaran, dilakukan sebelum
+// peserta bisa masuk member area. Layer checkout konsultasi lanjutan sudah dihapus.
 model PembayaranKonsultasi {
   id            Int         @id @default(autoincrement())
   pendaftaranId Int         @map("pendaftaran_id")

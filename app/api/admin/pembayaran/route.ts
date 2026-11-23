@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const fail = (error: string, status = 400) =>
   NextResponse.json({ success: false, error }, { status });
 
-/** Daftar pembayaran konsultasi online yang perlu diverifikasi admin. */
+/** Daftar pembayaran aktivasi akun yang perlu diverifikasi admin. */
 export async function GET(req: NextRequest) {
   try {
     if (!(await requireAdmin())?.user) return fail("Tidak terautentikasi.", 401);

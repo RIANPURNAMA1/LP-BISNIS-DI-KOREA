@@ -100,9 +100,11 @@ export default function PembayaranPeserta({
       if (!res.ok || !json.success) {
         throw new Error(json.error || "Gagal mengirim bukti. Coba lagi.");
       }
-      setStatus("menunggu");
+      // Jangan ubah state ke "menunggu": itu akan sempat merender card
+      // verifikasi di halaman ini. Langsung pindah ke ruang member yang
+      // menampilkan card tersebut dalam mode terkunci.
       setBukti(null);
-      router.refresh();
+      router.push("/peserta");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mengirim bukti. Coba lagi.");
     } finally {

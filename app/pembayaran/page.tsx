@@ -31,8 +31,10 @@ export default async function PembayaranPage() {
   ]);
 
   if (!p) redirect("/login");
-  // Sudah lunas: tidak perlu melihat halaman gerbang lagi.
-  if (p.aksesAktifAt) redirect("/peserta");
+  // Sudah lunas ATAU bukti sedang menunggu verifikasi: halaman pembayaran
+  // tidak dipakai lagi. Peserta langsung masuk ke ruang member (yang akan
+  // menampilkan card status + video/grup terkunci saat masih menunggu).
+  if (p.aksesAktifAt || terakhir?.status === "menunggu") redirect("/peserta");
 
   return (
     <PembayaranPeserta

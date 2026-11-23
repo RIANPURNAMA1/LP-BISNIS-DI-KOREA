@@ -182,5 +182,31 @@ export async function notifyPembayaranMasuk(p: {
   }
 }
 
+/** Notifikasi peserta masuk waitinglist ke admin. Tidak pernah melempar error. */
+export async function notifyWaitinglistBaru(p: {
+  nama: string;
+  whatsapp: string;
+  posisi?: string | null;
+  catatan?: string | null;
+}) {
+  try {
+    if (getWaSnapshot().status !== "connected") return;
+    const settings = await getNotifSettings();
+    if (!settings.enabled || settings.numbers.length === 0) return;
+
+    const lines = [
+      "*Waitinglist konsultasi lanjutan*",
+      `Nama: ${p.nama}`,
+      `WhatsApp: ${p.whatsapp}${normalizeNumber(p.whatsapp) ? ` (https://wa.me/${normalizeNumber(p.whatsapp)})` : ""}`,
+      ...(p.posisi ? [`Posisi: ${p.posisi}`] : []),
+      ...(p.catatan ? [`Catatan: ${p.catatan}`] : []),
+      `${SITE_URL}/admin/jadwal`,
+    ];
+    await sendWaText(settings.numbers, lines.join("\n"));
+  } catch (e) {
+    console.error("[wa] notifikasi waitinglist error:", e);
+  }
+}
+
 export const TEST_MESSAGE =
   "*Tes notifikasi*\nWhatsApp berhasil terhubung. Notifikasi pendaftar baru dan bukti pembayaran akan dikirim ke nomor ini.";
