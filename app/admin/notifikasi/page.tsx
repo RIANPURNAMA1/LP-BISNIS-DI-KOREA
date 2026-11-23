@@ -358,7 +358,7 @@ Nama: Rian Purnama
 WhatsApp: +6282118364415 (https://wa.me/6282118364415)
 Bank: BCA
 Nama pengirim: RIAN PURNAMA
-Jumlah: Rp49.000
+Jumlah: Rp29.900
 
 Lihat bukti: https://domain-anda/api/bukti-bayar/xxx.jpg
 Verifikasi: https://domain-anda/admin/pembayaran`}</pre>

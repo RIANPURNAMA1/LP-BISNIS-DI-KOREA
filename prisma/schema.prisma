@@ -126,7 +126,7 @@ model JadwalSesi {
   @@map("jadwal_sesi")
 }
 
-// Pembayaran aktivasi akun (Rp49.000) — satu-satunya pembayaran, dilakukan sebelum
+// Pembayaran aktivasi akun (Rp29.900) — satu-satunya pembayaran, dilakukan sebelum
 // peserta bisa masuk member area. Layer checkout konsultasi lanjutan sudah dihapus.
 model PembayaranKonsultasi {
   id            Int         @id @default(autoincrement())
@@ -141,7 +141,7 @@ model PembayaranKonsultasi {
   namaChannel   String      @map("nama_channel") @db.VarChar(100)
   namaPengirim  String      @map("nama_pengirim") @db.VarChar(255)
   buktiBayar    String      @map("bukti_bayar") @db.VarChar(500)
-  jumlah        Int         @default(49000)
+  jumlah        Int         @default(29900)
   // menunggu | dikonfirmasi | ditolak
   status        String      @default("menunggu") @db.VarChar(20)
   catatanAdmin  String?     @map("catatan_admin") @db.Text
@@ -183,7 +183,7 @@ model Affiliate {
 }
 
 // Atribusi: satu pendaftaran hanya bisa diklaim satu affiliate (1 level).
-// pembayaranId diisi saat admin menyetujui pembayaran Rp49.000.
+// pembayaranId diisi saat admin menyetujui pembayaran Rp29.900.
 model Referral {
   id             Int                   @id @default(autoincrement())
   affiliateId    Int                   @map("affiliate_id")

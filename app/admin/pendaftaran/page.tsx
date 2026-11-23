@@ -49,6 +49,7 @@ type PendaftarRow = {
   tujuan: string[] | string;
   cerita: string;
   sumber: string;
+  wilayah?: string | null;
   eventStatus?: string;
   videoSelesaiAt?: string | null;
   konsultasiAt?: string | null;
@@ -138,6 +139,16 @@ function formatWaktu(value?: string | null) {
       });
 }
 
+const WILAYAH_LABEL: Record<string, string> = {
+  jabodetabek: "Jabodetabek",
+  luar_jabodetabek: "Luar Jabodetabek",
+  luar_negeri: "Luar Negeri",
+};
+
+function formatWilayah(r: PendaftarRow) {
+  return WILAYAH_LABEL[r.wilayah ?? ""] || r.wilayah || "-";
+}
+
 function formatTanggal(r: PendaftarRow) {
   return formatWaktu(r.createdAt || r.created_at);
 }
@@ -161,6 +172,7 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
   { key: "nama", label: "Nama", width: 180, get: (r) => r.nama ?? "" },
   { key: "whatsapp", label: "WhatsApp", width: 140, get: (r) => r.whatsapp ?? "" },
   { key: "email", label: "Email", width: 210, get: (r) => r.email ?? "" },
+  { key: "wilayah", label: "Wilayah", width: 150, get: formatWilayah },
   {
     key: "domisili",
     label: "Domisili",
@@ -390,6 +402,7 @@ function PendaftaranList() {
       "Nama",
       "WhatsApp",
       "Email",
+      "Wilayah",
       "Domisili",
       "Negara",
       "Provinsi/State",
@@ -431,6 +444,7 @@ function PendaftaranList() {
         r.nama,
         r.whatsapp,
         r.email,
+        formatWilayah(r),
         isLuar ? "Luar Negeri" : "Indonesia",
         isLuar ? r.kabupaten : "",
         isLuar ? r.kecamatan : r.provinsi,

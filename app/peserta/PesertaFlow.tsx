@@ -11,6 +11,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  User,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -199,6 +200,34 @@ function InfoRow({
   );
 }
 
+/** Ringkasan data yang sudah dikonfirmasi, dipakai di langkah & popup meeting lanjutan. */
+function RingkasanMeeting({
+  nama,
+  kontak,
+  posisi,
+}: {
+  nama: string;
+  kontak: Kontak;
+  posisi: string;
+}) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+      <h3 className="text-sm font-semibold text-slate-900">Data meeting lanjutan</h3>
+      <dl className="mt-1 divide-y divide-slate-100 px-1">
+        <InfoRow icon={User} label="Nama" value={nama} />
+        <InfoRow icon={Phone} label="WhatsApp" value={kontak?.whatsapp ?? ""} />
+        <InfoRow icon={Mail} label="Email" value={kontak?.email ?? ""} />
+        <InfoRow
+          icon={MapPin}
+          label="Wilayah"
+          value={WILAYAH_LABEL[kontak?.wilayah ?? ""] || kontak?.wilayah || "-"}
+        />
+        <InfoRow icon={Check} label="Posisi" value={posisi} />
+      </dl>
+    </section>
+  );
+}
+
 /* ---------- Halaman utama ---------- */
 
 export default function PesertaFlow({
@@ -355,6 +384,7 @@ export default function PesertaFlow({
         ? "active"
         : "locked";
   const labelPosisi = POSISI_OPSI.find((o) => o.kode === posisiTerpilih)?.label ?? posisiTerpilih ?? "-";
+  const posisiTampil = posisiTerpilih ? `${posisiTerpilih.toUpperCase()}. ${labelPosisi}` : labelPosisi;
 
   return (
     <>
@@ -497,7 +527,7 @@ export default function PesertaFlow({
                 {terkunci ? (
                   <Lock className="h-4 w-4" />
                 ) : null}
-                Konsultasi lanjutan
+                {konsultasiDone && !terkunci ? "Lihat / ubah jadwal" : "Konsultasi lanjutan"}
                 {terkunci ? null : <ArrowRight className="h-4 w-4" />}
               </button>
               {terkunci && (
@@ -513,6 +543,18 @@ export default function PesertaFlow({
                 >
                   <Lock className="h-4 w-4 shrink-0" /> {infoVideo}
                 </p>
+              )}
+
+              {konsultasiDone && !terkunci && (
+                <div className="mt-5 space-y-4">
+                  <RingkasanMeeting nama={nama} kontak={kontak} posisi={posisiTampil} />
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-slate-900">
+                      Jadwal meeting lanjutan
+                    </h3>
+                    <JadwalSesi onSelesai={onJadwalSelesai} />
+                  </div>
+                </div>
               )}
 
               {konsultasiDone && jadwalDone && (
@@ -702,7 +744,10 @@ export default function PesertaFlow({
           onClose={() => setPopup(null)}
           size="lg"
         >
-          <JadwalSesi onSelesai={onJadwalSelesai} />
+          <div className="space-y-4">
+            <RingkasanMeeting nama={nama} kontak={kontak} posisi={posisiTampil} />
+            <JadwalSesi onSelesai={onJadwalSelesai} />
+          </div>
         </Modal>
       )}
 

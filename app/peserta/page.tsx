@@ -48,7 +48,7 @@ export default async function PesertaPage() {
       }),
     ]);
   const nama = p?.nama || session?.user?.name || "Peserta";
-  // Data lama mungkin punya konsultasiAt dari checkout Rp49.000: tanpa posisi,
+  // Data lama mungkin punya konsultasiAt dari checkout Rp29.900: tanpa posisi,
   // peserta tetap harus mengisi konfirmasi posisi terlebih dahulu.
   const konsultasiSelesai = !!p?.konsultasiAt && !!p?.posisiKonsultasi;
   const jadwalSelesai = !!jadwalAktif || !!waitinglist;

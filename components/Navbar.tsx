@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LogIn } from "lucide-react";
 
 const LOGO = "/logo/3.webp";
 
@@ -55,28 +54,16 @@ export default function Navbar() {
         </div>
 
         {/* CTA */}
-        <div className="z-10 flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="z-10 flex shrink-0 items-center">
           <a
             href="/login"
-            aria-label="Masuk"
-            className={`focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border p-0 text-xs font-semibold transition-colors sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 sm:text-sm ${
-              scrolled
-                ? "border-white/30 text-white hover:bg-white/10"
-                : "border-white/60 text-white hover:bg-white/10"
-            }`}
-          >
-            <LogIn className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">Masuk</span>
-          </a>
-          <a
-            href="/daftar"
             className={`focus-ring inline-block whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors sm:px-6 sm:py-2.5 sm:text-sm ${
               scrolled
                 ? "bg-red-600 text-white hover:bg-red-700"
                 : "bg-white text-[#0C2342] hover:bg-slate-100"
             }`}
           >
-            Daftar Program
+            Login Member
           </a>
         </div>
       </div>

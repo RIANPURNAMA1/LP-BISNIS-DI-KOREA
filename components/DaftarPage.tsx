@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 /* ------------------------------------------------------------------ */
@@ -544,6 +544,10 @@ function GroupTitle({ title, desc }: { title: string; desc?: string }) {
 
 const simple = (list: string[]) => list.map((v) => ({ value: v, label: v }));
 
+const EMAIL_TERDAFTAR =
+  "Email ini sudah terdaftar. Gunakan email lain atau login jika Anda sudah pernah mendaftar.";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /* ------------------------------------------------------------------ */
 /* Komponen utama                                                      */
 /* ------------------------------------------------------------------ */
@@ -566,6 +570,10 @@ export default function DaftarPage({
   const [form, setForm] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [emailTersedia, setEmailTersedia] = useState<boolean | null>(null);
+  const cekEmailSeq = useRef(0);
+  const hasilCekEmail = useRef<{ email: string; tersedia: boolean } | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [done, setDone] = useState(false);
   const [loggedIn, setLoggedIn] = useState(true);
@@ -618,6 +626,13 @@ export default function DaftarPage({
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+    if (key === "email") {
+      // Batalkan hasil pengecekan email lama yang mungkin masih berjalan.
+      cekEmailSeq.current += 1;
+      hasilCekEmail.current = null;
+      setEmailChecking(false);
+      setEmailTersedia(null);
+    }
     if (errors[key as string]) {
       setErrors((e) => {
         const next = { ...e };
@@ -626,6 +641,79 @@ export default function DaftarPage({
       });
     }
   }
+
+  /**
+   * Cek duplikat email segera (debounce saat mengetik, langsung saat blur/lanjut).
+   * Mengembalikan false jika email sudah dipakai, true jika tersedia, null jika
+   * pengecekan gagal/batals. Status juga disimpan di state supaya tombol Lanjut
+   * tetap diblokir walaupun pengecekan berikutnya gagal.
+   */
+  const cekEmail = useCallback(async (nilai: string): Promise<boolean | null> => {
+    const email = nilai.trim().toLowerCase();
+    if (!EMAIL_RE.test(email)) {
+      cekEmailSeq.current += 1;
+      hasilCekEmail.current = null;
+      setEmailChecking(false);
+      setEmailTersedia(null);
+      return null;
+    }
+
+    // Email yang sama sudah dicek dan hasilnya masih berlaku.
+    const cached = hasilCekEmail.current;
+    if (cached?.email === email) return cached.tersedia;
+
+    const seq = ++cekEmailSeq.current;
+    setEmailChecking(true);
+    try {
+      const res = await fetch(
+        `/api/pendaftaran/cek-email?email=${encodeURIComponent(email)}`,
+        { cache: "no-store" },
+      );
+      const json = (await res.json().catch(() => null)) as {
+        success?: boolean;
+        terdaftar?: boolean;
+        tersedia?: boolean;
+      } | null;
+      if (seq !== cekEmailSeq.current) return null;
+
+      if (res.ok && json?.success && typeof json.terdaftar === "boolean") {
+        const tersedia = json.tersedia === true;
+        hasilCekEmail.current = { email, tersedia };
+        setEmailTersedia(tersedia);
+        if (!tersedia) {
+          setErrors((e) => ({ ...e, email: EMAIL_TERDAFTAR }));
+        } else {
+          setErrors((e) => {
+            const next = { ...e };
+            if (next.email === EMAIL_TERDAFTAR) delete next.email;
+            return next;
+          });
+        }
+        return tersedia;
+      }
+      return null;
+    } catch {
+      // Jangan mengganggu input; validasi akhir tetap ada di server.
+      return null;
+    } finally {
+      if (seq === cekEmailSeq.current) setEmailChecking(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const email = form.email.trim().toLowerCase();
+    if (!EMAIL_RE.test(email)) {
+      cekEmailSeq.current += 1;
+      hasilCekEmail.current = null;
+      setEmailChecking(false);
+      setEmailTersedia(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void cekEmail(email);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [form.email, cekEmail]);
 
   function setDomisili(value: Domisili) {
     if (value === form.domisili) return;
@@ -688,8 +776,9 @@ export default function DaftarPage({
           "Masukkan nomor WhatsApp yang valid, contoh +62 812 3456 7890.";
 
       if (!form.email.trim()) e.email = req;
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+      else if (!EMAIL_RE.test(form.email.trim()))
         e.email = "Masukkan alamat email yang valid.";
+      else if (emailTersedia === false) e.email = EMAIL_TERDAFTAR;
 
       if (form.password.length < 8) e.password = "Password minimal 8 karakter.";
       else if (form.password.length > 72) e.password = "Password maksimal 72 karakter.";
@@ -723,21 +812,42 @@ export default function DaftarPage({
         e.setuju = "Anda perlu menyetujui penggunaan data untuk melanjutkan.";
     }
 
+    // Email yang sudah terdaftar selalu menggagalkan validasi, tahap apa pun.
+    if (emailTersedia === false && !e.email) e.email = EMAIL_TERDAFTAR;
+
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  function next() {
-    if (validate(step)) setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  async function next() {
+    if (emailTersedia === false) {
+      setErrors((e) => ({ ...e, email: EMAIL_TERDAFTAR }));
+      setStep(0);
+      return;
+    }
+    if (!validate(step)) return;
+    if (step === 0 && (await cekEmail(form.email)) === false) return;
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
 
   async function handleSubmit(ev: FormEvent) {
     ev.preventDefault();
     if (step < STEPS.length - 1) {
-      next();
+      await next();
+      return;
+    }
+    if (emailTersedia === false) {
+      setErrors((e) => ({ ...e, email: EMAIL_TERDAFTAR }));
+      setStep(0);
       return;
     }
     if (!validate(step)) return;
+    // Cek ulang sebelum mengirim supaya email ganda tidak pernah sampai submit.
+    if ((await cekEmail(form.email)) === false) {
+      setErrors((e) => ({ ...e, email: EMAIL_TERDAFTAR }));
+      setStep(0);
+      return;
+    }
 
     const tujuanLain = form.tujuanLainOn ? form.tujuanLain.trim() : "";
     const isLuar = form.domisili === "luar";
@@ -1210,6 +1320,13 @@ export default function DaftarPage({
                             label="Email"
                             required
                             error={errors.email}
+                            hint={
+                              emailChecking
+                                ? "Memeriksa ketersediaan email..."
+                                : emailTersedia === true && !errors.email
+                                  ? "Email tersedia."
+                                  : undefined
+                            }
                           >
                             <input
                               id="email"
@@ -1217,6 +1334,7 @@ export default function DaftarPage({
                               autoComplete="email"
                               value={form.email}
                               onChange={(e) => set("email", e.target.value)}
+                              onBlur={() => void cekEmail(form.email)}
                               placeholder="nama@email.com"
                               className={cls(errors.email)}
                               aria-invalid={!!errors.email}
@@ -1232,6 +1350,13 @@ export default function DaftarPage({
                             label="Email"
                             required
                             error={errors.email}
+                            hint={
+                              emailChecking
+                                ? "Memeriksa ketersediaan email..."
+                                : emailTersedia === true && !errors.email
+                                  ? "Email tersedia."
+                                  : undefined
+                            }
                           >
                             <input
                               id="email"
@@ -1239,6 +1364,7 @@ export default function DaftarPage({
                               autoComplete="email"
                               value={form.email}
                               onChange={(e) => set("email", e.target.value)}
+                              onBlur={() => void cekEmail(form.email)}
                               placeholder="nama@email.com"
                               className={cls(errors.email)}
                               aria-invalid={!!errors.email}
@@ -1548,7 +1674,7 @@ export default function DaftarPage({
 
                 <button
                   type="submit"
-                  disabled={sending}
+                  disabled={sending || emailTersedia === false}
                   className="rounded-full bg-[#E3081C] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#B30616] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E3081C] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {step < STEPS.length - 1

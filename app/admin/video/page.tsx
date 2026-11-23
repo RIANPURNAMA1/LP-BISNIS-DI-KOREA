@@ -20,6 +20,7 @@ type ProgresUnggah = {
   total: number;
   kecepatan: number; // byte/detik
   tahap: "unggah" | "simpan" | "selesai";
+  bagian?: string; // mis. "Bagian 3/23"
 };
 
 const card = "rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60";
@@ -36,31 +37,37 @@ const formatKecepatan = (bps: number) =>
 const formatSisa = (detik: number) =>
   detik >= 60 ? `${Math.floor(detik / 60)}m ${String(detik % 60).padStart(2, "0")}s` : `${detik}s`;
 
+type ResponsUnggah = {
+  status: number;
+  json: { success?: boolean; videoUrl?: string; error?: string; diterima?: number } | null;
+};
+
+/** Potongan 5 MB: aman dari batas 100 MB Cloudflare dan memory PM2. */
+const UKURAN_POTONGAN = 5 * 1024 * 1024;
+const BATAS_POTONGAN = 20 * 1024 * 1024;
+
+const idUnggahBaru = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+
 /**
  * fetch() tidak menyediakan progres upload. XMLHttpRequest.upload.onprogress
  * memberi byte yang sudah terkirim secara real-time.
  */
-function unggahDenganProgres(
+function kirimFormData(
+  url: string,
   body: FormData,
-  onProgres: (p: ProgresUnggah) => void,
-): Promise<{ status: number; json: { videoUrl?: string; error?: string } | null }> {
+  onProgres: (terkirim: number) => void,
+): Promise<ResponsUnggah> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    const mulai = Date.now();
-    xhr.open("POST", "/api/admin/video");
+    xhr.open("POST", url);
     xhr.upload.onprogress = (e) => {
-      if (!e.lengthComputable) return;
-      const detik = Math.max((Date.now() - mulai) / 1000, 0.1);
-      onProgres({
-        persen: Math.min(100, Math.round((e.loaded / e.total) * 100)),
-        terkirim: e.loaded,
-        total: e.total,
-        kecepatan: e.loaded / detik,
-        tahap: "unggah",
-      });
+      if (e.lengthComputable) onProgres(e.loaded);
     };
     xhr.onload = () => {
-      let json: { videoUrl?: string; error?: string } | null = null;
+      let json: ResponsUnggah["json"] = null;
       try {
         json = JSON.parse(xhr.responseText);
       } catch {
@@ -115,27 +122,90 @@ export default function AdminVideo() {
       setMsg({ ok: false, text: "Pilih file video terlebih dahulu." });
       return;
     }
+
+    const mulai = Date.now();
+    let uploadId = "";
+    const update = (terkirim: number, tahap: ProgresUnggah["tahap"], bagian?: string) => {
+      const detik = Math.max((Date.now() - mulai) / 1000, 0.1);
+      setProgres({
+        persen: Math.min(100, Math.round((terkirim / file.size) * 100)),
+        terkirim,
+        total: file.size,
+        kecepatan: terkirim / detik,
+        tahap,
+        bagian,
+      });
+    };
+
     setSaving(true);
     setMsg(null);
-    setProgres({ persen: 0, terkirim: 0, total: file.size, kecepatan: 0, tahap: "unggah" });
+    update(0, "unggah");
     try {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("arahan", arahan);
-      const { status, json } = await unggahDenganProgres(body, setProgres);
-      setProgres((p) => (p ? { ...p, persen: 100, tahap: "simpan" } : p));
-      if (status < 200 || status >= 300 || !json?.videoUrl) {
-        setProgres(null);
-        setMsg({ ok: false, text: json?.error || "Gagal mengunggah video." });
-        return;
+      let videoUrlBaru = "";
+
+      if (file.size > BATAS_POTONGAN) {
+        // File besar dipecah per 5 MB agar tidak mentok di Cloudflare (100 MB),
+        // Nginx timeout, atau batas memory PM2.
+        uploadId = idUnggahBaru();
+        const jumlah = Math.ceil(file.size / UKURAN_POTONGAN);
+        for (let i = 0; i < jumlah; i++) {
+          const awal = i * UKURAN_POTONGAN;
+          const akhir = Math.min(awal + UKURAN_POTONGAN, file.size);
+          const body = new FormData();
+          body.append("uploadId", uploadId);
+          body.append("index", String(i));
+          body.append("total", String(jumlah));
+          body.append("nama", file.name);
+          body.append("chunk", file.slice(awal, akhir), `bagian-${i}`);
+          const res = await kirimFormData("/api/admin/video/chunk", body, (loaded) =>
+            update(awal + loaded, "unggah", `Bagian ${i + 1}/${jumlah}`),
+          );
+          if (res.status < 200 || res.status >= 300 || !res.json?.success) {
+            throw new Error(res.json?.error || `Gagal mengunggah bagian ${i + 1}.`);
+          }
+        }
+        update(file.size, "simpan");
+        const res = await fetch("/api/admin/video/finalize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uploadId, nama: file.name, arahan, total: jumlah }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.videoUrl)
+          throw new Error(json?.error || "Gagal menyimpan video.");
+        videoUrlBaru = json.videoUrl;
+      } else {
+        const body = new FormData();
+        body.append("file", file);
+        body.append("arahan", arahan);
+        const res = await kirimFormData("/api/admin/video", body, (loaded) =>
+          update(loaded, "unggah"),
+        );
+        update(file.size, "simpan");
+        if (res.status < 200 || res.status >= 300 || !res.json?.videoUrl) {
+          throw new Error(res.json?.error || "Gagal mengunggah video.");
+        }
+        videoUrlBaru = res.json.videoUrl;
       }
-      setVideoUrl(json.videoUrl);
+
+      setVideoUrl(videoUrlBaru);
       setFile(null);
-      setProgres((p) => (p ? { ...p, persen: 100, tahap: "selesai" } : p));
+      update(file.size, "selesai");
       setMsg({ ok: true, text: "Video berhasil diunggah dan ditampilkan ke peserta." });
-    } catch {
+    } catch (err) {
+      if (uploadId) {
+        await fetch(`/api/admin/video/chunk?uploadId=${encodeURIComponent(uploadId)}`, {
+          method: "DELETE",
+        }).catch(() => undefined);
+      }
       setProgres(null);
-      setMsg({ ok: false, text: "Gagal mengunggah. Periksa koneksi Anda." });
+      setMsg({
+        ok: false,
+        text:
+          err instanceof Error
+            ? err.message
+            : "Gagal mengunggah. Periksa koneksi Anda.",
+      });
     } finally {
       setSaving(false);
     }
@@ -317,7 +387,7 @@ export default function AdminVideo() {
               <span className="mt-1 block text-[11px] text-slate-500">
                 {file
                   ? `${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`
-                  : "MP4, WebM, OGG, MOV, M4V · maksimal 200 MB. File di atas 100 MB lebih cepat memakai Link YouTube."}
+                  : "MP4, WebM, OGG, MOV, M4V · maksimal 200 MB. File besar dikirim otomatis per 5 MB agar tidak mentok di VPS/Cloudflare."}
               </span>
             </label>
 
@@ -326,7 +396,7 @@ export default function AdminVideo() {
                 <div className="flex items-center justify-between gap-2 text-[11px]">
                   <span className="min-w-0 truncate font-medium text-slate-700">
                     {progres.tahap === "unggah"
-                      ? `Mengunggah ${formatMB(progres.terkirim)} / ${formatMB(progres.total)} · ${formatKecepatan(progres.kecepatan)}`
+                      ? `${progres.bagian ? `${progres.bagian} · ` : ""}Mengunggah ${formatMB(progres.terkirim)} / ${formatMB(progres.total)} · ${formatKecepatan(progres.kecepatan)}`
                       : progres.tahap === "simpan"
                         ? "Upload selesai — menyimpan video di server…"
                         : "Upload selesai"}

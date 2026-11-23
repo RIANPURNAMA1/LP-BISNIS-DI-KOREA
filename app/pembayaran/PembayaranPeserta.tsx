@@ -237,7 +237,7 @@ export default function PembayaranPeserta({
                   <div className="flex justify-between gap-4 border-t border-slate-200 pt-2">
                     <dt className="text-slate-500">Jumlah</dt>
                     <dd className="font-bold text-[#0052A4]">
-                      {formatRupiah(pembayaran?.jumlah || HARGA_KONSULTASI)}
+                      {formatRupiah(HARGA_KONSULTASI)}
                     </dd>
                   </div>
                 </dl>

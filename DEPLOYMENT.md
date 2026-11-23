@@ -318,7 +318,7 @@ Pengaturan admin: buka /admin/pengaturan, kartu "Afiliasi". Nominal komisi per r
 
 Izin folder: aplikasi menulis bukti transfer pencairan ke storage/bukti-pencairan/. Pastikan folder tersebut dapat ditulis oleh user PM2 (perlakuan sama seperti storage/bukti-bayar/).
 
-Alur komisi: affiliate membagikan /daftar?ref=KODE. Saat peserta mendaftar dan admin menyetujui pembayaran aktivasi Rp49.000, satu komisi otomatis dibuat (idempoten). Self-referral diblokir berdasarkan email dan nomor WhatsApp. Pencairan diambil manual oleh affiliate, lalu admin mengunggah bukti transfer di /admin/afiliasi.
+Alur komisi: affiliate membagikan /daftar?ref=KODE. Saat peserta mendaftar dan admin menyetujui pembayaran aktivasi Rp29.900, satu komisi otomatis dibuat (idempoten). Self-referral diblokir berdasarkan email dan nomor WhatsApp. Pencairan diambil manual oleh affiliate, lalu admin mengunggah bukti transfer di /admin/afiliasi.
 
 Notifikasi: email affiliate memakai konfigurasi SMTP di /admin/email; notifikasi WA admin mengikuti pengaturan nomor WA dan status koneksi WhatsApp. Jika email belum dikonfigurasi, pengiriman notifikasi hanya dicatat di log (tidak menggagalkan transaksi).
 
@@ -403,6 +403,33 @@ Pastikan:
   di blok `server`, lalu `nginx -t && systemctl reload nginx`.
 - Video aktif tersimpan di tabel `pengaturan` (`peserta_video_url`). Cek lewat
   `GET /api/admin/konten` saat login sebagai admin.
+- Untuk file besar (>20 MB), admin/video mengirim otomatis per potongan 5 MB
+  (`POST /api/admin/video/chunk`), lalu menggabungkannya di
+  `POST /api/admin/video/finalize`. Ini menghindari batas 100 MB Cloudflare,
+  timeout Nginx, dan batas memory PM2. File sementara ada di
+  `storage/video/tmp/` dan dibersihkan otomatis jika gagal.
+
+Jika upload masih mentok di persentase tertentu di VPS:
+
+1. **Cloudflare**:DNS yang `Proxied` membatasi ukuran body ~100 MB dan timeout
+   origin ~100 detik. Saat upload besar, ubah record A/AAAA sementara ke
+   **DNS only** (cloud abu-abu), atau pakai subdomain admin yang tidak
+   diproksikan. Alternatif tercepat: tempel **Link YouTube**.
+2. **Nginx** — tambahkan di blok `server` (`/etc/nginx/sites-available/bisnisdikorea.com`):
+   ```nginx
+   client_max_body_size 210M;
+   client_body_timeout 300s;
+   proxy_request_buffering off;
+   proxy_connect_timeout 300s;
+   proxy_send_timeout 300s;
+   proxy_read_timeout 300s;
+   ```
+   lalu `nginx -t && systemctl reload nginx`.
+3. **PM2** — naikkan `max_memory_restart` di `ecosystem.config.js` menjadi `"1G"`,
+   lalu `pm2 restart bisnis-korea --update-env`.
+4. Cek `pm2 logs bisnis-korea --lines 100`. Kode `413` berarti batas body
+   (Nginx/Cloudflare), `504` berarti timeout proxy, sedangkan restart PM2
+   di tengah upload berarti memory terlalu kecil.
 
 ### Bukti pembayaran aktivasi akun tidak tampil di admin
 - Bukti disimpan di folder `storage/bukti-bayar/` dan disajikan lewat
@@ -411,7 +438,7 @@ Pastikan:
 - Rekening bank tujuan (metode pembayaran hanya transfer bank) dan dua link grup (Korean Bisnis Klub + Grup Konsultasi
   Lanjutan) diatur di `/admin/pengaturan`; halaman pembayaran aktivasi peserta ada di
   `/pembayaran`. Setelah terverifikasi, peserta boleh masuk `/peserta`.
-- Pembayaran konsultasi Rp49.000 yang lama sudah dihapus dari alur member; URL
+- Pembayaran konsultasi Rp29.900 yang lama sudah dihapus dari alur member; URL
   `/peserta/konsultasi` kini dialihkan ke `/peserta`.
 - Data pembayaran aktivasi masuk ke tabel `pembayaran_konsultasi` dan diverifikasi di
   `/admin/pembayaran`. Setelah disetujui, sistem mengirim email konfirmasi ke peserta.

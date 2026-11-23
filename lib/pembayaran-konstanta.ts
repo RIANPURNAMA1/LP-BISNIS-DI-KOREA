@@ -1,6 +1,6 @@
 /** Konstanta pembayaran yang aman dipakai di komponen client (tanpa akses database). */
 
-export const HARGA_KONSULTASI = 49000;
+export const HARGA_KONSULTASI = 29900;
 export const NAMA_LAYANAN = "Konsultasi Online";
 
 export const METODE_BAYAR = ["bank"] as const;

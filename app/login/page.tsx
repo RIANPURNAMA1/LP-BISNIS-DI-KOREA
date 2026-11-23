@@ -179,11 +179,6 @@ export default function LoginPage() {
                   Buat akun peserta baru
                 </Link>
               </p>
-              <p>
-                <Link href="/afiliasi" className="font-medium hover:underline">
-                  Daftar sebagai affiliate
-                </Link>
-              </p>
               <p className="leading-5 text-gray-500">
                 Lupa password? Hubungi admin melalui grup WhatsApp.
               </p>
