@@ -2,8 +2,10 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { getGrupKonsultasi, getGrupUmum } from "@/lib/grup";
 import { DEFAULT_ARAHAN, getKontenPeserta } from "@/lib/jadwal";
+import { getRekening, ringkasPembayaran } from "@/lib/pembayaran";
 import PesertaFlow from "./PesertaFlow";
 import StatusVerifikasi from "./StatusVerifikasi";
+import KartuAktivasi from "./KartuAktivasi";
 import LogoutButton from "./LogoutButton";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +14,7 @@ export default async function PesertaPage() {
   // Gerbang akses dijaga layout /peserta. Sesi dipakai untuk menyapa peserta.
   const session = await auth();
   const id = parseInt((session?.user as { id?: string } | undefined)?.id ?? "", 10);
-  const [konten, p, jadwalAktif, waitinglist, grupKonsultasi, pembayaranTerakhir] =
+  const [konten, p, jadwalAktif, waitinglist, grupKonsultasi, pembayaranTerakhir, rekening] =
     await Promise.all([
       getKontenPeserta(),
       prisma.pendaftaran.findUnique({
@@ -44,8 +46,8 @@ export default async function PesertaPage() {
       prisma.pembayaranKonsultasi.findFirst({
         where: { pendaftaranId: id },
         orderBy: { id: "desc" },
-        select: { status: true, createdAt: true },
       }),
+      getRekening(),
     ]);
   const nama = p?.nama || session?.user?.name || "Peserta";
   // Data lama mungkin punya konsultasiAt dari checkout Rp29.900: tanpa posisi,
@@ -54,11 +56,14 @@ export default async function PesertaPage() {
   const jadwalSelesai = !!jadwalAktif || !!waitinglist;
   const grupUmum = await getGrupUmum();
   // Akses member sudah diverifikasi admin lewat aksesAktifAt (satu-satunya pembayaran).
-  const bolehGrupKonsultasi = !!p?.aksesAktifAt;
-  // Bukti sudah dikirim tetapi belum disetujui: video & grup tetap tampil,
-  // terkunci, dengan card status di paling atas.
-  const menungguVerifikasi =
-    !p?.aksesAktifAt && pembayaranTerakhir?.status === "menunggu";
+  const aksesAktif = !!p?.aksesAktifAt;
+  const statusBayar = pembayaranTerakhir?.status ?? "";
+  // Bukti sudah dikirim tetapi belum disetujui: tampil card status, semua tetap terkunci.
+  const menungguVerifikasi = !aksesAktif && statusBayar === "menunggu";
+  // Belum bayar / bukti ditolak: tampil card aktivasi dengan popup pembayaran.
+  const perluBayar = !aksesAktif && !menungguVerifikasi;
+  const bolehGrupKonsultasi = aksesAktif;
+  const pembayaranRingkas = ringkasPembayaran(pembayaranTerakhir);
 
   return (
     <div className="min-h-screen bg-white">
@@ -86,6 +91,17 @@ export default async function PesertaPage() {
           <StatusVerifikasi createdAt={pembayaranTerakhir.createdAt.toISOString()} />
         )}
 
+        {perluBayar && p && (
+          <KartuAktivasi
+            nama={nama}
+            whatsapp={p.whatsapp}
+            email={p.email}
+            rekening={rekening}
+            grupUmum={grupUmum}
+            pembayaran={pembayaranRingkas}
+          />
+        )}
+
         {/* Sapaan */}
         <div className="mb-10 max-w-2xl">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
@@ -111,7 +127,7 @@ export default async function PesertaPage() {
           grupUmum={grupUmum}
           grupKonsultasi={grupKonsultasi}
           bolehGrupKonsultasi={bolehGrupKonsultasi}
-          terkunci={menungguVerifikasi}
+          terkunci={!aksesAktif}
           nama={nama}
           kontak={{
             whatsapp: p?.whatsapp ?? "",

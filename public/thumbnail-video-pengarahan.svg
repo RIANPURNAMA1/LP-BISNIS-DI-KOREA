@@ -1,0 +1,87 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06152E"/>
+      <stop offset="0.48" stop-color="#0A3468"/>
+      <stop offset="1" stop-color="#062A55"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(640 250) rotate(90) scale(300 560)">
+      <stop stop-color="#3D9BEE" stop-opacity="0.55"/>
+      <stop offset="0.55" stop-color="#1E6CC4" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#0A3468" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skyline" x1="0" y1="300" x2="0" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B2144"/>
+      <stop offset="1" stop-color="#041025"/>
+    </linearGradient>
+    <linearGradient id="line" x1="80" y1="420" x2="1200" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E7FD4" stop-opacity="0.25"/>
+      <stop offset="0.5" stop-color="#7BD5FF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#2E7FD4" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="560" x2="0" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B3B72" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#020A18" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(640 360) rotate(90) scale(430 760)">
+      <stop offset="0.55" stop-color="#000814" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000814" stop-opacity="0.62"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="nodeGlow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <ellipse cx="640" cy="250" rx="560" ry="300" fill="url(#glow)"/>
+
+  <g opacity="0.13" stroke="#8ED3FF" stroke-width="1">
+    <path d="M0 120H1280M0 240H1280M0 360H1280M0 480H1280M0 600H1280"/>
+    <path d="M160 0V720M320 0V720M480 0V720M640 0V720M800 0V720M960 0V720M1120 0V720"/>
+  </g>
+
+  <g filter="url(#soft)" opacity="0.8">
+    <path d="M90 470C300 330 470 360 640 265C810 170 1010 250 1200 175" stroke="url(#line)" stroke-width="4"/>
+    <path d="M160 530C360 430 520 445 700 365C880 285 1060 340 1240 255" stroke="url(#line)" stroke-width="3"/>
+    <path d="M240 585C420 510 560 515 720 445C890 370 1050 420 1210 345" stroke="url(#line)" stroke-width="2"/>
+  </g>
+
+  <g fill="url(#skyline)">
+    <path d="M0 560V466H56V430H104V492H150V404H206V458H252V416H286V312L300 286L314 312V430H360V480H414V438H462V500H510V452H558V560H0Z"/>
+    <path d="M290 312V430H310V312L300 286L290 312Z" fill="#0E2C56"/>
+    <path d="M296 268H304V300H296V268Z" fill="#5FC2FF" opacity="0.75"/>
+
+    <path d="M706 560V470H758V436H806V398H852V452H898V372H946V430H992V392H1040V346H1088V416H1120V300H1140V416H1172V374H1216V442H1280V560H706Z"/>
+    <path d="M1120 300H1140V416H1120V300Z" fill="#10325E"/>
+    <path d="M1112 272H1148V292H1112V272Z" fill="#10325E"/>
+    <path d="M1128 236H1132V272H1128V236Z" fill="#7BD5FF" opacity="0.8"/>
+  </g>
+
+  <g stroke="#57B6F5" stroke-width="1" opacity="0.35">
+    <path d="M104 430H206M252 416H360M414 438H510M758 436H852M898 372H992M1040 346H1088M1172 374H1280"/>
+  </g>
+
+  <g filter="url(#nodeGlow)">
+    <circle cx="300" cy="286" r="5" fill="#BDEBFF"/>
+    <circle cx="640" cy="265" r="6" fill="#BDEBFF"/>
+    <circle cx="1010" cy="250" r="5" fill="#BDEBFF"/>
+    <circle cx="700" cy="365" r="4" fill="#7BD5FF"/>
+    <circle cx="1060" cy="340" r="4" fill="#7BD5FF"/>
+    <circle cx="720" cy="445" r="3.5" fill="#7BD5FF"/>
+  </g>
+
+  <path d="M0 560H1280V720H0V560Z" fill="url(#floor)"/>
+  <path d="M0 560H1280" stroke="#4DA3FF" stroke-opacity="0.45" stroke-width="2"/>
+  <g opacity="0.2" stroke="#7BD5FF" stroke-width="1">
+    <path d="M640 560L300 720M640 560L980 720M640 560L120 720M640 560L1160 720"/>
+  </g>
+
+  <rect width="1280" height="720" fill="url(#vignette)"/>
+</svg>

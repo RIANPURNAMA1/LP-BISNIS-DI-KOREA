@@ -345,6 +345,24 @@ export default function VideoWajib({
       >
         <div ref={hostRef} className="absolute inset-0" />
 
+        {/* Poster profesional sebelum video diputar. Hilang begitu video berjalan. */}
+        {current === 0 && !playing && (
+          <>
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/thumbnail-video-pengarahan.svg')" }}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent"
+            />
+            <span className="absolute bottom-3 left-3 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white ring-1 ring-white/25 backdrop-blur-sm">
+              Video Pengarahan
+            </span>
+          </>
+        )}
+
         {/* Lapisan penghalang: pemutar tidak bisa diklik/diseret langsung. */}
         <button
           type="button"

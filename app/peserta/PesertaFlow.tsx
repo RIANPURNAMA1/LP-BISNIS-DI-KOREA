@@ -354,7 +354,23 @@ export default function PesertaFlow({
       if (!res.ok) throw new Error(json?.error || "Konfirmasi belum tersimpan. Coba lagi.");
       setPosisiTerpilih(pilihanPosisi);
       setKonsultasiDone(true);
-      setPopup("jadwal");
+
+      // Jadwal sudah fix per kategori: langsung dipesan tanpa memilih slot manual.
+      try {
+        const jadwalRes = await fetch("/api/peserta/jadwal/otomatis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ catatan: "" }),
+        });
+        const jadwalJson = await jadwalRes.json().catch(() => null);
+        if (!jadwalRes.ok) throw new Error(jadwalJson?.error || "Jadwal belum tersedia.");
+        setJadwalDone(true);
+        setJenisSelesai(jadwalJson?.jenis === "waitinglist" ? "waitinglist" : "jadwal");
+        setPopup("selamat");
+      } catch {
+        // Fallback: peserta tetap bisa memilih/mengirim jadwal secara manual.
+        setPopup("jadwal");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Konfirmasi belum tersimpan. Coba lagi.");
     } finally {
@@ -552,7 +568,7 @@ export default function PesertaFlow({
                     <h3 className="mb-2 text-sm font-semibold text-slate-900">
                       Jadwal meeting lanjutan
                     </h3>
-                    <JadwalSesi onSelesai={onJadwalSelesai} />
+                    <JadwalSesi posisi={posisiTerpilih} onSelesai={onJadwalSelesai} />
                   </div>
                 </div>
               )}
@@ -730,7 +746,7 @@ export default function PesertaFlow({
               disabled={saving}
               className={`mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-3 text-sm font-medium text-white hover:bg-[#00438a] disabled:opacity-60 ${FOCUS}`}
             >
-              {saving ? "Menyimpan…" : "Jadwalkan konsultasi sekarang"}
+              {saving ? "Menyimpan…" : "Konfirmasi & jadwalkan otomatis"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
@@ -746,7 +762,7 @@ export default function PesertaFlow({
         >
           <div className="space-y-4">
             <RingkasanMeeting nama={nama} kontak={kontak} posisi={posisiTampil} />
-            <JadwalSesi onSelesai={onJadwalSelesai} />
+            <JadwalSesi posisi={posisiTerpilih} onSelesai={onJadwalSelesai} />
           </div>
         </Modal>
       )}
@@ -756,7 +772,7 @@ export default function PesertaFlow({
         <Modal title="Selamat!" onClose={() => setPopup(null)}>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {jenisSelesai === "jadwal"
-              ? "Jadwal konsultasi lanjutan Anda sudah dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya."
+              ? "Jadwal konsultasi lanjutan kategori Anda sudah otomatis dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya."
               : "Data Anda sudah masuk waitinglist. Admin akan menghubungi Anda untuk informasi selanjutnya."}
           </p>
           <button

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { KODE_AFILIASI_RE } from "./afiliasi-konstanta";
 
+/** Kategori konsultasi lanjutan A–D. Dipakai form peserta, admin, dan slot jadwal. */
+export const POSISI_KONSULTASI = ["A", "B", "C", "D"] as const;
+export type PosisiKonsultasi = (typeof POSISI_KONSULTASI)[number];
+
 // ─── Validasi Pendaftaran (dari formulir) ────────────────────────
 export const pendaftaranSchema = z.object({
   nama: z
@@ -112,15 +116,13 @@ export const jadwalSchema = z.object({
 
 // ─── Slot jadwal yang ditetapkan admin ───────────────────────────
 export const jadwalSlotSchema = z.object({
+  kategori: z.enum(POSISI_KONSULTASI, { message: "Pilih kategori A–D." }).default("A"),
   tanggal: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid."),
   jam: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Jam tidak valid."),
   kuota: z.coerce.number().int().min(1, "Kuota minimal 1.").max(50, "Kuota maksimal 50.").default(5),
 });
 
 // ─── Konfirmasi konsultasi lanjutan (opsi A–D) ───────────────────
-export const POSISI_KONSULTASI = ["A", "B", "C", "D"] as const;
-export type PosisiKonsultasi = (typeof POSISI_KONSULTASI)[number];
-
 export const konsultasiPosisiSchema = z
   .object({
     posisi: z.enum(POSISI_KONSULTASI, { message: "Pilih salah satu posisi." }),

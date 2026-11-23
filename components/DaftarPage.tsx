@@ -578,12 +578,12 @@ export default function DaftarPage({
   const [done, setDone] = useState(false);
   const [loggedIn, setLoggedIn] = useState(true);
 
-  // Setelah berhasil daftar, arahkan ke gerbang pembayaran/aktivasi akun.
-  // Akses /peserta baru terbuka setelah admin memverifikasi pembayaran.
+  // Setelah berhasil daftar, langsung masuk ke ruang member. Di sana peserta
+  // melihat kartu aktivasi dan membuka form pembayaran lewat popup.
   useEffect(() => {
     if (!done) return;
     const t = window.setTimeout(() => {
-      window.location.assign(loggedIn ? "/pembayaran" : "/login");
+      window.location.assign(loggedIn ? "/peserta" : "/login");
     }, 2500);
     return () => window.clearTimeout(t);
   }, [done, loggedIn]);
@@ -944,7 +944,7 @@ export default function DaftarPage({
               </h1>
               <p className="mx-auto mt-4 max-w-md text-[15px] leading-7 text-gray-600">
                 {loggedIn
-                  ? "Akun Anda sudah dibuat dan Anda otomatis masuk. Anda akan diarahkan ke halaman pembayaran untuk mengaktifkan akun."
+                  ? "Akun Anda sudah dibuat dan Anda otomatis masuk. Anda akan diarahkan ke ruang member untuk menyelesaikan aktivasi akun."
                   : "Akun Anda sudah dibuat. Silakan masuk dengan email dan password Anda, lalu selesaikan pembayaran untuk mengaktifkan akun."}
               </p>
               <p
@@ -958,10 +958,10 @@ export default function DaftarPage({
                 Mengalihkan...
               </p>
               <a
-                href={loggedIn ? "/pembayaran" : "/login"}
+                href={loggedIn ? "/peserta" : "/login"}
                 className="mx-auto mt-6 flex w-full max-w-md items-center justify-center rounded-full bg-[#0052A4] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#00438a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4] focus-visible:ring-offset-2"
               >
-                {loggedIn ? "Lanjut ke Pembayaran" : "Masuk"}
+                {loggedIn ? "Masuk ke Ruang Member" : "Masuk"}
               </a>
             </div>
           ) : (

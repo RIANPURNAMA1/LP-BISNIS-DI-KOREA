@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CalendarClock, CalendarCheck, Loader2 } from "lucide-react";
 import { STATUS_LABEL, formatTanggal } from "@/lib/jadwal-format";
+import { formatPosisi } from "@/lib/posisi";
 
 type Slot = {
   id: number;
+  kategori: string;
   tanggal: string;
   jam: string;
   kuota: number;
@@ -25,8 +27,11 @@ type Data = { slots: Slot[]; jadwal: Jadwal[]; waitinglist: Waitinglist };
 const AKTIF = ["menunggu", "dikonfirmasi"];
 
 export default function JadwalSesi({
+  posisi,
   onSelesai,
 }: {
+  /** Kategori A–D yang dipilih peserta; dipakai sebagai penanda jadwal. */
+  posisi: string | null;
   /** Dipanggil setelah jadwal / waitinglist berhasil dikirim. */
   onSelesai: (jenis: "jadwal" | "waitinglist") => void;
 }) {
@@ -79,7 +84,7 @@ export default function JadwalSesi({
         return;
       }
       await load();
-      onSelesai("jadwal");
+      onSelesai(json?.jenis === "waitinglist" ? "waitinglist" : "jadwal");
     } catch {
       setError("Jadwal belum tersimpan. Periksa koneksi Anda.");
     } finally {
@@ -154,6 +159,7 @@ export default function JadwalSesi({
           <p className="mt-2 text-base font-semibold text-slate-900">
             {formatTanggal(aktif.tanggal)} · {aktif.jam} WIB
           </p>
+          <p className="mt-1 text-xs text-slate-500">{formatPosisi(posisi)}</p>
           <span className="mt-2 inline-block rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#0052A4]">
             {STATUS_LABEL[aktif.status]?.label ?? aktif.status}
           </span>
@@ -179,8 +185,10 @@ export default function JadwalSesi({
       ) : (
         <form onSubmit={submit} className="space-y-4">
           <p className="text-sm leading-6 text-slate-600">
-            Pilih salah satu jadwal konsultasi lanjutan yang sudah ditetapkan admin. Setiap jadwal
-            maksimal diisi <b>5 peserta</b>.
+            Jadwal konsultasi untuk kategori{" "}
+            <b>{formatPosisi(posisi) || "yang Anda pilih"}</b>. Pilih salah satu slot yang sudah
+            ditetapkan admin; setiap slot maksimal diisi <b>5 peserta</b>. Jika penuh, Anda otomatis
+            masuk waitinglist.
           </p>
 
           {data.slots.length === 0 ? (

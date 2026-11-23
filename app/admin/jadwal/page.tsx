@@ -13,9 +13,11 @@ import {
   Users,
 } from "lucide-react";
 import { formatTanggal, STATUS_LABEL } from "@/lib/jadwal-format";
+import { POSISI_OPSI, formatPosisi } from "@/lib/posisi";
 
 type Slot = {
   id: number;
+  kategori: string;
   tanggal: string;
   jam: string;
   kuota: number;
@@ -29,7 +31,13 @@ type Peserta = {
   jam: string;
   status: string;
   catatan: string | null;
-  pendaftaran: { id: number; nama: string; whatsapp: string; email: string };
+  pendaftaran: {
+    id: number;
+    nama: string;
+    whatsapp: string;
+    email: string;
+    posisiKonsultasi: string | null;
+  };
 };
 type Waiting = {
   id: number;
@@ -56,10 +64,12 @@ export default function AdminJadwal() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
 
+  const [kategori, setKategori] = useState("A");
   const [tanggal, setTanggal] = useState("");
   const [jam, setJam] = useState("09:00");
   const [kuota, setKuota] = useState(5);
   const [editId, setEditId] = useState<number | null>(null);
+  const [editKategori, setEditKategori] = useState("A");
   const [editTanggal, setEditTanggal] = useState("");
   const [editJam, setEditJam] = useState("");
   const [editKuota, setEditKuota] = useState(5);
@@ -99,7 +109,7 @@ export default function AdminJadwal() {
       const res = await fetch("/api/admin/jadwal/slot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tanggal, jam, kuota }),
+        body: JSON.stringify({ kategori, tanggal, jam, kuota }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) throw new Error(json?.error || "Slot belum tersimpan.");
@@ -115,6 +125,7 @@ export default function AdminJadwal() {
 
   function mulaiEdit(s: Slot) {
     setEditId(s.id);
+    setEditKategori(s.kategori);
     setEditTanggal(s.tanggal);
     setEditJam(s.jam);
     setEditKuota(s.kuota);
@@ -130,7 +141,12 @@ export default function AdminJadwal() {
       const res = await fetch(`/api/admin/jadwal/slot/${editId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tanggal: editTanggal, jam: editJam, kuota: editKuota }),
+        body: JSON.stringify({
+          kategori: editKategori,
+          tanggal: editTanggal,
+          jam: editJam,
+          kuota: editKuota,
+        }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) throw new Error(json?.error || "Perubahan belum tersimpan.");
@@ -189,9 +205,10 @@ export default function AdminJadwal() {
       <header>
         <h1 className="text-xl font-bold text-slate-900">Jadwal Konsultasi Lanjutan</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Tetapkan slot jadwal fix untuk peserta. Setiap slot maksimal diisi <b>5 peserta</b>.
-          Peserta yang memilih slot langsung tercatat dan <b>dikonfirmasi</b>, tanpa perlu diverifikasi
-          admin. Jika semua slot penuh, peserta diarahkan ke waitinglist.
+          Tetapkan slot jadwal fix untuk masing-masing kategori A–D. Setiap slot maksimal diisi
+          <b> 5 peserta</b>. Saat peserta memilih kategori, jadwal kategori itu langsung tercatat dan
+          <b> dikonfirmasi</b>, tanpa verifikasi admin. Jika semua slot penuh, peserta otomatis masuk
+          waitinglist.
         </p>
       </header>
 
@@ -221,7 +238,22 @@ export default function AdminJadwal() {
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
           <Plus className="h-4 w-4 text-[#0052A4]" /> Tambah slot jadwal
         </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold text-slate-600">Kategori</span>
+            <select
+              required
+              value={kategori}
+              onChange={(e) => setKategori(e.target.value)}
+              className={input}
+            >
+              {POSISI_OPSI.map((o) => (
+                <option key={o.kode} value={o.kode}>
+                  {formatPosisi(o.kode)}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold text-slate-600">Tanggal</span>
             <input
@@ -281,13 +313,28 @@ export default function AdminJadwal() {
           <div className="divide-y divide-slate-100">
             {slots.map((s) => {
               const daftar = peserta.filter(
-                (p) => p.tanggal === s.tanggal && p.jam === s.jam,
+                (p) =>
+                  p.tanggal === s.tanggal &&
+                  p.jam === s.jam &&
+                  (p.pendaftaran.posisiKonsultasi ?? "A") === s.kategori,
               );
               const edit = editId === s.id;
               return (
                 <div key={s.id} className="p-4">
                   {edit ? (
-                    <form onSubmit={simpanEdit} className="grid gap-3 sm:grid-cols-4">
+                    <form onSubmit={simpanEdit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                      <select
+                        required
+                        value={editKategori}
+                        onChange={(e) => setEditKategori(e.target.value)}
+                        className={input}
+                      >
+                        {POSISI_OPSI.map((o) => (
+                          <option key={o.kode} value={o.kode}>
+                            {formatPosisi(o.kode)}
+                          </option>
+                        ))}
+                      </select>
                       <input
                         type="date"
                         required
@@ -327,6 +374,12 @@ export default function AdminJadwal() {
                     <>
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
+                          <span
+                            title={formatPosisi(s.kategori)}
+                            className="mb-1 inline-block rounded-full bg-[#0052A4]/10 px-2.5 py-1 text-xs font-semibold text-[#0052A4]"
+                          >
+                            Kategori {s.kategori}
+                          </span>
                           <p className="text-sm font-semibold text-slate-900">
                             {formatTanggal(s.tanggal)} · {s.jam} WIB
                           </p>
@@ -458,8 +511,9 @@ export default function AdminJadwal() {
       </section>
 
       <p className="text-xs leading-5 text-slate-500">
-        Slot yang sudah dipakai peserta tidak bisa dihapus — nonaktifkan saja agar tidak bisa
-        dipilih. Kuota tidak boleh lebih kecil dari jumlah peserta yang sudah terdaftar.
+        Slot yang sudah dipakai peserta tidak bisa dihapus atau dipindah kategorinya — nonaktifkan
+        saja agar tidak bisa dipilih. Kuota tidak boleh lebih kecil dari jumlah peserta yang sudah
+        terdaftar.
       </p>
     </div>
   );

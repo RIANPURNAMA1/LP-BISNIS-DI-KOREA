@@ -73,9 +73,10 @@ model AdminUser {
 }
 
 // Slot jadwal konsultasi lanjutan yang ditetapkan admin (fix).
-// Satu slot bisa diisi sampai `kuota` peserta (default 5).
+// Tiap kategori A–D punya jadwal sendiri; satu slot diisi maksimal `kuota` peserta (default 5).
 model JadwalSlot {
   id        Int      @id @default(autoincrement())
+  kategori  String   @default("A") @db.VarChar(1)
   tanggal   String   @db.VarChar(10)
   jam       String   @db.VarChar(5)
   kuota     Int      @default(5)
@@ -83,7 +84,7 @@ model JadwalSlot {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([tanggal, jam])
+  @@unique([kategori, tanggal, jam])
   @@map("jadwal_slot")
 }
 
@@ -105,7 +106,7 @@ model Waitinglist {
 
 // Jadwal sesi konsultasi lanjutan yang dipilih peserta.
 // tanggal "YYYY-MM-DD" & jam "HH:mm" dalam WIB.
-// slotKey = "tanggal_jam_kursi" (kursi 1..kuota) selama jadwal aktif,
+// slotKey = "kategori_tanggal_jam_kursi" (kursi 1..kuota) selama jadwal aktif,
 // NULL jika batal/ditolak. Unique mencegah satu kursi diambil dua peserta.
 model JadwalSesi {
   id            Int         @id @default(autoincrement())

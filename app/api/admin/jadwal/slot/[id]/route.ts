@@ -12,7 +12,7 @@ const fail = (error: string, status: number) =>
 async function terisi(slotId: number) {
   const slot = await prisma.jadwalSlot.findUnique({ where: { id: slotId } });
   if (!slot) return null;
-  const prefix = slotPrefix(slot.tanggal, slot.jam);
+  const prefix = slotPrefix(slot.tanggal, slot.jam, slot.kategori);
   const rows = await prisma.jadwalSesi.findMany({
     where: {
       status: { in: [...STATUS_AKTIF] },
@@ -41,6 +41,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const info = await terisi(id);
     if (!info) return fail("Slot tidak ditemukan.", 404);
+    if (data.kategori && data.kategori !== info.slot.kategori && info.count > 0)
+      return fail("Kategori tidak dapat diubah pada slot yang sudah dipakai peserta.", 409);
     const kuotaBaru = data.kuota ?? info.slot.kuota;
     if (kuotaBaru < info.count)
       return fail(`Kuota tidak boleh lebih kecil dari jumlah peserta yang sudah terdaftar (${info.count}).`, 409);
@@ -48,6 +50,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const row = await prisma.jadwalSlot.update({
       where: { id },
       data: {
+        ...(data.kategori !== undefined ? { kategori: data.kategori } : {}),
         ...(data.tanggal !== undefined ? { tanggal: data.tanggal } : {}),
         ...(data.jam !== undefined ? { jam: data.jam } : {}),
         ...(data.kuota !== undefined ? { kuota: data.kuota } : {}),
@@ -57,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ success: true, data: row });
   } catch (e) {
     if ((e as { code?: string }).code === "P2002")
-      return fail("Slot dengan tanggal dan jam tersebut sudah ada.", 409);
+      return fail("Slot kategori tersebut pada tanggal dan jam ini sudah ada.", 409);
     console.error("PATCH /api/admin/jadwal/slot/[id] error:", e);
     return fail("Terjadi kesalahan server.", 500);
   }

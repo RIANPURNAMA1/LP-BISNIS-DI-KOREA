@@ -16,13 +16,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const status = body?.status as StatusJadwal;
     if (!Number.isFinite(id) || !STATUS_JADWAL.includes(status)) return fail("Data tidak valid.");
 
-    const jadwal = await prisma.jadwalSesi.findUnique({ where: { id } });
+    const jadwal = await prisma.jadwalSesi.findUnique({
+      where: { id },
+      include: { pendaftaran: { select: { posisiKonsultasi: true } } },
+    });
     if (!jadwal) return fail("Jadwal tidak ditemukan.", 404);
+    const kategori = jadwal.pendaftaran.posisiKonsultasi;
 
     // Slot hanya terkunci selama jadwal tidak batal/ditolak.
     let slotKey: string | null = null;
     if (status !== "batal" && status !== "ditolak") {
-      const slot = await cariSlot(jadwal.tanggal, jadwal.jam);
+      const slot = await cariSlot(jadwal.tanggal, jadwal.jam, kategori);
       const kuota = slot?.kuota ?? 5;
       const dipakai = await prisma.jadwalSesi.findMany({
         where: {
@@ -30,16 +34,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           jam: jadwal.jam,
           status: { in: [...STATUS_JADWAL.filter((s) => s !== "batal" && s !== "ditolak")] },
           id: { not: id },
-          slotKey: { startsWith: slotPrefix(jadwal.tanggal, jadwal.jam) },
+          slotKey: { startsWith: slotPrefix(jadwal.tanggal, jadwal.jam, kategori) },
         },
         select: { slotKey: true },
       });
       const used = new Set(dipakai.map((d) => d.slotKey));
       const kursi = Array.from({ length: kuota }, (_, i) => i + 1).find(
-        (n) => !used.has(slotSeatKey(jadwal.tanggal, jadwal.jam, n)),
+        (n) => !used.has(slotSeatKey(jadwal.tanggal, jadwal.jam, n, kategori)),
       );
       if (!kursi) return fail("Semua kursi pada slot ini sudah terisi.", 409);
-      slotKey = slotSeatKey(jadwal.tanggal, jadwal.jam, kursi);
+      slotKey = slotSeatKey(jadwal.tanggal, jadwal.jam, kursi, kategori);
     }
 
     await prisma.jadwalSesi.update({ where: { id }, data: { status, slotKey } });

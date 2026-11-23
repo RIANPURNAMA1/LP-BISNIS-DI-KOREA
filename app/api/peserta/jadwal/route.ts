@@ -2,15 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requirePesertaAktif } from "@/lib/guard";
 import { jadwalSchema } from "@/lib/validations";
-import { notifyJadwalKonsultasi } from "@/lib/email";
-import { notifyJadwalBaru } from "@/lib/wa-notif";
+import { STATUS_AKTIF, cariSlot, getSlotTersedia } from "@/lib/jadwal";
 import {
-  STATUS_AKTIF,
-  cariSlot,
-  getSlotTersedia,
-  kursiTersedia,
-  slotSeatKey,
-} from "@/lib/jadwal";
+  ambilPesertaKonsultasi,
+  daftarWaitinglist,
+  kirimNotifikasiJadwal,
+  pesanKursi,
+} from "@/lib/jadwal-peserta";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +21,12 @@ export async function GET() {
     const peserta = await requirePesertaAktif();
     if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
+    const p = await prisma.pendaftaran.findUnique({
+      where: { id: peserta.id },
+      select: { posisiKonsultasi: true },
+    });
     const [slots, jadwal, waitinglist] = await Promise.all([
-      getSlotTersedia(),
+      getSlotTersedia(p?.posisiKonsultasi),
       prisma.jadwalSesi.findMany({
         where: { pendaftaranId: peserta.id },
         orderBy: { createdAt: "desc" },
@@ -57,16 +59,7 @@ export async function POST(req: NextRequest) {
     const { tanggal, jam, catatan } = parsed.data;
 
     const [p, aktif, waiting] = await Promise.all([
-      prisma.pendaftaran.findUnique({
-        where: { id: peserta.id },
-        select: {
-          nama: true,
-          whatsapp: true,
-          email: true,
-          videoSelesaiAt: true,
-          posisiKonsultasi: true,
-        },
-      }),
+      ambilPesertaKonsultasi(peserta.id),
       prisma.jadwalSesi.findFirst({
         where: { pendaftaranId: peserta.id, status: { in: [...STATUS_AKTIF] } },
         select: { id: true },
@@ -85,57 +78,20 @@ export async function POST(req: NextRequest) {
     if (aktif)
       return fail("Anda sudah memiliki jadwal aktif. Batalkan dulu untuk memilih ulang.", 409);
 
-    const slot = await cariSlot(tanggal, jam);
-    if (!slot) return fail("Jadwal tidak tersedia.", 400);
+    const kategori = p.posisiKonsultasi;
+    const slot = await cariSlot(tanggal, jam, kategori);
+    if (!slot) return fail("Jadwal kategori Anda tidak tersedia.", 400);
 
-    // Coba setiap kursi yang masih kosong; jika ada race condition, lanjut ke kursi berikutnya.
-    const kursi = await kursiTersedia(tanggal, jam);
-    if (!kursi.length) return fail("Jadwal sudah full. Silakan klik tombol waitinglist.", 409);
-
-    let created = null;
-    let terpakai = false;
-    for (const nomor of kursi) {
-      try {
-        created = await prisma.jadwalSesi.create({
-          data: {
-            pendaftaranId: peserta.id,
-            tanggal,
-            jam,
-            catatan: catatan.trim() || null,
-            // Peserta langsung masuk jadwal; tidak perlu verifikasi admin.
-            status: "dikonfirmasi",
-            slotKey: slotSeatKey(tanggal, jam, nomor),
-          },
-          include: { pendaftaran: { select: { nama: true, whatsapp: true } } },
-        });
-        break;
-      } catch (e) {
-        if ((e as { code?: string }).code === "P2002") {
-          terpakai = true;
-          continue;
-        }
-        throw e;
-      }
-    }
-    if (!created) {
-      return fail(
-        terpakai
-          ? "Jadwal baru saja penuh. Silakan pilih jadwal lain atau klik waitinglist."
-          : "Jadwal belum tersimpan. Coba lagi.",
-        409,
-      );
+    // Peserta langsung dikonfirmasi. Jika kursi habis (termasuk race condition),
+    // otomatis masuk waitinglist tanpa perlu klik tombol lain.
+    const jadwal = await pesanKursi({ peserta: p, tanggal, jam, kategori, catatan });
+    if (!jadwal) {
+      const row = await daftarWaitinglist(p, catatan);
+      return NextResponse.json({ success: true, jenis: "waitinglist", id: row.id }, { status: 201 });
     }
 
-    void notifyJadwalBaru({
-      nama: created.pendaftaran.nama,
-      whatsapp: created.pendaftaran.whatsapp,
-      tanggal,
-      jam,
-      catatan: created.catatan,
-    });
-    void notifyJadwalKonsultasi({ nama: p.nama, email: p.email, tanggal, jam });
-
-    return NextResponse.json({ success: true, id: created.id }, { status: 201 });
+    kirimNotifikasiJadwal(p, jadwal);
+    return NextResponse.json({ success: true, jenis: "jadwal", id: jadwal.id }, { status: 201 });
   } catch (error) {
     console.error("POST /api/peserta/jadwal error:", error);
     return fail("Terjadi kesalahan server.", 500);

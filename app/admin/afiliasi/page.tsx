@@ -81,6 +81,19 @@ const tanggal = (iso: string) =>
 const inputCls =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
 const th = "px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500";
+
+/** Tabel daftar: lebar kolom proporsional, rapi di desktop maupun saat scroll di mobile. */
+const tableCls =
+  "w-full min-w-[680px] table-fixed border-separate border-spacing-0 text-left text-[13px]";
+const headCls =
+  "sticky top-0 z-10 whitespace-nowrap border-y border-r border-slate-200 bg-slate-100 px-3 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500";
+const headLastCls =
+  "sticky right-0 top-0 z-20 whitespace-nowrap rounded-tr-lg border-y border-l border-slate-200 bg-slate-100 px-3 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-500";
+const cellCls =
+  "border-b border-r border-slate-200 px-3 py-3 align-middle text-[13px] text-slate-700";
+const cellLastCls =
+  "sticky right-0 z-10 whitespace-nowrap border-b border-l border-slate-200 bg-white px-3 py-3 text-right group-hover:bg-slate-50";
+const angka = "text-right tabular-nums";
 const td = "px-4 py-3 text-sm text-slate-700";
 
 function badge(status: string, map: Record<string, string>) {
@@ -316,11 +329,11 @@ export default function AdminAfiliasi() {
 
       <div className="flex min-h-[420px] flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 lg:min-h-0">
         {/* Toolbar */}
-        <div className="flex shrink-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 p-3 sm:gap-3 sm:p-4">
           {tab === "afiliasi" && (
             <form
               onSubmit={(e) => e.preventDefault()}
-              className="flex h-11 w-full items-center gap-2 rounded-full border border-slate-200 bg-white pl-4 pr-1.5 transition-colors focus-within:border-[#0052A4]/50 sm:max-w-sm"
+              className="flex h-10 min-w-[200px] flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white pl-3.5 pr-1.5 transition-colors focus-within:border-[#0052A4]/50 sm:h-11 sm:max-w-sm sm:pl-4"
             >
               <ListFilter className="h-4 w-4 shrink-0 text-slate-400" />
               <input
@@ -352,7 +365,7 @@ export default function AdminAfiliasi() {
           <button
             onClick={() => void muat()}
             disabled={loading}
-            className="inline-flex h-10 shrink-0 items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Muat ulang
           </button>
@@ -370,22 +383,31 @@ export default function AdminAfiliasi() {
           </div>
         ) : tab === "afiliasi" ? (
           <>
-            <div className="min-h-0 flex-1 overflow-auto pl-3">
-              <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-[13px]">
+            <p className="shrink-0 border-b border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] text-slate-500 lg:hidden">
+              Geser tabel ke samping untuk melihat semua kolom &rarr;
+            </p>
+            <div className="min-h-0 flex-1 overflow-auto">
+              <table className={tableCls}>
+                <colgroup>
+                  <col className="w-11" />
+                  <col className="w-[25%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-14" />
+                </colgroup>
                 <thead>
-                  <tr className="text-xs font-medium text-slate-500">
-                    <th className="w-12 rounded-l-lg border-y border-l border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-4 py-3 font-medium">#</th>
-                    {["Affiliate", "Kode", "Referral", "Terverifikasi", "Total komisi", "Saldo"].map((label) => (
-                      <th
-                        key={label}
-                        className="whitespace-nowrap border-y border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-3 py-3 font-medium"
-                      >
-                        {label}
-                      </th>
-                    ))}
-                    <th className="sticky right-0 top-0 z-20 whitespace-nowrap border-y border-l border-slate-200 bg-slate-100 px-3 py-3 text-right font-medium">
-                      Aksi
-                    </th>
+                  <tr>
+                    <th className={`${headCls} rounded-tl-lg border-l text-center`}>#</th>
+                    <th className={headCls}>Affiliate</th>
+                    <th className={headCls}>Kode</th>
+                    <th className={`${headCls} text-right`}>Referral</th>
+                    <th className={`${headCls} text-right`}>Terverifikasi</th>
+                    <th className={`${headCls} text-right`}>Total komisi</th>
+                    <th className={`${headCls} text-right`}>Saldo</th>
+                    <th className={headLastCls}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,31 +419,39 @@ export default function AdminAfiliasi() {
                     </tr>
                   )}
                   {affiliates.map((a, i) => {
+                    const terakhir = i === affiliates.length - 1;
                     const bg = "bg-white group-hover:bg-slate-50";
+                    const bawah = terakhir ? "rounded-bl-lg" : "";
+                    const bawahAkhir = terakhir ? "rounded-br-lg" : "";
                     return (
-                      <tr key={a.id} className="group h-[53px]">
-                        <td className={`border-b border-l border-r border-slate-200 px-4 py-3.5 text-slate-400 ${bg}`}>
+                      <tr key={a.id} className="group">
+                        <td className={`${cellCls} ${bg} ${bawah} text-center text-slate-400`}>
                           {i + 1}
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>
-                          <div className="flex flex-col leading-tight">
-                            <span className="truncate font-medium text-slate-900">{a.nama}</span>
-                            <span className="truncate text-[11px] text-slate-400">{a.email}</span>
+                        <td className={`${cellCls} ${bg}`}>
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#0052A4]/10 text-[11px] font-bold text-[#0052A4]">
+                              {(a.nama || "A").trim().charAt(0).toUpperCase()}
+                            </span>
+                            <span className="min-w-0 leading-tight">
+                              <span className="block truncate font-semibold text-slate-900">{a.nama}</span>
+                              <span className="block truncate text-[11px] text-slate-400">{a.email}</span>
+                            </span>
                           </div>
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 font-mono text-xs text-[#0052A4] ${bg}`}>
-                          {a.kode}
+                        <td className={`${cellCls} ${bg}`}>
+                          <span className="inline-flex max-w-full truncate rounded-md bg-[#0052A4]/5 px-2 py-1 font-mono text-[11px] font-semibold text-[#0052A4] ring-1 ring-[#0052A4]/10">
+                            {a.kode}
+                          </span>
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>{a.totalReferral}</td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>{a.terverifikasi}</td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>{rupiah(a.totalKomisi)}</td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 font-semibold ${bg}`}>
+                        <td className={`${cellCls} ${bg} ${angka}`}>{a.totalReferral}</td>
+                        <td className={`${cellCls} ${bg} ${angka}`}>{a.terverifikasi}</td>
+                        <td className={`${cellCls} ${bg} ${angka} text-slate-600`}>{rupiah(a.totalKomisi)}</td>
+                        <td className={`${cellCls} ${bg} ${angka} font-semibold text-slate-900`}>
                           {rupiah(a.saldo)}
                         </td>
-                        <td className="sticky right-0 z-10 whitespace-nowrap border-b border-l border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
-                          <div className="flex items-center justify-end">
-                            <IconAction onClick={() => void bukaDetail(a.id)} icon={Eye} label="Detail" />
-                          </div>
+                        <td className={`${cellLastCls} ${bawahAkhir}`}>
+                          <IconAction onClick={() => void bukaDetail(a.id)} icon={Eye} label="Detail" />
                         </td>
                       </tr>
                     );
@@ -435,22 +465,29 @@ export default function AdminAfiliasi() {
           </>
         ) : (
           <>
-            <div className="min-h-0 flex-1 overflow-auto pl-3">
-              <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-[13px]">
+            <p className="shrink-0 border-b border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] text-slate-500 lg:hidden">
+              Geser tabel ke samping untuk melihat semua kolom &rarr;
+            </p>
+            <div className="min-h-0 flex-1 overflow-auto">
+              <table className={tableCls}>
+                <colgroup>
+                  <col className="w-11" />
+                  <col className="w-[24%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[16%]" />
+                  <col className="w-14" />
+                </colgroup>
                 <thead>
-                  <tr className="text-xs font-medium text-slate-500">
-                    <th className="w-12 rounded-l-lg border-y border-l border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-4 py-3 font-medium">#</th>
-                    {["Affiliate", "Jumlah", "Rekening", "Status", "Waktu"].map((label) => (
-                      <th
-                        key={label}
-                        className="whitespace-nowrap border-y border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-3 py-3 font-medium"
-                      >
-                        {label}
-                      </th>
-                    ))}
-                    <th className="sticky right-0 top-0 z-20 whitespace-nowrap border-y border-l border-slate-200 bg-slate-100 px-3 py-3 text-right font-medium">
-                      Aksi
-                    </th>
+                  <tr>
+                    <th className={`${headCls} rounded-tl-lg border-l text-center`}>#</th>
+                    <th className={headCls}>Affiliate</th>
+                    <th className={`${headCls} text-right`}>Jumlah</th>
+                    <th className={headCls}>Rekening</th>
+                    <th className={headCls}>Status</th>
+                    <th className={headCls}>Waktu</th>
+                    <th className={headLastCls}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -462,59 +499,63 @@ export default function AdminAfiliasi() {
                     </tr>
                   )}
                   {payouts.map((p, i) => {
+                    const terakhir = i === payouts.length - 1;
                     const bg = "bg-white group-hover:bg-slate-50";
+                    const bawah = terakhir ? "rounded-bl-lg" : "";
+                    const bawahAkhir = terakhir ? "rounded-br-lg" : "";
                     return (
-                      <tr key={p.id} className="group h-[53px]">
-                        <td className={`border-b border-l border-r border-slate-200 px-4 py-3.5 text-slate-400 ${bg}`}>
+                      <tr key={p.id} className="group">
+                        <td className={`${cellCls} ${bg} ${bawah} text-center text-slate-400`}>
                           {i + 1}
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>
-                          <div className="flex flex-col leading-tight">
-                            <span className="truncate font-medium text-slate-900">{p.affiliate.nama}</span>
-                            <span className="truncate text-[11px] text-slate-400">{p.affiliate.email}</span>
+                        <td className={`${cellCls} ${bg}`}>
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#0052A4]/10 text-[11px] font-bold text-[#0052A4]">
+                              {(p.affiliate.nama || "A").trim().charAt(0).toUpperCase()}
+                            </span>
+                            <span className="min-w-0 leading-tight">
+                              <span className="block truncate font-semibold text-slate-900">{p.affiliate.nama}</span>
+                              <span className="block truncate text-[11px] text-slate-400">{p.affiliate.email}</span>
+                            </span>
                           </div>
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 font-semibold ${bg}`}>
+                        <td className={`${cellCls} ${bg} ${angka} font-semibold text-slate-900`}>
                           {rupiah(p.jumlah)}
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>
-                          <span className="truncate">{p.bankNama} · {p.bankNo}</span>
+                        <td className={`${cellCls} ${bg}`}>
+                          <span className="block truncate">{p.bankNama} · {p.bankNo}</span>
                           <span className="block truncate text-[11px] text-slate-400">a.n. {p.bankAtasNama}</span>
                         </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>
-                          {badge(p.status, STATUS_PAYOUT)}
-                        </td>
-                        <td className={`border-b border-r border-slate-200 px-3 py-3.5 ${bg}`}>
+                        <td className={`${cellCls} ${bg}`}>{badge(p.status, STATUS_PAYOUT)}</td>
+                        <td className={`${cellCls} ${bg} whitespace-nowrap text-slate-500`}>
                           {tanggal(p.createdAt)}
                         </td>
-                        <td className="sticky right-0 z-10 whitespace-nowrap border-b border-l border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
-                          <div className="flex items-center justify-end">
-                            {p.status === "menunggu" ? (
-                              <button
-                                onClick={() => {
-                                  setProses(p);
-                                  setStatusProses("dibayar");
-                                  setCatatan("");
-                                  setBukti(null);
-                                  setPesan("");
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-[#0052A4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#004080]"
-                              >
-                                <Wallet className="h-3.5 w-3.5" /> Proses
-                              </button>
-                            ) : p.bukti ? (
-                              <a
-                                href={p.bukti}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-xs font-semibold text-[#0052A4] hover:underline"
-                              >
-                                Lihat bukti
-                              </a>
-                            ) : (
-                              <span className="text-xs text-slate-400">-</span>
-                            )}
-                          </div>
+                        <td className={`${cellLastCls} ${bawahAkhir}`}>
+                          {p.status === "menunggu" ? (
+                            <button
+                              onClick={() => {
+                                setProses(p);
+                                setStatusProses("dibayar");
+                                setCatatan("");
+                                setBukti(null);
+                                setPesan("");
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-[#0052A4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#004080]"
+                            >
+                              <Wallet className="h-3.5 w-3.5" /> Proses
+                            </button>
+                          ) : p.bukti ? (
+                            <a
+                              href={p.bukti}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs font-semibold text-[#0052A4] hover:underline"
+                            >
+                              Lihat bukti
+                            </a>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          )}
                         </td>
                       </tr>
                     );

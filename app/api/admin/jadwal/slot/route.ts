@@ -28,7 +28,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: slots.map((s) => {
-        const terisi = hitung.get(slotPrefix(s.tanggal, s.jam)) ?? 0;
+        const terisi = hitung.get(slotPrefix(s.tanggal, s.jam, s.kategori)) ?? 0;
         return { ...s, terisi, sisa: Math.max(0, s.kuota - terisi) };
       }),
     });
@@ -44,15 +44,15 @@ export async function POST(req: NextRequest) {
     if (!(await requireAdmin())) return fail("Tidak terautentikasi.", 401);
     const parsed = jadwalSlotSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Data tidak valid.", 400);
-    const { tanggal, jam, kuota } = parsed.data;
+    const { kategori, tanggal, jam, kuota } = parsed.data;
     if (tanggal < wibToday()) return fail("Tanggal tidak boleh sebelum hari ini.", 400);
 
     try {
-      const row = await prisma.jadwalSlot.create({ data: { tanggal, jam, kuota } });
+      const row = await prisma.jadwalSlot.create({ data: { kategori, tanggal, jam, kuota } });
       return NextResponse.json({ success: true, data: row }, { status: 201 });
     } catch (e) {
       if ((e as { code?: string }).code === "P2002")
-        return fail("Slot dengan tanggal dan jam tersebut sudah ada.", 409);
+        return fail(`Slot kategori ${kategori} pada tanggal dan jam tersebut sudah ada.`, 409);
       throw e;
     }
   } catch (error) {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { requirePeserta } from "@/lib/guard";
-import { getRekening } from "@/lib/pembayaran";
+import { getRekening, ringkasPembayaran } from "@/lib/pembayaran";
 import { getGrupUmum } from "@/lib/grup";
 import PembayaranPeserta from "./PembayaranPeserta";
 
@@ -43,21 +43,7 @@ export default async function PembayaranPage() {
       email={p.email}
       rekening={rekening}
       grupUmum={grupUmum}
-      pembayaran={
-        terakhir
-          ? {
-              id: terakhir.id,
-              status: terakhir.status,
-              catatanAdmin: terakhir.catatanAdmin,
-              namaChannel: terakhir.namaChannel,
-              namaPengirim: terakhir.namaPengirim,
-              buktiBayar: terakhir.buktiBayar,
-              jumlah: terakhir.jumlah,
-              createdAt: terakhir.createdAt.toISOString(),
-              verifiedAt: terakhir.verifiedAt?.toISOString() ?? null,
-            }
-          : null
-      }
+      pembayaran={ringkasPembayaran(terakhir)}
     />
   );
 }

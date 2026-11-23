@@ -13,7 +13,15 @@ export async function GET() {
       orderBy: [{ tanggal: "desc" }, { jam: "asc" }],
       take: 500,
       include: {
-        pendaftaran: { select: { id: true, nama: true, whatsapp: true, email: true } },
+        pendaftaran: {
+          select: {
+            id: true,
+            nama: true,
+            whatsapp: true,
+            email: true,
+            posisiKonsultasi: true,
+          },
+        },
       },
     });
     return NextResponse.json({ success: true, data });

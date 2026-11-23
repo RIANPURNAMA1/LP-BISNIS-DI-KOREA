@@ -451,3 +451,22 @@ Jika upload masih mentok di persentase tertentu di VPS:
 - Jika semua slot penuh, peserta masuk tabel `waitinglist` dan admin akan menghubungi.
 
 pass: email yjzqtuoyvxyzyghf
+
+
+
+
+PEMBAYARAN MUNCUL DI PESERTA SAJA TIDAK DI AWALL 
+sebelum itu muncul di bayar 
+
+thumnAIL DI VIDEO 
+
+revisi 
+jika admin pilih jadwal a beda lagi tuh
+FILTER POSISI KONSULTASI DI MEETING LANJUTAN 
+seting jadwal berdasarkan POSISI KONSULTASI ABCD
+
+
+pencairan di hide 
+andri dalam 90 hari kedepan klik ikutan 91 hari sudah tidak trafiliasi ke si andri dan bisa
+ada waktu di member affiliasi peserta 
+bisa follow up

@@ -114,6 +114,7 @@ export const DEFAULT_KUOTA = 5;
 
 export type SlotTersedia = {
   id: number;
+  kategori: string;
   tanggal: string;
   jam: string;
   kuota: number;
@@ -121,19 +122,43 @@ export type SlotTersedia = {
   sisa: number;
 };
 
-/** Prefix kunci kursi: "tanggal_jam_". Diikuti nomor kursi 1..kuota. */
-export const slotPrefix = (tanggal: string, jam: string) => `${tanggal}_${jam}_`;
-export const slotSeatKey = (tanggal: string, jam: string, kursi: number) =>
-  `${slotPrefix(tanggal, jam)}${kursi}`;
+/** Kategori A–D yang valid; mengembalikan null untuk data lama tanpa kategori. */
+function normalKategori(kategori?: string | null): string | null {
+  const v = kategori?.trim().toUpperCase();
+  return v && /^[A-D]$/.test(v) ? v : null;
+}
 
 /**
- * Slot yang ditetapkan admin, masih aktif, dan belum lewat.
+ * Prefix kunci kursi: "kategori_tanggal_jam_" untuk slot baru.
+ * Tanpa kategori dipakai format lama "tanggal_jam_" agar jadwal lama tetap terbaca.
+ * Panjang kunci dengan kategori = 20 karakter, sesuai batas kolom `slot_key`.
+ */
+export const slotPrefix = (tanggal: string, jam: string, kategori?: string | null) => {
+  const kat = normalKategori(kategori);
+  return `${kat ? `${kat}_` : ""}${tanggal}_${jam}_`;
+};
+
+export const slotSeatKey = (
+  tanggal: string,
+  jam: string,
+  kursi: number,
+  kategori?: string | null,
+) => `${slotPrefix(tanggal, jam, kategori)}${kursi}`;
+
+/**
+ * Slot yang ditetapkan admin untuk satu kategori (A–D), masih aktif, dan belum lewat.
+ * Jika kategori kosong, semua slot dikembalikan (dipakai admin/legacy).
  * `terisi` dihitung dari jadwal aktif (menunggu/dikonfirmasi).
  */
-export async function getSlotTersedia(): Promise<SlotTersedia[]> {
+export async function getSlotTersedia(kategori?: string | null): Promise<SlotTersedia[]> {
+  const kat = normalKategori(kategori);
   const slots = await prisma.jadwalSlot.findMany({
-    where: { aktif: true, tanggal: { gte: wibToday() } },
-    orderBy: [{ tanggal: "asc" }, { jam: "asc" }],
+    where: {
+      aktif: true,
+      tanggal: { gte: wibToday() },
+      ...(kat ? { kategori: kat } : {}),
+    },
+    orderBy: [{ kategori: "asc" }, { tanggal: "asc" }, { jam: "asc" }],
   });
   if (!slots.length) return [];
 
@@ -155,9 +180,10 @@ export async function getSlotTersedia(): Promise<SlotTersedia[]> {
   }
 
   return slots.map((s) => {
-    const terisi = hitung.get(slotPrefix(s.tanggal, s.jam)) ?? 0;
+    const terisi = hitung.get(slotPrefix(s.tanggal, s.jam, s.kategori)) ?? 0;
     return {
       id: s.id,
+      kategori: s.kategori,
       tanggal: s.tanggal,
       jam: s.jam,
       kuota: s.kuota,
@@ -167,27 +193,34 @@ export async function getSlotTersedia(): Promise<SlotTersedia[]> {
   });
 }
 
-/** Cek apakah tanggal+jam termasuk slot fix yang masih bisa dipilih. */
-export async function cariSlot(tanggal: string, jam: string) {
+/** Cek apakah tanggal+jam termasuk slot fix kategori yang masih bisa dipilih. */
+export async function cariSlot(tanggal: string, jam: string, kategori?: string | null) {
   if (tanggal < wibToday()) return null;
-  return prisma.jadwalSlot.findFirst({ where: { tanggal, jam, aktif: true } });
+  const kat = normalKategori(kategori);
+  return prisma.jadwalSlot.findFirst({
+    where: { tanggal, jam, aktif: true, ...(kat ? { kategori: kat } : {}) },
+  });
 }
 
 /** Nomor kursi yang masih kosong pada sebuah slot (1..kuota). */
-export async function kursiTersedia(tanggal: string, jam: string): Promise<number[]> {
-  const slot = await cariSlot(tanggal, jam);
+export async function kursiTersedia(
+  tanggal: string,
+  jam: string,
+  kategori?: string | null,
+): Promise<number[]> {
+  const slot = await cariSlot(tanggal, jam, kategori);
   if (!slot) return [];
   const dipakai = await prisma.jadwalSesi.findMany({
     where: {
       tanggal,
       jam,
       status: { in: [...STATUS_AKTIF] },
-      slotKey: { startsWith: slotPrefix(tanggal, jam) },
+      slotKey: { startsWith: slotPrefix(tanggal, jam, kategori ?? slot.kategori) },
     },
     select: { slotKey: true },
   });
   const used = new Set(dipakai.map((d) => d.slotKey));
   return Array.from({ length: slot.kuota }, (_, i) => i + 1).filter(
-    (n) => !used.has(slotSeatKey(tanggal, jam, n)),
+    (n) => !used.has(slotSeatKey(tanggal, jam, n, kategori ?? slot.kategori)),
   );
 }
