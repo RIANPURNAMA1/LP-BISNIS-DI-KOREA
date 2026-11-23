@@ -202,7 +202,7 @@ export default function AdminAfiliasi() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-6.5rem)] min-h-[520px] flex-col gap-4">
+    <div className="flex min-h-[520px] flex-col gap-4 lg:h-[calc(100vh-6.5rem)]">
       {/* Judul — mengikuti gaya halaman Data Pendaftar */}
       <div className="flex shrink-0 items-start gap-3 px-1">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#0052A4]/10 text-[#0052A4]">
@@ -216,7 +216,7 @@ export default function AdminAfiliasi() {
         </div>
       </div>
 
-      <div className="grid shrink-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { label: "Affiliate", value: ringkasan.affiliate, icon: Gift },
           { label: "Total referral", value: ringkasan.referral, icon: Eye },
@@ -314,7 +314,7 @@ export default function AdminAfiliasi() {
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+      <div className="flex min-h-[420px] flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 lg:min-h-0">
         {/* Toolbar */}
         <div className="flex shrink-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           {tab === "afiliasi" && (
@@ -371,7 +371,7 @@ export default function AdminAfiliasi() {
         ) : tab === "afiliasi" ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto pl-3">
-              <table className="w-full border-separate border-spacing-0 text-left text-[13px]">
+              <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-[13px]">
                 <thead>
                   <tr className="text-xs font-medium text-slate-500">
                     <th className="w-12 rounded-l-lg border-y border-l border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-4 py-3 font-medium">#</th>
@@ -436,7 +436,7 @@ export default function AdminAfiliasi() {
         ) : (
           <>
             <div className="min-h-0 flex-1 overflow-auto pl-3">
-              <table className="w-full border-separate border-spacing-0 text-left text-[13px]">
+              <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-[13px]">
                 <thead>
                   <tr className="text-xs font-medium text-slate-500">
                     <th className="w-12 rounded-l-lg border-y border-l border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-4 py-3 font-medium">#</th>

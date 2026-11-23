@@ -565,13 +565,13 @@ function PendaftaranList() {
   return (
     <div className="flex h-[calc(100vh-6.5rem)] min-h-[520px] flex-col gap-4">
       {/* Tab */}
-      <div className="flex shrink-0 items-center gap-2 px-1">
+      <div className="flex shrink-0 items-center gap-2 overflow-x-auto px-1 pb-1">
         <button
           onClick={() => {
             setTab("semua");
             setPage(1);
           }}
-          className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
+          className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
             tab === "semua"
               ? "bg-white font-semibold text-[#0052A4] shadow-sm"
               : "bg-white/60 font-medium text-slate-500 hover:bg-white"
@@ -588,7 +588,7 @@ function PendaftaranList() {
             setTab("meeting");
             setPage(1);
           }}
-          className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
+          className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
             tab === "meeting"
               ? "bg-white font-semibold text-[#0052A4] shadow-sm"
               : "bg-white/60 font-medium text-slate-500 hover:bg-white"
@@ -609,7 +609,7 @@ function PendaftaranList() {
             setTab("waiting");
             setPage(1);
           }}
-          className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
+          className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
             tab === "waiting"
               ? "bg-white font-semibold text-[#0052A4] shadow-sm"
               : "bg-white/60 font-medium text-slate-500 hover:bg-white"
