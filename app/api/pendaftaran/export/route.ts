@@ -4,6 +4,9 @@ import ExcelJS from "exceljs";
 import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { parseTujuan } from "@/lib/validations";
+import { formatJadwal, pilihJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
+import { afiliasiLabel } from "@/lib/afiliasi-info";
+import { posisiLabel } from "@/lib/posisi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,11 +37,15 @@ const COLUMNS: Column[] = [
   { header: "Tujuan Program", width: 42 },
   { header: "Cerita Bisnis", width: 46 },
   { header: "Sumber Informasi", width: 20 },
+  { header: "Afiliasi", width: 26 },
   { header: "Tanggal Daftar", width: 20, align: "center" },
   { header: "Wilayah Grup", width: 20, align: "center" },
   { header: "Status Event", width: 20, align: "center" },
   { header: "Video Selesai", width: 20, align: "center" },
   { header: "Meeting Lanjutan", width: 20, align: "center" },
+  { header: "Posisi Konsultasi", width: 42 },
+  { header: "Jadwal Konsultasi", width: 24, align: "center" },
+  { header: "Status Jadwal", width: 20, align: "center" },
 ];
 
 const WILAYAH_LABEL: Record<string, string> = {
@@ -93,12 +100,14 @@ export async function GET(req: NextRequest) {
               { nama: { contains: search } },
               { email: { contains: search } },
               { whatsapp: { contains: search } },
+              { referral: { affiliate: { nama: { contains: search } } } },
+              { referral: { kode: { contains: search } } },
             ],
           }
         : {}),
       ...eventWhere(req.nextUrl.searchParams.get("event")),
       ...(req.nextUrl.searchParams.get("meeting") === "1"
-        ? { konsultasiAt: { not: null } }
+        ? { konsultasiAt: { not: null }, posisiKonsultasi: { not: null } }
         : {}),
     };
 
@@ -108,6 +117,45 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: MAX_ROWS,
     });
+
+    const jadwalRows = await prisma.jadwalSesi.findMany({
+      where: { pendaftaranId: { in: data.map((r) => r.id) } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        pendaftaranId: true,
+        tanggal: true,
+        jam: true,
+        status: true,
+        catatan: true,
+      },
+    });
+    const jadwalMap = new Map<number, typeof jadwalRows>();
+    for (const j of jadwalRows) {
+      const list = jadwalMap.get(j.pendaftaranId) ?? [];
+      list.push(j);
+      jadwalMap.set(j.pendaftaranId, list);
+    }
+
+    const referralRows = await prisma.referral.findMany({
+      where: { pendaftaranId: { in: data.map((r) => r.id) } },
+      select: {
+        pendaftaranId: true,
+        status: true,
+        affiliate: { select: { id: true, nama: true, kode: true } },
+      },
+    });
+    const afiliasiMap = new Map(
+      referralRows.map((r) => [
+        r.pendaftaranId,
+        {
+          id: r.affiliate.id,
+          nama: r.affiliate.nama,
+          kode: r.affiliate.kode,
+          status: r.status,
+        },
+      ])
+    );
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = PROJECT_NAME;
@@ -217,6 +265,7 @@ export async function GET(req: NextRequest) {
 
     // ── Isi data ─────────────────────────────────────────────────
     data.forEach((row, index) => {
+      const jadwal = pilihJadwal(jadwalMap.get(row.id) ?? []);
       const isLuar = row.provinsi === "Luar Negeri";
       const values = [
         index + 1,
@@ -236,11 +285,17 @@ export async function GET(req: NextRequest) {
         tujuanText(row.tujuan),
         row.cerita ?? "",
         row.sumber ?? "",
+        afiliasiLabel(afiliasiMap.get(row.id) ?? null),
         row.createdAt,
         WILAYAH_LABEL[row.wilayah] ?? "",
         eventLabel(row.eventStatus),
         progresText(row.videoSelesaiAt),
-        progresText(row.konsultasiAt),
+        row.posisiKonsultasi ? progresText(row.konsultasiAt) : "Belum",
+        row.posisiKonsultasi
+          ? `${row.posisiKonsultasi}. ${posisiLabel(row.posisiKonsultasi)}`
+          : "Belum",
+        jadwal ? formatJadwal(jadwal.tanggal, jadwal.jam) : "Belum",
+        jadwal ? (STATUS_LABEL[jadwal.status]?.label ?? jadwal.status) : "Belum",
       ];
 
       const excelRow = sheet.addRow(values);

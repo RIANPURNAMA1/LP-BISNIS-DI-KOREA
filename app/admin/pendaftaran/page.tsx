@@ -1,6 +1,9 @@
 "use client";
 
 import { EVENT_OPTIONS, eventLabel } from "@/lib/event";
+import { formatJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
+import { afiliasiLabel, type AfiliasiInfo } from "@/lib/afiliasi-info";
+import { formatPosisi, posisiLabel } from "@/lib/posisi";
 import EventSelect from "@/components/EventSelect";
 import { Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
@@ -16,10 +19,19 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Users,
   MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
+
+type JadwalRow = {
+  id: number;
+  tanggal: string;
+  jam: string;
+  status: string;
+  catatan: string | null;
+};
 
 type PendaftarRow = {
   id: number;
@@ -40,6 +52,10 @@ type PendaftarRow = {
   eventStatus?: string;
   videoSelesaiAt?: string | null;
   konsultasiAt?: string | null;
+  posisiKonsultasi?: string | null;
+  ijazahS1?: boolean;
+  jadwal?: JadwalRow | null;
+  afiliasi?: AfiliasiInfo;
   createdAt?: string;
   created_at?: string;
 };
@@ -52,6 +68,28 @@ type ApiResp = {
   totalMeeting: number;
   page: number;
   totalPages: number;
+};
+
+type Tab = "semua" | "meeting" | "waiting";
+
+type WaitingRow = {
+  id: number;
+  pendaftaranId: number;
+  posisi: string | null;
+  catatan: string | null;
+  status: string;
+  createdAt: string;
+  afiliasi?: AfiliasiInfo;
+  pendaftaran: { id: number; nama: string; whatsapp: string; email: string; eventStatus: string };
+};
+
+type WaitingResp = { success: boolean; data: WaitingRow[] };
+
+const WAITING_STATUS_LABEL: Record<string, string> = {
+  menunggu: "Menunggu",
+  diproses: "Diproses",
+  ditambahkan: "Ditambahkan",
+  batal: "Batal",
 };
 
 // Bungkus nilai dalam tanda kutip dan escape tanda kutip ganda sesuai RFC 4180,
@@ -104,6 +142,16 @@ function formatTanggal(r: PendaftarRow) {
   return formatWaktu(r.createdAt || r.created_at);
 }
 
+function formatJadwalRow(r: PendaftarRow) {
+  return r.jadwal ? formatJadwal(r.jadwal.tanggal, r.jadwal.jam) : "Belum";
+}
+
+// konsultasiAt juga dipakai data lama hasil checkout; hanya yang punya posisi
+// yang benar-benar sudah submit konfirmasi konsultasi lanjutan.
+function formatMeeting(r: PendaftarRow) {
+  return r.konsultasiAt && r.posisiKonsultasi ? formatWaktu(r.konsultasiAt) : "Belum";
+}
+
 // Tinggi baris tabel (px) dan tinggi footer; dipakai menghitung berapa baris yang muat di layar.
 const ROW_H = 53;
 const FOOTER_H = 57;
@@ -136,12 +184,25 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
     get: (r) => (Array.isArray(r.tujuan) ? r.tujuan.join(", ") : (r.tujuan ?? "")),
   },
   { key: "sumber", label: "Sumber Info", width: 140, get: (r) => r.sumber ?? "" },
+  {
+    key: "afiliasi",
+    label: "Afiliasi",
+    width: 180,
+    get: (r) => afiliasiLabel(r.afiliasi ?? null),
+  },
   { key: "tanggal", label: "Tanggal Daftar", width: 160, get: formatTanggal },
+  {
+    key: "posisi",
+    label: "Posisi Konsultasi",
+    width: 240,
+    get: (r) => formatPosisi(r.posisiKonsultasi) || "Belum",
+  },
+  { key: "jadwal", label: "Jadwal Konsultasi", width: 170, get: formatJadwalRow },
   {
     key: "meeting",
     label: "Meeting Lanjutan",
     width: 150,
-    get: (r) => (r.konsultasiAt ? formatWaktu(r.konsultasiAt) : "Belum"),
+    get: formatMeeting,
   },
 ];
 
@@ -161,7 +222,9 @@ function PendaftaranList() {
   const [total, setTotal] = useState(0);
   const [totalSemua, setTotalSemua] = useState(0);
   const [totalMeeting, setTotalMeeting] = useState(0);
-  const [meeting, setMeeting] = useState(false);
+  const [tab, setTab] = useState<Tab>("semua");
+  const [waiting, setWaiting] = useState<WaitingRow[]>([]);
+  const [loadingWaiting, setLoadingWaiting] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
@@ -215,7 +278,7 @@ function PendaftaranList() {
     });
     if (search) params.set("search", search);
     if (eventFilter) params.set("event", eventFilter);
-    if (meeting) params.set("meeting", "1");
+    if (tab === "meeting") params.set("meeting", "1");
 
     fetch(`/api/pendaftaran?${params}`)
       .then((r) => {
@@ -232,11 +295,45 @@ function PendaftaranList() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [page, search, eventFilter, meeting, limit]);
+  }, [page, search, eventFilter, tab, limit]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Waitinglist diambil terpisah (endpoint admin yang sudah ada).
+  const fetchWaiting = useCallback(() => {
+    setLoadingWaiting(true);
+    fetch("/api/admin/waitinglist", { cache: "no-store" })
+      .then((r) => {
+        if (!r.ok) throw new Error("Gagal memuat waitinglist.");
+        return r.json() as Promise<WaitingResp>;
+      })
+      .then((json) => setWaiting(json.data))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoadingWaiting(false));
+  }, []);
+
+  useEffect(() => {
+    if (tab === "waiting") fetchWaiting();
+  }, [tab, fetchWaiting]);
+
+  const filteredWaiting = waiting.filter((w) => {
+    if (eventFilter) {
+      const event = w.pendaftaran.eventStatus || "belum";
+      if (event !== eventFilter) return false;
+    }
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return [
+      w.pendaftaran.nama,
+      w.pendaftaran.whatsapp,
+      w.pendaftaran.email,
+      w.posisi ?? "",
+      w.catatan ?? "",
+      afiliasiLabel(w.afiliasi ?? null),
+    ].some((v) => v.toLowerCase().includes(q));
+  });
 
   // Sinkronkan dengan pencarian dari header (?q=...)
   useEffect(() => {
@@ -306,10 +403,14 @@ function PendaftaranList() {
       "Tujuan Program",
       "Cerita Bisnis",
       "Sumber Informasi",
+      "Afiliasi",
       "Tanggal Daftar",
       "Status Event",
       "Video Selesai",
       "Meeting Lanjutan",
+      "Posisi Konsultasi",
+      "Jadwal Konsultasi",
+      "Status Jadwal",
     ];
 
     const rows = list.map((r, i) => {
@@ -343,10 +444,14 @@ function PendaftaranList() {
         r.tujuan,
         r.cerita,
         r.sumber,
+        afiliasiLabel(r.afiliasi ?? null),
         tanggalText,
         eventLabel(r.eventStatus),
         formatWaktu(r.videoSelesaiAt) || "Belum",
-        formatWaktu(r.konsultasiAt) || "Belum",
+        formatMeeting(r),
+        formatPosisi(r.posisiKonsultasi) || "Belum",
+        formatJadwalRow(r),
+        r.jadwal ? (STATUS_LABEL[r.jadwal.status]?.label ?? r.jadwal.status) : "Belum",
       ].map(csvCell);
     });
 
@@ -370,7 +475,7 @@ function PendaftaranList() {
       });
       if (search) params.set("search", search);
       if (eventFilter) params.set("event", eventFilter);
-      if (meeting) params.set("meeting", "1");
+      if (tab === "meeting") params.set("meeting", "1");
 
       const res = await fetch(`/api/pendaftaran?${params}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
@@ -410,7 +515,7 @@ function PendaftaranList() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (eventFilter) params.set("event", eventFilter);
-      if (meeting) params.set("meeting", "1");
+      if (tab === "meeting") params.set("meeting", "1");
 
       const res = await fetch(`/api/pendaftaran/export?${params}`);
       if (!res.ok) throw new Error("Gagal membuat file Excel");
@@ -449,11 +554,11 @@ function PendaftaranList() {
       <div className="flex shrink-0 items-center gap-2 px-1">
         <button
           onClick={() => {
-            setMeeting(false);
+            setTab("semua");
             setPage(1);
           }}
           className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
-            !meeting
+            tab === "semua"
               ? "bg-white font-semibold text-[#0052A4] shadow-sm"
               : "bg-white/60 font-medium text-slate-500 hover:bg-white"
           }`}
@@ -466,11 +571,11 @@ function PendaftaranList() {
         </button>
         <button
           onClick={() => {
-            setMeeting(true);
+            setTab("meeting");
             setPage(1);
           }}
           className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
-            meeting
+            tab === "meeting"
               ? "bg-white font-semibold text-[#0052A4] shadow-sm"
               : "bg-white/60 font-medium text-slate-500 hover:bg-white"
           }`}
@@ -483,6 +588,27 @@ function PendaftaranList() {
             }`}
           >
             {totalMeeting}
+          </span>
+        </button>
+        <button
+          onClick={() => {
+            setTab("waiting");
+            setPage(1);
+          }}
+          className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2 text-sm transition-colors ${
+            tab === "waiting"
+              ? "bg-white font-semibold text-[#0052A4] shadow-sm"
+              : "bg-white/60 font-medium text-slate-500 hover:bg-white"
+          }`}
+        >
+          <Clock className="h-4 w-4" />
+          Waitinglist
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${
+              waiting.length > 0 ? "bg-amber-500" : "bg-slate-400"
+            }`}
+          >
+            {waiting.length}
           </span>
         </button>
       </div>
@@ -566,6 +692,7 @@ function PendaftaranList() {
               <path d="M5 8l5 5 5-5" />
             </svg>
           </div>
+          {tab !== "waiting" && (
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleExportCsv}
@@ -592,10 +719,154 @@ function PendaftaranList() {
               {exporting === "excel" ? "Menyiapkan..." : "Export Excel"}
             </button>
           </div>
+          )}
         </div>
 
         {/* Tabel */}
-        {loading ? (
+        {tab === "waiting" ? (
+          loadingWaiting ? (
+            <div className="flex flex-1 items-center justify-center">
+              <div className="h-7 w-7 animate-spin rounded-full border-4 border-slate-200 border-t-[#0052A4]" />
+            </div>
+          ) : filteredWaiting.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center px-5 py-16 text-center">
+              <Clock className="h-8 w-8 text-slate-300" />
+              <p className="mt-3 text-sm text-slate-500">
+                {search || eventFilter
+                  ? "Tidak ada peserta waitinglist yang cocok."
+                  : "Belum ada peserta di waitinglist."}
+              </p>
+            </div>
+          ) : (
+            <div className="min-h-0 flex-1 overflow-auto pl-3">
+              <table className="w-full border-separate border-spacing-0 text-left text-[13px]">
+                <thead>
+                  <tr className="text-xs font-medium text-slate-500">
+                    <th className="w-14 rounded-l-lg border-y border-l border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-4 py-3 font-medium">
+                      No
+                    </th>
+                    {[
+                      "Nama",
+                      "WhatsApp",
+                      "Email",
+                      "Afiliasi",
+                      "Posisi",
+                      "Status",
+                      "Tanggal Masuk",
+                      "Catatan",
+                    ].map(
+                      (label) => (
+                        <th
+                          key={label}
+                          className="whitespace-nowrap border-y border-r border-slate-200 sticky top-0 z-10 bg-slate-100 px-3 py-3 font-medium"
+                        >
+                          {label}
+                        </th>
+                      )
+                    )}
+                    <th className="sticky right-0 top-0 z-20 whitespace-nowrap border-y border-l border-slate-200 bg-slate-100 px-3 py-3 text-right font-medium">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredWaiting.map((w, i) => (
+                    <tr key={w.id} className="group h-[53px]">
+                      <td className="border-b border-l border-r border-slate-200 bg-white px-4 py-3.5 text-slate-400">
+                        {i + 1}
+                      </td>
+                      <td className="max-w-[220px] border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        <Link
+                          href={`/admin/pendaftaran/${w.pendaftaranId}`}
+                          className="block truncate font-medium text-slate-900 hover:text-[#0052A4]"
+                          title={w.pendaftaran.nama}
+                        >
+                          {w.pendaftaran.nama}
+                        </Link>
+                      </td>
+                      <td className="border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        {waLink(w.pendaftaran.whatsapp) ? (
+                          <a
+                            href={waLink(w.pendaftaran.whatsapp)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0052A4] hover:underline"
+                          >
+                            {w.pendaftaran.whatsapp}
+                          </a>
+                        ) : (
+                          w.pendaftaran.whatsapp
+                        )}
+                      </td>
+                      <td className="max-w-[220px] border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        <span className="block truncate text-slate-600" title={w.pendaftaran.email}>
+                          {w.pendaftaran.email}
+                        </span>
+                      </td>
+                      <td className="border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        {w.afiliasi ? (
+                          <span
+                            className="inline-flex max-w-full items-center gap-1.5"
+                            title={afiliasiLabel(w.afiliasi)}
+                          >
+                            <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                              {w.afiliasi.nama}
+                            </span>
+                            <span className="truncate text-[11px] text-slate-400">
+                              {w.afiliasi.kode}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        {w.posisi ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="shrink-0 rounded bg-[#0052A4]/10 px-1.5 py-0.5 text-[11px] font-semibold text-[#0052A4]">
+                              {w.posisi.toUpperCase()}
+                            </span>
+                            <span className="truncate">{posisiLabel(w.posisi)}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        <span
+                          className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                            w.status === "ditambahkan"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : w.status === "batal"
+                                ? "bg-rose-50 text-rose-600"
+                                : "bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {WAITING_STATUS_LABEL[w.status] ?? w.status}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap border-b border-r border-slate-200 bg-white px-3 py-3.5 text-slate-500 group-hover:bg-slate-50">
+                        {formatWaktu(w.createdAt)}
+                      </td>
+                      <td className="max-w-[220px] border-b border-r border-slate-200 bg-white px-3 py-3.5 group-hover:bg-slate-50">
+                        <span className="block truncate text-slate-500" title={w.catatan ?? ""}>
+                          {w.catatan || "-"}
+                        </span>
+                      </td>
+                      <td className="sticky right-0 z-10 whitespace-nowrap border-b border-l border-slate-200 bg-white px-3 py-3.5 text-right group-hover:bg-slate-50">
+                        <IconAction
+                          href={`/admin/pendaftaran/${w.pendaftaranId}`}
+                          icon={Eye}
+                          label="Detail"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : loading ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="h-7 w-7 animate-spin rounded-full border-4 border-slate-200 border-t-[#0052A4]" />
           </div>
@@ -685,8 +956,46 @@ function PendaftaranList() {
                               {text}
                             </span>
                           );
+                        } else if (c.key === "afiliasi") {
+                          content = r.afiliasi ? (
+                            <span className="inline-flex max-w-full items-center gap-1.5 align-middle">
+                              <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                                {r.afiliasi.nama}
+                              </span>
+                              <span className="truncate text-[11px] text-slate-400">
+                                {r.afiliasi.kode}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          );
+                        } else if (c.key === "posisi") {
+                          content = r.posisiKonsultasi ? (
+                            <span className="inline-flex max-w-full items-center gap-1.5 align-middle">
+                              <span className="shrink-0 rounded bg-[#0052A4]/10 px-1.5 py-0.5 text-[11px] font-semibold text-[#0052A4]">
+                                {r.posisiKonsultasi.toUpperCase()}
+                              </span>
+                              <span className="truncate">
+                                {posisiLabel(r.posisiKonsultasi)}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">Belum</span>
+                          );
+                        } else if (c.key === "jadwal") {
+                          content = r.jadwal ? (
+                            <span className="inline-flex max-w-full flex-col items-start gap-0.5 align-middle leading-tight">
+                              <span className="truncate font-medium text-slate-700">{text}</span>
+                              <span className="truncate text-[11px] text-slate-400">
+                                {STATUS_LABEL[r.jadwal.status]?.label ?? r.jadwal.status}
+                                {r.jadwal.catatan ? ` • ${r.jadwal.catatan}` : ""}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">Belum</span>
+                          );
                         } else if (c.key === "meeting") {
-                          content = r.konsultasiAt ? (
+                          content = r.konsultasiAt && r.posisiKonsultasi ? (
                             <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 align-middle text-[11px] font-semibold text-emerald-700">
                               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                               <span className="truncate">{text}</span>
@@ -744,7 +1053,14 @@ function PendaftaranList() {
         )}
 
         {/* Footer / paginasi */}
-        {!loading && !error && (
+        {tab === "waiting" ? (
+          !loadingWaiting && (
+            <div className="flex h-[57px] shrink-0 items-center border-t border-slate-100 px-4 text-xs text-slate-500">
+              {filteredWaiting.length} peserta di waitinglist
+              {(search || eventFilter) && ` dari ${waiting.length} total`}
+            </div>
+          )
+        ) : !loading && !error && (
           <div className="flex h-[57px] shrink-0 flex-col items-center justify-between gap-2 border-t border-slate-100 px-4 text-xs text-slate-500 sm:flex-row">
             <span>
               {total === 0

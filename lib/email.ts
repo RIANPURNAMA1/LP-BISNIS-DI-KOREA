@@ -414,9 +414,9 @@ export async function notifyJadwalKonsultasi(p: {
     await kirimEmailTransaksional({
       nama: p.nama,
       email: p.email,
-      subjek: "Jadwal konsultasi lanjutan Anda sudah kami terima",
-      judul: "Jadwal Konsultasi Diterima",
-      pesan: `Jadwal konsultasi lanjutan Anda pada ${p.tanggal} pukul ${p.jam} WIB sudah kami terima. Admin akan menghubungi Anda untuk informasi selanjutnya.`,
+      subjek: "Jadwal konsultasi lanjutan Anda dikonfirmasi",
+      judul: "Jadwal Konsultasi Dikonfirmasi",
+      pesan: `Jadwal konsultasi lanjutan Anda pada ${p.tanggal} pukul ${p.jam} WIB sudah dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya.`,
       ctaLabel: "Lihat halaman peserta",
       ctaHref: "/peserta",
       label: "jadwal konsultasi",

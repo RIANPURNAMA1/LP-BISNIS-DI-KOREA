@@ -11,6 +11,20 @@ export function formatTanggal(tanggal: string, withDay = true): string {
   });
 }
 
+/** "2026-11-24" + "10:00" → "24 Nov 2026 · 10:00 WIB". */
+export function formatJadwal(tanggal: string, jam: string, withDay = false): string {
+  return `${formatTanggal(tanggal, withDay)} · ${jam} WIB`;
+}
+
+/** Ambil jadwal aktif; jika tidak ada, ambil jadwal terakhir (misalnya yang dibatalkan). */
+export function pilihJadwal<T extends { status: string }>(list: T[]): T | null {
+  return (
+    list.find((j) => j.status === "menunggu" || j.status === "dikonfirmasi") ??
+    list[0] ??
+    null
+  );
+}
+
 export const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
   menunggu: { label: "Menunggu konfirmasi", tone: "bg-amber-50 text-amber-700" },
   dikonfirmasi: { label: "Dikonfirmasi", tone: "bg-emerald-50 text-emerald-700" },

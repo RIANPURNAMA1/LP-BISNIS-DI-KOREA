@@ -83,7 +83,7 @@ export default function DaftarAfiliasi() {
         redirect: false,
       });
       if (login?.error) {
-        router.push("/afiliasi/login");
+        router.push("/login?callbackUrl=%2Fafiliasi%2Fdashboard");
         return;
       }
       router.replace("/afiliasi/dashboard");
@@ -249,7 +249,7 @@ export default function DaftarAfiliasi() {
             {errors.email?.includes("sudah terdaftar") && (
               <p className="flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">
                 <CheckCircle2 className="h-3.5 w-3.5" /> Sudah punya akun?{" "}
-                <Link href="/afiliasi/login" className="font-semibold text-[#0052A4]">
+                <Link href="/login?callbackUrl=%2Fafiliasi%2Fdashboard" className="font-semibold text-[#0052A4]">
                   Login di sini
                 </Link>
               </p>
@@ -257,7 +257,7 @@ export default function DaftarAfiliasi() {
             {!errors.email && (
               <p className="text-center text-xs text-slate-500">
                 Sudah terdaftar?{" "}
-                <Link href="/afiliasi/login" className="font-semibold text-[#0052A4]">
+                <Link href="/login?callbackUrl=%2Fafiliasi%2Fdashboard" className="font-semibold text-[#0052A4]">
                   Login affiliate
                 </Link>
               </p>

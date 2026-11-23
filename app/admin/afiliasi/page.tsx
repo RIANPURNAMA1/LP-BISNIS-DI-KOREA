@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  Copy,
+  ExternalLink,
   Eye,
   Gift,
+  Link2,
   Loader2,
   RefreshCw,
   Search,
@@ -104,6 +107,9 @@ export default function AdminAfiliasi() {
   const [bukti, setBukti] = useState<File | null>(null);
   const [prosesLoading, setProsesLoading] = useState(false);
   const [pesan, setPesan] = useState("");
+  const [daftarUrl, setDaftarUrl] = useState("/afiliasi");
+  const [linkTersalin, setLinkTersalin] = useState(false);
+  const [linkPesan, setLinkPesan] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const muat = useCallback(async () => {
@@ -135,6 +141,21 @@ export default function AdminAfiliasi() {
     const t = setTimeout(() => void muat(), 250);
     return () => clearTimeout(t);
   }, [muat]);
+
+  useEffect(() => {
+    setDaftarUrl(`${window.location.origin}/afiliasi`);
+  }, []);
+
+  async function salinDaftarUrl() {
+    try {
+      await navigator.clipboard.writeText(daftarUrl);
+      setLinkPesan("");
+      setLinkTersalin(true);
+      setTimeout(() => setLinkTersalin(false), 2000);
+    } catch {
+      setLinkPesan("Salin tautan manual dari kolom yang tersedia.");
+    }
+  }
 
   async function bukaDetail(id: number) {
     setDetailLoading(true);
@@ -213,6 +234,51 @@ export default function AdminAfiliasi() {
           </div>
         ))}
       </div>
+
+      {/* Tautan pendaftaran affiliate: publik, bisa disalin admin untuk dibagikan. */}
+      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#0052A4]/10 text-[#0052A4]">
+              <Link2 className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Tautan daftar affiliate</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Bagikan ke calon affiliate. Halaman pendaftaran bersifat publik dan langsung aktif tanpa persetujuan admin.
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Saat admin sedang login, buka tautan ini di browser/incognito yang belum login agar tidak dialihkan ke dashboard.
+              </p>
+            </div>
+          </div>
+          <a
+            href="/afiliasi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Buka halaman
+          </a>
+        </div>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            aria-label="Tautan daftar affiliate"
+            readOnly
+            value={daftarUrl}
+            className={`${inputCls} font-mono text-xs`}
+            onFocus={(e) => e.target.select()}
+          />
+          <button
+            onClick={() => void salinDaftarUrl()}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#004080]"
+          >
+            {linkTersalin ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {linkTersalin ? "Tersalin" : "Salin"}
+          </button>
+        </div>
+        {linkPesan && <p className="mt-1 text-xs text-amber-600">{linkPesan}</p>}
+      </section>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200">
         {(["afiliasi", "pencairan"] as const).map((t) => (

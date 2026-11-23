@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pengaturan Grup WhatsApp",
+  title: "Pengaturan",
 };
 
 export default function PengaturanLayout({

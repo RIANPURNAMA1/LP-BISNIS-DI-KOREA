@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import EventSelect from "@/components/EventSelect";
 import ResetPassword from "@/components/ResetPassword";
+import { formatJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
+import { afiliasiLabel, type AfiliasiInfo } from "@/lib/afiliasi-info";
+import { formatPosisi } from "@/lib/posisi";
 import {
   AlertCircle,
   ArrowLeft,
@@ -49,6 +52,17 @@ type Pendaftar = {
   created_at?: string;
   updatedAt?: string;
   updated_at?: string;
+  konsultasiAt?: string | null;
+  posisiKonsultasi?: string | null;
+  ijazahS1?: boolean;
+  afiliasi?: AfiliasiInfo;
+  jadwal?: {
+    id: number;
+    tanggal: string;
+    jam: string;
+    status: string;
+    catatan: string | null;
+  } | null;
 };
 
 /* ------------------------------------------------------------------ */
@@ -81,6 +95,20 @@ function getInitials(name: string) {
 function toWaNumber(raw: string) {
   const digits = raw.replace(/[^0-9]/g, "");
   return digits.startsWith("0") ? "62" + digits.slice(1) : digits;
+}
+
+function formatWaktu(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  return isNaN(d.getTime())
+    ? ""
+    : d.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 }
 
 /* ------------------------------------------------------------------ */
@@ -475,6 +503,58 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
             </div>
           </SectionCard>
 
+          <SectionCard icon={CalendarClock} title="Konsultasi Lanjutan">
+            <dl>
+              <InfoRow
+                label="Waktu Submit"
+                value={
+                  data.posisiKonsultasi
+                    ? formatWaktu(data.konsultasiAt) || "-"
+                    : "Belum submit"
+                }
+              />
+              <InfoRow
+                label="Posisi"
+                value={
+                  data.posisiKonsultasi ? (
+                    <Badge tone="blue">{formatPosisi(data.posisiKonsultasi)}</Badge>
+                  ) : null
+                }
+              />
+              {data.posisiKonsultasi === "D" && (
+                <InfoRow
+                  label="Ijazah S1"
+                  value={
+                    <Badge tone={data.ijazahS1 ? "green" : "gray"}>
+                      {data.ijazahS1 ? "Ya" : "Tidak"}
+                    </Badge>
+                  }
+                />
+              )}
+              <InfoRow
+                label="Jadwal"
+                value={
+                  data.jadwal
+                    ? formatJadwal(data.jadwal.tanggal, data.jadwal.jam)
+                    : "Belum pilih jadwal"
+                }
+              />
+              <InfoRow
+                label="Status Jadwal"
+                value={
+                  data.jadwal ? (
+                    <Badge tone={data.jadwal.status === "dikonfirmasi" ? "green" : "gray"}>
+                      {STATUS_LABEL[data.jadwal.status]?.label ?? data.jadwal.status}
+                    </Badge>
+                  ) : null
+                }
+              />
+              {data.jadwal?.catatan && (
+                <InfoRow label="Catatan" value={data.jadwal.catatan} />
+              )}
+            </dl>
+          </SectionCard>
+
           <SectionCard icon={CalendarCheck} title="Status Event">
             <div className="py-4">
               <EventSelect
@@ -493,6 +573,16 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
                 <p className="text-sm text-gray-300">—</p>
               )}
             </div>
+            <InfoRow
+              label="Afiliasi"
+              value={
+                data.afiliasi ? (
+                  <Badge tone="blue">{afiliasiLabel(data.afiliasi)}</Badge>
+                ) : (
+                  <span className="text-sm text-gray-400">Tidak ada</span>
+                )
+              }
+            />
           </SectionCard>
         </div>
       </div>

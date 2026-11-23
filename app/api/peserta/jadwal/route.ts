@@ -102,6 +102,8 @@ export async function POST(req: NextRequest) {
             tanggal,
             jam,
             catatan: catatan.trim() || null,
+            // Peserta langsung masuk jadwal; tidak perlu verifikasi admin.
+            status: "dikonfirmasi",
             slotKey: slotSeatKey(tanggal, jam, nomor),
           },
           include: { pendaftaran: { select: { nama: true, whatsapp: true } } },

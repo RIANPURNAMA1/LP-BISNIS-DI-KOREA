@@ -28,7 +28,8 @@ function recordFail(key: string) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
-    // Login admin
+    // Login tunggal di /login: admin, affiliate, dan peserta memakai satu form.
+    // Provider "peserta" dan "afiliasi" tetap ada untuk auto-login setelah daftar.
     Credentials({
       id: "credentials",
       name: "credentials",
@@ -40,13 +41,69 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         const email = String(credentials.email).trim().toLowerCase();
-        const user = await prisma.adminUser.findUnique({ where: { email } });
-        if (!user) return null;
+        const password = String(credentials.password);
 
-        const isValid = await bcrypt.compare(String(credentials.password), user.password);
-        if (!isValid) return null;
+        // 1) Admin
+        const admin = await prisma.adminUser.findUnique({ where: { email } });
+        if (admin && (await bcrypt.compare(password, admin.password))) {
+          return {
+            id: String(admin.id),
+            email: admin.email,
+            name: admin.name,
+            role: "admin",
+          };
+        }
 
-        return { id: String(user.id), email: user.email, name: user.name, role: "admin" };
+        // 2) Affiliate (akun terpisah dari peserta)
+        const afiliasiKey = `afiliasi:${email}`;
+        if (!isLocked(afiliasiKey)) {
+          const affiliate = await prisma.affiliate.findUnique({ where: { email } });
+          const ok =
+            !!affiliate?.aktif &&
+            !!affiliate.password &&
+            (await bcrypt.compare(password, affiliate.password));
+          if (ok && affiliate) {
+            fails.delete(afiliasiKey);
+            await prisma.affiliate.update({
+              where: { id: affiliate.id },
+              data: { lastLoginAt: new Date() },
+            });
+            return {
+              id: String(affiliate.id),
+              email: affiliate.email,
+              name: affiliate.nama,
+              role: "afiliasi",
+            };
+          }
+          // Catat gagal hanya jika akun affiliate memang ada, agar percobaan
+          // login peserta tidak mengunci akun affiliate dengan email sama.
+          if (affiliate) recordFail(afiliasiKey);
+        }
+
+        // 3) Peserta
+        if (isLocked(email)) return null;
+        const peserta = await prisma.pendaftaran.findFirst({ where: { email } });
+        const pesertaOk =
+          !!peserta?.password && (await bcrypt.compare(password, peserta.password));
+        if (!pesertaOk || !peserta) {
+          if (peserta) recordFail(email);
+          return null;
+        }
+
+        fails.delete(email);
+        await prisma.pendaftaran.update({
+          where: { id: peserta.id },
+          data: { lastLoginAt: new Date() },
+        });
+        return {
+          id: String(peserta.id),
+          email: peserta.email,
+          name: peserta.nama,
+          role: "peserta",
+          // Info untuk memilih tujuan setelah login. Akses tetap diverifikasi
+          // ulang dari DB oleh requirePesertaAktif().
+          aksesAktif: !!peserta.aksesAktifAt,
+        };
       },
     }),
     // Login peserta (pendaftar)

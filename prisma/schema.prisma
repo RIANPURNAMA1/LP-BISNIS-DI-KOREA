@@ -113,8 +113,9 @@ model JadwalSesi {
   tanggal       String      @db.VarChar(10)
   jam           String      @db.VarChar(5)
   catatan       String?     @db.VarChar(500)
-  // menunggu | dikonfirmasi | selesai | batal | ditolak
-  status        String      @default("menunggu") @db.VarChar(20)
+  // dikonfirmasi | selesai | batal | ditolak
+  // Jadwal yang dipilih peserta langsung aktif, tanpa verifikasi admin.
+  status        String      @default("dikonfirmasi") @db.VarChar(20)
   slotKey       String?     @unique @map("slot_key") @db.VarChar(20)
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")

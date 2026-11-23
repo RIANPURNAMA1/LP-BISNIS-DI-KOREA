@@ -5,6 +5,7 @@ import prisma from "@/lib/db";
 import { eventWhere } from "@/lib/event";
 import { notifyPendaftaranBaru } from "@/lib/wa-notif";
 import { notifyPesertaTerdaftar } from "@/lib/email";
+import { pilihJadwal } from "@/lib/jadwal-format";
 import {
   pendaftaranSchema,
   listQuerySchema,
@@ -155,15 +156,23 @@ export async function GET(req: NextRequest) {
               { nama: { contains: query.search } },
               { email: { contains: query.search } },
               { whatsapp: { contains: query.search } },
+              { referral: { affiliate: { nama: { contains: query.search } } } },
+              { referral: { kode: { contains: query.search } } },
             ],
           }
         : {}),
       ...eventWhere(query.event),
     };
-    const meetingWhere = { ...baseWhere, konsultasiAt: { not: null } };
+    // Meeting lanjutan = peserta yang sudah submit konfirmasi(posisi A–D).
+    // Data lama yang hanya punya konsultasiAt dari checkout tidak dihitung.
+    const meetingWhere = {
+      ...baseWhere,
+      konsultasiAt: { not: null },
+      posisiKonsultasi: { not: null },
+    };
     const where = query.meeting === "1" ? meetingWhere : baseWhere;
 
-    const [data, totalSemua, totalMeeting] = await Promise.all([
+    const [rows, totalSemua, totalMeeting] = await Promise.all([
       prisma.pendaftaran.findMany({
         omit: { password: true },
         where,
@@ -176,9 +185,56 @@ export async function GET(req: NextRequest) {
     ]);
     const total = query.meeting === "1" ? totalMeeting : totalSemua;
 
+    // Ambil jadwal milik baris yang tampil untuk ditampilkan di kolom admin.
+    const jadwalRows = await prisma.jadwalSesi.findMany({
+      where: { pendaftaranId: { in: rows.map((r) => r.id) } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        pendaftaranId: true,
+        tanggal: true,
+        jam: true,
+        status: true,
+        catatan: true,
+      },
+    });
+    const jadwalMap = new Map<number, typeof jadwalRows>();
+    for (const j of jadwalRows) {
+      const list = jadwalMap.get(j.pendaftaranId) ?? [];
+      list.push(j);
+      jadwalMap.set(j.pendaftaranId, list);
+    }
+
+    // Atribusi affiliate: satu pendaftaran maksimal satu affiliate.
+    const referralRows = await prisma.referral.findMany({
+      where: { pendaftaranId: { in: rows.map((r) => r.id) } },
+      select: {
+        pendaftaranId: true,
+        status: true,
+        affiliate: { select: { id: true, nama: true, kode: true } },
+      },
+    });
+    const afiliasiMap = new Map(
+      referralRows.map((r) => [
+        r.pendaftaranId,
+        {
+          id: r.affiliate.id,
+          nama: r.affiliate.nama,
+          kode: r.affiliate.kode,
+          status: r.status,
+        },
+      ])
+    );
+
     return NextResponse.json({
       success: true,
-      data: data.map((d) => ({ ...d, tujuan: parseTujuan(d.tujuan) })),
+      data: rows.map((d) => ({
+        ...d,
+        tujuan: parseTujuan(d.tujuan),
+        // Jadwal aktif lebih diprioritaskan daripada jadwal lama yang dibatalkan.
+        jadwal: pilihJadwal(jadwalMap.get(d.id) ?? []),
+        afiliasi: afiliasiMap.get(d.id) ?? null,
+      })),
       total,
       totalSemua,
       totalMeeting,

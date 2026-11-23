@@ -19,11 +19,11 @@ export default auth((req) => {
   const isAdminLogin = path === "/admin/login";
   const isPesertaArea = path.startsWith("/peserta");
   const isPembayaranArea = path.startsWith("/pembayaran");
-  const isPesertaLogin = path === "/login";
+  const isLogin = path === "/login";
   const isAfiliasiArea = path.startsWith("/afiliasi");
   const isAfiliasiLogin = path === "/afiliasi/login";
-  // Form daftar & login affiliate boleh diakses tanpa sesi.
-  const isAfiliasiPublik = path === "/afiliasi" || isAfiliasiLogin;
+  // Form daftar affiliate boleh diakses tanpa sesi. Login memakai /login.
+  const isAfiliasiPublik = path === "/afiliasi";
 
   const go = (to: string, withCallback = false) => {
     const url = new URL(to, nextUrl.origin);
@@ -35,12 +35,12 @@ export default auth((req) => {
   if (!role) {
     if (isAdminArea && !isAdminLogin) return go("/login", true);
     if (isPesertaArea || isPembayaranArea) return go("/login", true);
-    if (isAfiliasiArea && !isAfiliasiPublik) return go("/afiliasi/login", true);
+    if (isAfiliasiArea && !isAfiliasiPublik) return go("/login", true);
     return undefined;
   }
 
   // Sudah login: halaman login/form daftar mengarah ke beranda sesuai role
-  if (isAdminLogin || isPesertaLogin || isAfiliasiPublik) return go(HOME[role]);
+  if (isAdminLogin || isLogin || isAfiliasiPublik || isAfiliasiLogin) return go(HOME[role]);
 
   // Role tidak boleh masuk area role lain
   if (isAdminArea && role !== "admin") return go(HOME[role]);

@@ -123,7 +123,7 @@ export default function DashboardAfiliasi() {
     try {
       const res = await fetch("/api/afiliasi/dashboard", { cache: "no-store" });
       if (res.status === 401) {
-        window.location.href = "/afiliasi/login";
+        window.location.href = "/login?callbackUrl=%2Fafiliasi%2Fdashboard";
         return;
       }
       const json = await res.json();
@@ -241,7 +241,7 @@ export default function DashboardAfiliasi() {
             <RefreshCw className="h-4 w-4" />
           </button>
           <button
-            onClick={() => void signOut({ callbackUrl: "/afiliasi/login" })}
+            onClick={() => void signOut({ callbackUrl: "/login" })}
             className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
           >
             <LogOut className="h-3.5 w-3.5" /> Keluar

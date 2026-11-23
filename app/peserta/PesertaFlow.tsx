@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import VideoWajib from "./VideoWajib";
 import JadwalSesi from "./JadwalSesi";
+import { POSISI_OPSI } from "@/lib/posisi";
 
 export type Grup = { nama: string; deskripsi: string; url: string }[];
 
@@ -32,14 +33,6 @@ const WILAYAH_LABEL: Record<string, string> = {
   luar_jabodetabek: "Luar Jabodetabek",
   luar_negeri: "Luar Negeri",
 };
-
-/** Opsi posisi peserta. Teks ini bisa diganti di satu tempat bila ada revisi redaksi. */
-const POSISI_OPSI = [
-  { kode: "A", label: "Belum punya usaha / baru mau mulai" },
-  { kode: "B", label: "Sudah punya usaha kecil" },
-  { kode: "C", label: "Sudah jalankan bisnis & ingin ekspansi ke Korea" },
-  { kode: "D", label: "Lulusan S1 (wajib centang ijazah S1)" },
-] as const;
 
 const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0052A4] focus-visible:ring-offset-2";
@@ -718,7 +711,7 @@ export default function PesertaFlow({
         <Modal title="Selamat!" onClose={() => setPopup(null)}>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {jenisSelesai === "jadwal"
-              ? "Jadwal konsultasi lanjutan Anda sudah kami terima. Admin akan menghubungi Anda untuk informasi selanjutnya."
+              ? "Jadwal konsultasi lanjutan Anda sudah dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya."
               : "Data Anda sudah masuk waitinglist. Admin akan menghubungi Anda untuk informasi selanjutnya."}
           </p>
           <button

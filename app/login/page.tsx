@@ -19,39 +19,47 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      // Coba sebagai admin terlebih dahulu (provider "credentials"),
-      // lalu sebagai peserta (provider "peserta") jika bukan admin.
-      const adminResult = await signIn("credentials", {
+      // Satu form untuk semua peran: admin, affiliate, dan peserta.
+      const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
-      const isAdmin = !!adminResult?.ok && !adminResult?.error;
-
-      if (!isAdmin) {
-        const pesertaResult = await signIn("peserta", {
-          email,
-          password,
-          redirect: false,
-        });
-        if (!pesertaResult?.ok || pesertaResult?.error) {
-          setError("Email atau password salah.");
-          return;
-        }
+      if (!result?.ok || result.error) {
+        setError("Email atau password salah.");
+        return;
       }
 
-      const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+      const rawCallback = new URLSearchParams(window.location.search).get("callbackUrl");
+      // URL lama /afiliasi/login kini memakai /login, arahkan ke dashboard-nya.
+      const callbackUrl =
+        rawCallback && rawCallback.startsWith("/afiliasi/login")
+          ? "/afiliasi/dashboard"
+          : rawCallback;
       const session = await getSession();
+      const user = session?.user as
+        | { role?: string; aksesAktif?: boolean }
+        | undefined;
+      const role = user?.role;
       // Diambil dari JWT saat login; bukan satu-satunya otoritas akses.
-      const aksesAktif = !!(session?.user as { aksesAktif?: boolean } | undefined)?.aksesAktif;
+      const aksesAktif = !!user?.aksesAktif;
 
-      const prefix = isAdmin ? "/admin" : "/peserta";
-      // Belum lunas => langsung ke gerbang pembayaran, bukan dashboard.
-      const home = isAdmin ? "/admin" : aksesAktif ? "/peserta" : "/pembayaran";
-      const destination =
-        callbackUrl && callbackUrl.startsWith(prefix) && (isAdmin || aksesAktif)
-          ? callbackUrl
-          : home;
+      const prefix =
+        role === "admin" ? "/admin" : role === "afiliasi" ? "/afiliasi" : "/peserta";
+      // Peserta belum lunas => langsung ke gerbang pembayaran, bukan dashboard.
+      const home =
+        role === "admin"
+          ? "/admin"
+          : role === "afiliasi"
+            ? "/afiliasi/dashboard"
+            : aksesAktif
+              ? "/peserta"
+              : "/pembayaran";
+      const callbackAllowed =
+        callbackUrl &&
+        callbackUrl.startsWith(prefix) &&
+        (role === "admin" || role === "afiliasi" || aksesAktif);
+      const destination = callbackAllowed ? callbackUrl : home;
 
       router.push(destination);
       router.refresh();
@@ -111,7 +119,7 @@ export default function LoginPage() {
           <div className="w-full max-w-[312px] rounded-md border border-[#D9DFF3] bg-white/70 p-5 shadow-sm backdrop-blur-md">
             <h1 className="text-sm font-semibold text-gray-900">Masuk</h1>
             <p className="mt-0.5 text-xs leading-5 text-gray-500">
-              Peserta dan admin masuk dengan email dan password terdaftar.
+              Peserta, admin, dan affiliate masuk dengan email dan password terdaftar.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
@@ -169,6 +177,11 @@ export default function LoginPage() {
               <p>
                 <Link href="/daftar" className="font-medium hover:underline">
                   Buat akun peserta baru
+                </Link>
+              </p>
+              <p>
+                <Link href="/afiliasi" className="font-medium hover:underline">
+                  Daftar sebagai affiliate
                 </Link>
               </p>
               <p className="leading-5 text-gray-500">

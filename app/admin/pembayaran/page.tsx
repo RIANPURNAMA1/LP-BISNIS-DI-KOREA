@@ -245,6 +245,8 @@ export default function AdminPembayaran() {
       setDialog(null);
       setCatatan("");
       await muat();
+      // Sidebar memantau event ini supaya badge "menunggu verifikasi" langsung update.
+      window.dispatchEvent(new Event("pembayaran:berubah"));
     } catch (e) {
       setToast({
         type: "error",

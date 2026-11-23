@@ -14,11 +14,41 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
       include: {
         pendaftaran: {
-          select: { id: true, nama: true, whatsapp: true, email: true },
+          select: {
+            id: true,
+            nama: true,
+            whatsapp: true,
+            email: true,
+            eventStatus: true,
+            referral: {
+              select: {
+                status: true,
+                affiliate: { select: { id: true, nama: true, kode: true } },
+              },
+            },
+          },
         },
       },
     });
-    return NextResponse.json({ success: true, data });
+    const rows = data.map(({ pendaftaran, ...w }) => ({
+      ...w,
+      afiliasi: pendaftaran.referral
+        ? {
+            id: pendaftaran.referral.affiliate.id,
+            nama: pendaftaran.referral.affiliate.nama,
+            kode: pendaftaran.referral.affiliate.kode,
+            status: pendaftaran.referral.status,
+          }
+        : null,
+      pendaftaran: {
+        id: pendaftaran.id,
+        nama: pendaftaran.nama,
+        whatsapp: pendaftaran.whatsapp,
+        email: pendaftaran.email,
+        eventStatus: pendaftaran.eventStatus,
+      },
+    }));
+    return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     console.error("GET /api/admin/waitinglist error:", error);
     return NextResponse.json({ success: false, error: "Terjadi kesalahan server." }, { status: 500 });

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { parseTujuan } from "@/lib/validations";
 import { EVENT_VALUES } from "@/lib/event";
+import { pilihJadwal } from "@/lib/jadwal-format";
 
 async function unauthorized() {
   return NextResponse.json(
@@ -40,9 +41,35 @@ export async function GET(
       );
     }
 
+    const jadwalSesi = await prisma.jadwalSesi.findMany({
+      where: { pendaftaranId: id },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, tanggal: true, jam: true, status: true, catatan: true },
+    });
+
+    const referral = await prisma.referral.findUnique({
+      where: { pendaftaranId: id },
+      select: {
+        status: true,
+        affiliate: { select: { id: true, nama: true, kode: true } },
+      },
+    });
+
     return NextResponse.json({
       success: true,
-      data: { ...data, tujuan: parseTujuan(data.tujuan) },
+      data: {
+        ...data,
+        tujuan: parseTujuan(data.tujuan),
+        jadwal: pilihJadwal(jadwalSesi),
+        afiliasi: referral
+          ? {
+              id: referral.affiliate.id,
+              nama: referral.affiliate.nama,
+              kode: referral.affiliate.kode,
+              status: referral.status,
+            }
+          : null,
+      },
     });
   } catch (error) {
     console.error("GET /api/pendaftaran/[id] error:", error);

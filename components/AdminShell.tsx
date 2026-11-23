@@ -15,7 +15,7 @@ import {
   BellRing,
   Mail,
   Video,
-  MessageCircle,
+  Settings,
   UserCircle2,
   Users,
   ChevronDown,
@@ -32,7 +32,7 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/afiliasi", label: "Afiliasi", icon: Users },
   { href: "/admin/jadwal", label: "Jadwal Konsultasi", icon: CalendarDays },
   { href: "/admin/video", label: "Kelola Video", icon: Video },
-  { href: "/admin/pengaturan", label: "Grup WhatsApp", icon: MessageCircle },
+  { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
   { href: "/admin/notifikasi", label: "Notifikasi WA", icon: BellRing },
   { href: "/admin/email", label: "Notifikasi Email", icon: Mail },
   { href: "/admin/profil", label: "Profil", icon: UserCircle2 },
@@ -73,6 +73,33 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
+  const [pembayaranMenunggu, setPembayaranMenunggu] = useState(0);
+
+  // Badge jumlah pembayaran masuk yang belum diverifikasi.
+  useEffect(() => {
+    let aktif = true;
+    async function muat() {
+      try {
+        const res = await fetch("/api/admin/pembayaran/count", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as { success?: boolean; count?: number };
+        if (aktif && json.success) setPembayaranMenunggu(json.count ?? 0);
+      } catch {
+        // Biarkan badge tetap 0 bila gagal memuat.
+      }
+    }
+    void muat();
+    const timer = window.setInterval(muat, 30_000);
+    window.addEventListener("focus", muat);
+    window.addEventListener("pembayaran:berubah", muat);
+    return () => {
+      aktif = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", muat);
+      window.removeEventListener("pembayaran:berubah", muat);
+    };
+  }, [pathname]);
+
   const itemBase =
     "group relative flex h-11 items-center gap-3 rounded-xl text-sm font-medium transition-colors";
   const itemPad = "px-3 md:justify-center md:px-0";
@@ -125,11 +152,18 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
           const Icon = item.icon;
           const isActive =
             item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+          const badge = item.href === "/admin/pembayaran" ? pembayaranMenunggu : 0;
+          const tipLabel =
+            badge > 0 ? `${item.label} — ${badge} menunggu verifikasi` : item.label;
           return (
-            <Tip key={item.href} label={item.label}>
+            <Tip key={item.href} label={tipLabel}>
               <Link
                 href={item.href}
-                aria-label={item.label}
+                aria-label={
+                  badge > 0
+                    ? `${item.label}, ${badge} pembayaran menunggu verifikasi`
+                    : item.label
+                }
                 className={`${itemBase} ${itemPad} ${
                   isActive
                     ? "bg-[#0052A4]/10 text-[#0052A4]"
@@ -141,6 +175,11 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
                 )}
                 <Icon className="h-[19px] w-[19px] shrink-0" />
                 <span className="truncate md:hidden">{item.label}</span>
+                {badge > 0 && (
+                  <span className="absolute right-3 top-1/2 grid h-5 min-w-5 -translate-y-1/2 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white shadow-sm md:right-0.5 md:top-0.5 md:h-4 md:min-w-4 md:translate-y-0">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
               </Link>
             </Tip>
           );

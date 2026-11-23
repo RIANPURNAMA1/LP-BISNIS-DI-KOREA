@@ -184,33 +184,14 @@ export default function AdminJadwal() {
     }
   }
 
-  async function ubahStatus(id: number, status: string) {
-    setSaving(true);
-    setMsg(null);
-    try {
-      const res = await fetch(`/api/admin/jadwal/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error || "Status belum berubah.");
-      setMsg({ ok: true, text: "Status jadwal diperbarui." });
-      await load();
-    } catch (e) {
-      setMsg({ ok: false, text: e instanceof Error ? e.message : "Status belum berubah." });
-    } finally {
-      setSaving(false);
-    }
-  }
-
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-xl font-bold text-slate-900">Jadwal Konsultasi Lanjutan</h1>
         <p className="mt-1 text-sm text-slate-600">
           Tetapkan slot jadwal fix untuk peserta. Setiap slot maksimal diisi <b>5 peserta</b>.
-          Peserta yang melihat semua slot penuh akan diarahkan ke waitinglist.
+          Peserta yang memilih slot langsung tercatat dan <b>dikonfirmasi</b>, tanpa perlu diverifikasi
+          admin. Jika semua slot penuh, peserta diarahkan ke waitinglist.
         </p>
       </header>
 
@@ -418,18 +399,9 @@ export default function AdminJadwal() {
                                       </p>
                                     )}
                                   </div>
-                                  <select
-                                    value={p.status}
-                                    onChange={(e) => ubahStatus(p.id, e.target.value)}
-                                    disabled={saving}
-                                    className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 focus:border-[#0052A4] focus:outline-none"
-                                  >
-                                    {Object.entries(STATUS_LABEL).map(([value, v]) => (
-                                      <option key={value} value={value}>
-                                        {v.label}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                    {STATUS_LABEL[p.status]?.label ?? p.status}
+                                  </span>
                                 </li>
                               ))}
                             </ul>
