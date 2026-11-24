@@ -179,8 +179,10 @@ export default function LoginPage() {
                   Buat akun peserta baru
                 </Link>
               </p>
-              <p className="leading-5 text-gray-500">
-                Lupa password? Hubungi admin melalui grup WhatsApp.
+              <p>
+                <Link href="/lupa-password" className="font-medium hover:underline">
+                  Lupa password?
+                </Link>
               </p>
             </div>
           </div>

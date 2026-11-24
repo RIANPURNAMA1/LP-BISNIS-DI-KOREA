@@ -1,12 +1,12 @@
 "use client";
 
-import { EVENT_OPTIONS, eventLabel } from "@/lib/event";
 import { formatJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
-import { afiliasiLabel, type AfiliasiInfo } from "@/lib/afiliasi-info";
-import { formatPosisi, posisiLabel } from "@/lib/posisi";
+import { eventLabel } from "@/lib/event";
 import EventSelect from "@/components/EventSelect";
+import { afiliasiLabel, type AfiliasiInfo } from "@/lib/afiliasi-info";
+import { formatPosisi, POSISI_OPSI, posisiLabel } from "@/lib/posisi";
 import { Suspense, useEffect, useRef, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Download,
@@ -81,7 +81,14 @@ type WaitingRow = {
   status: string;
   createdAt: string;
   afiliasi?: AfiliasiInfo;
-  pendaftaran: { id: number; nama: string; whatsapp: string; email: string; eventStatus: string };
+  pendaftaran: {
+    id: number;
+    nama: string;
+    whatsapp: string;
+    email: string;
+    eventStatus: string;
+    posisiKonsultasi: string | null;
+  };
 };
 
 type WaitingResp = { success: boolean; data: WaitingRow[] };
@@ -186,7 +193,7 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
     get: (r) => (r.provinsi === "Luar Negeri" ? r.desa : r.kabupaten) ?? "",
   },
   { key: "status", label: "Pekerjaan", width: 130, get: (r) => r.status ?? "" },
-  { key: "event", label: "Status Event", width: 170, get: (r) => eventLabel(r.eventStatus) },
+  { key: "event", label: "Status Join Program", width: 170, get: (r) => eventLabel(r.eventStatus) },
   { key: "ide", label: "Ide Bisnis", width: 220, get: (r) => r.ide ?? "" },
   { key: "pendapatan", label: "Personal Income", width: 150, get: (r) => r.pendapatan ?? "" },
   {
@@ -212,7 +219,7 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
   { key: "jadwal", label: "Jadwal Konsultasi", width: 170, get: formatJadwalRow },
   {
     key: "meeting",
-    label: "Meeting Lanjutan",
+    label: "Konsultasi Lanjutan",
     width: 150,
     get: formatMeeting,
   },
@@ -228,8 +235,13 @@ export default function PendaftaranPage() {
 
 function PendaftaranList() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const urlQuery = searchParams.get("q") ?? "";
   const urlEvent = searchParams.get("event") ?? "";
+  // Kategori jadi satu-satunya sumber kebenaran lewat URL, supaya pilihan select
+  // tidak bisa beda dengan filter yang benar-benar dikirim ke API.
+  const kodeKategori = (searchParams.get("kategori") ?? "").trim().toUpperCase();
+  const kategoriFilter = POSISI_OPSI.some((o) => o.kode === kodeKategori) ? kodeKategori : "";
   const [data, setData] = useState<PendaftarRow[]>([]);
   const [total, setTotal] = useState(0);
   const [totalSemua, setTotalSemua] = useState(0);
@@ -247,8 +259,6 @@ function PendaftaranList() {
   const [exporting, setExporting] = useState<"csv" | "excel" | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
-
-  const [eventFilter, setEventFilter] = useState("");
 
   // Jumlah baris per halaman = jumlah baris yang muat penuh di tinggi tabel layar ini.
   // Halaman baru (pagination) baru muncul jika data lebih banyak dari itu.
@@ -289,7 +299,9 @@ function PendaftaranList() {
       order: "desc",
     });
     if (search) params.set("search", search);
-    if (eventFilter) params.set("event", eventFilter);
+    if (kategoriFilter) params.set("kategori", kategoriFilter);
+    // Filter event dari link dashboard tetap dihormati walau tidak ada UI-nya.
+    if (urlEvent) params.set("event", urlEvent);
     if (tab === "meeting") params.set("meeting", "1");
 
     fetch(`/api/pendaftaran?${params}`)
@@ -307,7 +319,7 @@ function PendaftaranList() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [page, search, eventFilter, tab, limit]);
+  }, [page, search, kategoriFilter, urlEvent, tab, limit]);
 
   useEffect(() => {
     fetchData();
@@ -331,9 +343,15 @@ function PendaftaranList() {
   }, [tab, fetchWaiting]);
 
   const filteredWaiting = waiting.filter((w) => {
-    if (eventFilter) {
+    if (kategoriFilter) {
+      // Pakai field posisi yang memang ditampilkan di tabel waitinglist;
+      // fallback ke data pendaftaran untuk baris lama.
+      const posisi = w.posisi ?? w.pendaftaran.posisiKonsultasi ?? "";
+      if (posisi.trim().toUpperCase() !== kategoriFilter) return false;
+    }
+    if (urlEvent) {
       const event = w.pendaftaran.eventStatus || "belum";
-      if (event !== eventFilter) return false;
+      if (event !== urlEvent) return false;
     }
     const q = search.trim().toLowerCase();
     if (!q) return true;
@@ -354,11 +372,14 @@ function PendaftaranList() {
     setPage(1);
   }, [urlQuery]);
 
-  // Filter event dari link (mis. dari dashboard: ?event=webinar)
-  useEffect(() => {
-    setEventFilter(urlEvent);
+  // Event dari dashboard (?event=) tetap dipakai sebagai filter tambahan.
+  function pilihKategori(kode: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (kode) params.set("kategori", kode);
+    else params.delete("kategori");
     setPage(1);
-  }, [urlEvent]);
+    router.replace(`/admin/pendaftaran?${params.toString()}`, { scroll: false });
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -418,9 +439,9 @@ function PendaftaranList() {
       "Sumber Informasi",
       "Afiliasi",
       "Tanggal Daftar",
-      "Status Event",
+      "Status Join Program",
       "Video Selesai",
-      "Meeting Lanjutan",
+      "Konsultasi Lanjutan",
       "Posisi Konsultasi",
       "Jadwal Konsultasi",
       "Status Jadwal",
@@ -488,7 +509,8 @@ function PendaftaranList() {
         order: "desc",
       });
       if (search) params.set("search", search);
-      if (eventFilter) params.set("event", eventFilter);
+      if (kategoriFilter) params.set("kategori", kategoriFilter);
+      if (urlEvent) params.set("event", urlEvent);
       if (tab === "meeting") params.set("meeting", "1");
 
       const res = await fetch(`/api/pendaftaran?${params}`);
@@ -528,7 +550,8 @@ function PendaftaranList() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (eventFilter) params.set("event", eventFilter);
+      if (kategoriFilter) params.set("kategori", kategoriFilter);
+      if (urlEvent) params.set("event", urlEvent);
       if (tab === "meeting") params.set("meeting", "1");
 
       const res = await fetch(`/api/pendaftaran/export?${params}`);
@@ -595,7 +618,7 @@ function PendaftaranList() {
           }`}
         >
           <MessagesSquare className="h-4 w-4" />
-          Meeting lanjutan
+          Konsultasi lanjutan
           <span
             className={`rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${
               totalMeeting > 0 ? "bg-emerald-600" : "bg-slate-400"
@@ -671,25 +694,22 @@ function PendaftaranList() {
             </button>
           </form>
 
-          <div className="relative sm:mr-auto">
+          <div className="relative w-full sm:mr-auto sm:w-[19rem]">
             <select
-              value={eventFilter}
-              onChange={(e) => {
-                setPage(1);
-                setEventFilter(e.target.value);
-              }}
-              aria-label="Filter status event"
-              className={`h-11 cursor-pointer appearance-none rounded-full border bg-white py-0 pl-4 pr-9 text-sm font-medium shadow-none outline-none transition-colors focus:ring-0 ${
-                eventFilter
+              value={kategoriFilter}
+              onChange={(e) => pilihKategori(e.target.value)}
+              autoComplete="off"
+              aria-label="Filter kategori"
+              className={`h-11 w-full cursor-pointer appearance-none truncate rounded-full border bg-white py-0 pl-4 pr-9 text-sm font-medium shadow-none outline-none transition-colors focus:ring-0 ${
+                kategoriFilter
                   ? "border-[#0052A4]/40 text-[#0052A4]"
                   : "border-slate-200 text-slate-600"
               }`}
             >
-              <option value="">Semua event</option>
-              <option value="belum">Belum ikut</option>
-              {EVENT_OPTIONS.filter((o) => o.value).map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
+              <option value="">Semua kategori</option>
+              {POSISI_OPSI.map((o) => (
+                <option key={o.kode} value={o.kode}>
+                  {formatPosisi(o.kode)}
                 </option>
               ))}
             </select>
@@ -746,7 +766,7 @@ function PendaftaranList() {
             <div className="flex flex-1 flex-col items-center justify-center px-5 py-16 text-center">
               <Clock className="h-8 w-8 text-slate-300" />
               <p className="mt-3 text-sm text-slate-500">
-                {search || eventFilter
+                {search || kategoriFilter || urlEvent
                   ? "Tidak ada peserta waitinglist yang cocok."
                   : "Belum ada peserta di waitinglist."}
               </p>
@@ -1071,7 +1091,7 @@ function PendaftaranList() {
           !loadingWaiting && (
             <div className="flex h-[57px] shrink-0 items-center border-t border-slate-100 px-4 text-xs text-slate-500">
               {filteredWaiting.length} peserta di waitinglist
-              {(search || eventFilter) && ` dari ${waiting.length} total`}
+              {(search || kategoriFilter || urlEvent) && ` dari ${waiting.length} total`}
             </div>
           )
         ) : !loading && !error && (

@@ -6,16 +6,42 @@ export const NAMA_LAYANAN = "Konsultasi Online";
 export const METODE_BAYAR = ["bank"] as const;
 export type MetodeBayar = (typeof METODE_BAYAR)[number];
 
-export const BANK_OPTIONS = [
+export const BANK_LIST = [
   "BCA",
   "Mandiri",
   "BNI",
   "BRI",
+  "BTN",
   "CIMB Niaga",
   "Permata",
+  "Danamon",
+  "OCBC",
+  "Maybank",
+  "Panin",
+  "Mega",
+  "BTPN / Jenius",
+  "Bank Jago",
+  "SeaBank",
+  "blu by BCA Digital",
+  "Allo Bank",
+  "Neo Commerce (BNC)",
   "Bank Syariah Indonesia (BSI)",
   "Bank lainnya",
 ] as const;
+
+export const EWALLET_LIST = [
+  "GoPay",
+  "OVO",
+  "DANA",
+  "ShopeePay",
+  "LinkAja",
+  "i.saku",
+  "Sakuku",
+  "E-wallet lainnya",
+] as const;
+
+/** Semua channel pengirim yang diterima (bank + e-wallet). */
+export const BANK_OPTIONS = [...BANK_LIST, ...EWALLET_LIST] as const;
 
 export const STATUS_BAYAR = {
   menunggu: "Menunggu verifikasi",
@@ -36,7 +62,7 @@ export function formatRupiah(value: number) {
   return `Rp${new Intl.NumberFormat("id-ID").format(value)}`;
 }
 
-/** Satu-satunya metode pembayaran yang tersedia: transfer bank. */
+/** Metode tetap transfer; channel pengirim boleh bank atau e-wallet. */
 export function channelOptions(_metode: string): readonly string[] {
   return BANK_OPTIONS;
 }

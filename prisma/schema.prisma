@@ -27,6 +27,7 @@ model Pendaftaran {
   wilayah    String   @default("") @db.VarChar(30)
   // "" (belum ikut) | webinar | seminar | keduanya — diatur admin
   eventStatus String  @default("") @map("event_status") @db.VarChar(30)
+  joinAt      DateTime? @map("join_at")
   // Hash bcrypt untuk login peserta; null = belum punya akses (data lama).
   password    String? @db.VarChar(255)
   lastLoginAt DateTime? @map("last_login_at")
@@ -166,6 +167,10 @@ model Affiliate {
   email        String    @unique @db.VarChar(255)
   whatsapp     String    @db.VarChar(30)
   password     String    @db.VarChar(255)
+  provinsi     String    @default("") @db.VarChar(100)
+  kabupaten    String    @default("") @db.VarChar(100)
+  kecamatan    String    @default("") @db.VarChar(100)
+  desa         String    @default("") @db.VarChar(100)
   kode         String    @unique @db.VarChar(30)
   bankNama     String    @default("") @map("bank_nama") @db.VarChar(100)
   bankNo       String    @default("") @map("bank_no") @db.VarChar(100)
@@ -252,4 +257,19 @@ model Payout {
   @@index([affiliateId])
   @@index([status])
   @@map("payout")
+}
+
+// Token reset password via email. Hanya hash token yang disimpan.
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  // admin | afiliasi | peserta
+  tipe      String    @db.VarChar(20)
+  userId    Int       @map("user_id")
+  tokenHash String    @unique @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([tipe, userId])
+  @@map("password_reset")
 }

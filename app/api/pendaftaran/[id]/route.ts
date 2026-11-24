@@ -106,7 +106,20 @@ export async function PATCH(
       );
     }
 
-    await prisma.pendaftaran.update({ where: { id }, data: { eventStatus } });
+    const sebelum = await prisma.pendaftaran.findUnique({
+      where: { id },
+      select: { eventStatus: true, joinAt: true },
+    });
+    if (!sebelum) {
+      return NextResponse.json(
+        { success: false, error: "Data tidak ditemukan." },
+        { status: 404 }
+      );
+    }
+    // Tanggal join dicatat sekali saat status jadi "join"; dihapus bila status diubah lagi.
+    const joinAt =
+      eventStatus === "join" ? (sebelum.joinAt ?? new Date()) : null;
+    await prisma.pendaftaran.update({ where: { id }, data: { eventStatus, joinAt } });
     return NextResponse.json({ success: true, eventStatus });
   } catch (error) {
     console.error("PATCH /api/pendaftaran/[id] error:", error);

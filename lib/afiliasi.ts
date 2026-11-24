@@ -8,6 +8,8 @@ import {
   KEY_AFILIASI_MIN_PENCAIRAN,
 } from "./afiliasi-konstanta";
 
+import { sisaHariReferral } from "./afiliasi-konstanta";
+
 export * from "./afiliasi-konstanta";
 
 /** Konfigurasi komisi & minimal pencairan dari tabel pengaturan. */
@@ -55,4 +57,42 @@ export async function getSaldoAfiliasi(affiliateId: number) {
     _count: true,
   });
   return { saldo: agg._sum.jumlah ?? 0, jumlahKomisi: agg._count };
+}
+
+/** Samakan format nomor WhatsApp (0812…, +62 812…, 62812…) menjadi 62812…. */
+export function normalisasiWa(raw: string): string {
+  const digit = raw.replace(/\D/g, "");
+  return digit.startsWith("0") ? `62${digit.slice(1)}` : digit;
+}
+
+/**
+ * Apakah orang dengan nomor WhatsApp ini masih terikat ke affiliate LAIN?
+ * Terikat = referral lama berstatus terdaftar dan masih dalam masa 90 hari,
+ * atau sudah closing (terverifikasi). Referral kedaluwarsa tidak mengunci.
+ * Dipakai agar peserta yang sama tidak bisa mendaftar ulang (email berbeda)
+ * lewat tautan affiliate lain untuk mengambil komisi.
+ */
+export async function terkunciAffiliateLain(
+  whatsapp: string,
+  affiliateId: number,
+  now: Date = new Date()
+): Promise<boolean> {
+  const target = normalisasiWa(whatsapp);
+  if (target.length < 8) return false;
+  const rows = await prisma.referral.findMany({
+    where: {
+      affiliateId: { not: affiliateId },
+      status: { in: ["terdaftar", "terverifikasi"] },
+    },
+    select: {
+      status: true,
+      createdAt: true,
+      pendaftaran: { select: { whatsapp: true } },
+    },
+  });
+  return rows.some(
+    (r) =>
+      normalisasiWa(r.pendaftaran.whatsapp) === target &&
+      (r.status === "terverifikasi" || sisaHariReferral(r.createdAt, now) > 0)
+  );
 }

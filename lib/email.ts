@@ -356,6 +356,8 @@ async function kirimEmailTransaksional(p: {
   ctaLabel: string;
   ctaHref: string;
   label: string;
+  /** Kalimat kaki email; default terkait status pembayaran. */
+  footer?: string;
 }) {
   try {
     const [s, m] = await Promise.all([getEmailSettings(), readRaw()]);
@@ -363,7 +365,7 @@ async function kirimEmailTransaksional(p: {
     if (!s.host || !s.user || !s.fromEmail || !rawPass) {
       throw new Error("Pengaturan email belum lengkap.");
     }
-    const url = `${SITE_URL}${p.ctaHref}`;
+    const url = /^https?:\/\//.test(p.ctaHref) ? p.ctaHref : `${SITE_URL}${p.ctaHref}`;
     const text = `${p.judul}\n\nHalo ${p.nama},\n\n${p.pesan}\n\n${p.ctaLabel}: ${url}`;
     const html = `<!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(p.subjek)}</title></head>
@@ -382,7 +384,7 @@ async function kirimEmailTransaksional(p: {
 <p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#94a3b8">Jika tombol tidak berfungsi, salin tautan ini ke browser:<br><span style="color:#0052A4;word-break:break-all">${esc(url)}</span></p>
 </td></tr>
 <tr><td style="padding:20px 32px 26px">
-<p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8">Email ini dikirim otomatis oleh ${esc(SITE_NAME)} terkait status pembayaran Anda.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8">Email ini dikirim otomatis oleh ${esc(SITE_NAME)} ${esc(p.footer ?? "terkait status pembayaran Anda.")}</p>
 </td></tr>
 </table>
 </td></tr></table></body></html>`;
@@ -485,7 +487,7 @@ export async function notifyAfiliasiTerdaftar(p: {
     email: p.email,
     subjek: "Akun affiliate Anda sudah aktif",
     judul: "Selamat Bergabung sebagai Affiliate",
-    pesan: `Pendaftaran affiliate Anda berhasil. Kode undangan Anda: ${p.kode}\n\nBagikan tautan undangan Anda dari dashboard affiliate. Komisi dihitung otomatis saat pembayaran peserta yang Anda undang terverifikasi admin.`,
+    pesan: `Pendaftaran affiliate Anda berhasil. Kode undangan Anda: ${p.kode}\n\nBagikan link undangan Anda dari dashboard affiliate dan pantau peserta yang mendaftar.`,
     ctaLabel: "Buka Dashboard Affiliate",
     ctaHref: "/afiliasi/dashboard",
     label: "afiliasi terdaftar",
@@ -556,5 +558,27 @@ export async function notifyPencairanDiproses(p: {
     ctaLabel: "Buka Dashboard Affiliate",
     ctaHref: "/afiliasi/dashboard",
     label: "pencairan diproses",
+  });
+}
+
+/** Email tautan reset password. Tidak pernah melempar error (hanya dicatat). */
+export async function kirimEmailResetPassword(p: {
+  nama: string;
+  email: string;
+  tipe: "admin" | "afiliasi" | "peserta";
+  token: string;
+}) {
+  const base = (process.env.AUTH_URL || SITE_URL).replace(/\/+$/, "");
+  const peran = p.tipe === "afiliasi" ? "affiliate" : p.tipe;
+  await kirimEmailTransaksional({
+    nama: p.nama,
+    email: p.email,
+    subjek: "Atur ulang password Anda",
+    judul: "Atur Ulang Password",
+    pesan: `Kami menerima permintaan untuk mengatur ulang password akun ${peran} Anda. Klik tombol di bawah untuk membuat password baru. Tautan berlaku 60 menit dan hanya bisa dipakai satu kali.\n\nJika Anda tidak merasa meminta ini, abaikan email ini. Password Anda tidak akan berubah.`,
+    ctaLabel: "Atur ulang password",
+    ctaHref: `${base}/reset-password?token=${p.token}`,
+    label: "reset password",
+    footer: "karena ada permintaan atur ulang password untuk akun Anda.",
   });
 }

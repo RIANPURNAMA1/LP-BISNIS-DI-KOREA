@@ -232,6 +232,7 @@ function RingkasanMeeting({
 
 export default function PesertaFlow({
   videoUrl,
+  thumbnailUrl,
   videoSelesai,
   konsultasiSelesai,
   posisi,
@@ -244,6 +245,7 @@ export default function PesertaFlow({
   kontak,
 }: {
   videoUrl: string;
+  thumbnailUrl?: string;
   videoSelesai: boolean;
   /** Konfirmasi posisi konsultasi lanjutan sudah dikirim. */
   konsultasiSelesai: boolean;
@@ -355,22 +357,8 @@ export default function PesertaFlow({
       setPosisiTerpilih(pilihanPosisi);
       setKonsultasiDone(true);
 
-      // Jadwal sudah fix per kategori: langsung dipesan tanpa memilih slot manual.
-      try {
-        const jadwalRes = await fetch("/api/peserta/jadwal/otomatis", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ catatan: "" }),
-        });
-        const jadwalJson = await jadwalRes.json().catch(() => null);
-        if (!jadwalRes.ok) throw new Error(jadwalJson?.error || "Jadwal belum tersedia.");
-        setJadwalDone(true);
-        setJenisSelesai(jadwalJson?.jenis === "waitinglist" ? "waitinglist" : "jadwal");
-        setPopup("selamat");
-      } catch {
-        // Fallback: peserta tetap bisa memilih/mengirim jadwal secara manual.
-        setPopup("jadwal");
-      }
+      // Langsung munculkan popup jadwal meeting lanjutan sesuai kategori yang dipilih.
+      setPopup("jadwal");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Konfirmasi belum tersimpan. Coba lagi.");
     } finally {
@@ -454,7 +442,7 @@ export default function PesertaFlow({
                     </div>
                   </div>
                 ) : videoUrl ? (
-                  <VideoWajib url={videoUrl} onDone={handleVideoDone} />
+                  <VideoWajib url={videoUrl} poster={thumbnailUrl} onDone={handleVideoDone} />
                 ) : (
                   <div className="grid aspect-video place-items-center bg-slate-50 px-6 text-center text-sm text-slate-500">
                     Video belum tersedia. Silakan cek kembali nanti.
@@ -746,7 +734,7 @@ export default function PesertaFlow({
               disabled={saving}
               className={`mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-3 text-sm font-medium text-white hover:bg-[#00438a] disabled:opacity-60 ${FOCUS}`}
             >
-              {saving ? "Menyimpan…" : "Konfirmasi & jadwalkan otomatis"}
+              {saving ? "Menyimpan…" : "Konfirmasi & lanjut pilih jadwal"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
@@ -756,7 +744,7 @@ export default function PesertaFlow({
       {/* Popup: pilih jadwal fix dari admin / waitinglist */}
       {popupTampil === "jadwal" && (
         <Modal
-          title="Pilih jadwal konsultasi lanjutan"
+          title="Jadwal meeting lanjutan"
           onClose={() => setPopup(null)}
           size="lg"
         >
@@ -769,11 +757,13 @@ export default function PesertaFlow({
 
       {/* Popup: jadwal / waitinglist berhasil dikirim */}
       {popupTampil === "selamat" && (
-        <Modal title="Selamat!" onClose={() => setPopup(null)}>
+        <Modal
+          title={jenisSelesai === "jadwal" ? "Selamat!" : "Jadwal sudah penuh"}
+          onClose={() => setPopup(null)}>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {jenisSelesai === "jadwal"
-              ? "Jadwal konsultasi lanjutan kategori Anda sudah otomatis dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya."
-              : "Data Anda sudah masuk waitinglist. Admin akan menghubungi Anda untuk informasi selanjutnya."}
+              ? "Jadwal konsultasi lanjutan Anda sudah dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya."
+              : "Mohon maaf, jadwal yang Anda pilih sudah penuh. Anda otomatis kami masukkan ke waitinglist dan akan diprioritaskan. Admin akan menghubungi Anda bila ada slot tersedia."}
           </p>
           <button
             onClick={() => setPopup(null)}

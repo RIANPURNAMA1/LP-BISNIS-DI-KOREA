@@ -19,3 +19,5 @@ storage/video/*
 # Bukti pembayaran konsultasi online (data peserta, jangan di-commit)
 storage/bukti-bayar/*
 !storage/bukti-bayar/.gitkeep
+storage/thumbnail/*
+!storage/thumbnail/.gitkeep

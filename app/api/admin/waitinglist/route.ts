@@ -20,6 +20,7 @@ export async function GET() {
             whatsapp: true,
             email: true,
             eventStatus: true,
+            posisiKonsultasi: true,
             referral: {
               select: {
                 status: true,
@@ -46,6 +47,7 @@ export async function GET() {
         whatsapp: pendaftaran.whatsapp,
         email: pendaftaran.email,
         eventStatus: pendaftaran.eventStatus,
+        posisiKonsultasi: pendaftaran.posisiKonsultasi,
       },
     }));
     return NextResponse.json({ success: true, data: rows });

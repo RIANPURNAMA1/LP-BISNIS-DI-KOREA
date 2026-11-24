@@ -49,15 +49,53 @@ const state: WaState = (g.__waState ??= {
 const SESSION_DIR =
   process.env.WA_SESSION_DIR || path.join(process.cwd(), ".wa-session");
 
+function sudahTertaut(creds: any) {
+  return !!creds?.me?.id || creds?.registered === true;
+}
+
 export function hasSavedSession() {
-  // Hanya dianggap ada sesi jika sudah pernah berhasil login (registered),
-  // bukan sekadar file kredensial dari QR yang belum dipindai.
+  // Sesi dianggap ada jika akun sudah tertaut (creds.me terisi). JANGAN memakai
+  // `registered`: pada pairing lewat QR flag itu tetap false walau sudah login,
+  // sehingga sesi valid dikira tidak ada dan koneksi tidak pernah dipulihkan.
   try {
-    const file = path.join(SESSION_DIR, "creds.json");
+    pulihkanCredsBilaRusak();
+    const file = CREDS();
     if (!fs.existsSync(file)) return false;
-    return JSON.parse(fs.readFileSync(file, "utf-8"))?.registered === true;
+    return sudahTertaut(JSON.parse(fs.readFileSync(file, "utf-8")));
   } catch {
     return false;
+  }
+}
+
+const CREDS = () => path.join(SESSION_DIR, "creds.json");
+const CREDS_BAK = () => path.join(SESSION_DIR, "creds.bak.json");
+
+/** Salin creds yang valid ke cadangan; dipakai memulihkan bila creds.json rusak. */
+function cadangkanCreds() {
+  try {
+    const raw = fs.readFileSync(CREDS(), "utf-8");
+    if (sudahTertaut(JSON.parse(raw))) fs.writeFileSync(CREDS_BAK(), raw);
+  } catch {
+    // creds sedang ditulis / rusak: jangan timpa cadangan yang masih baik
+  }
+}
+
+/** Jika creds.json rusak (mis. server mati saat menulis), pulihkan dari cadangan. */
+function pulihkanCredsBilaRusak() {
+  try {
+    JSON.parse(fs.readFileSync(CREDS(), "utf-8"));
+    return;
+  } catch {
+    // lanjut ke pemulihan
+  }
+  try {
+    const bak = fs.readFileSync(CREDS_BAK(), "utf-8");
+    if (sudahTertaut(JSON.parse(bak))) {
+      fs.writeFileSync(CREDS(), bak);
+      console.warn("[wa] creds.json rusak, dipulihkan dari cadangan.");
+    }
+  } catch {
+    // tidak ada cadangan valid
   }
 }
 
@@ -104,6 +142,7 @@ export async function startWhatsApp() {
       baileys;
 
     fs.mkdirSync(SESSION_DIR, { recursive: true });
+    pulihkanCredsBilaRusak();
     const { state: auth, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
 
     let version: number[] | undefined;
@@ -118,6 +157,8 @@ export async function startWhatsApp() {
       auth,
       logger: pino({ level: "silent" }),
       browser: ["Admin Pendaftaran", "Chrome", "1.0.0"],
+      // Jangan diam-diam gagal kirim bila pesan perlu dicoba ulang.
+      retryRequestDelayMs: 500,
       markOnlineOnConnect: false,
       syncFullHistory: false,
       // Ping berkala menjaga koneksi tetap hidup dan mendeteksi koneksi mati diam-diam.
@@ -127,7 +168,10 @@ export async function startWhatsApp() {
     });
     state.sock = sock;
 
-    sock.ev.on("creds.update", saveCreds);
+    sock.ev.on("creds.update", async () => {
+      await saveCreds();
+      cadangkanCreds();
+    });
 
     sock.ev.on("connection.update", async (update: any) => {
       const { connection, lastDisconnect, qr } = update;
@@ -149,16 +193,20 @@ export async function startWhatsApp() {
           String(sock.user?.id || "")
             .split(":")[0]
             .split("@")[0] || null;
+        cadangkanCreds();
         console.log("[wa] terhubung sebagai", state.number);
       }
 
       if (connection === "close") {
+        // Abaikan event dari socket lama yang sudah digantikan koneksi baru.
+        if (state.sock && state.sock !== sock) return;
         const code = (lastDisconnect?.error as any)?.output?.statusCode;
         state.sock = null;
         state.qr = null;
 
         // Logout dari HP (Perangkat tertaut -> keluar): sesi tidak berlaku lagi.
         if (code === DisconnectReason.loggedOut) {
+          console.warn("[wa] logout dari WhatsApp (perangkat tertaut dihapus). Scan QR ulang diperlukan.");
           clearSession();
           state.status = "disconnected";
           state.number = null;
@@ -189,8 +237,10 @@ export async function startWhatsApp() {
           return;
         }
 
+        console.warn("[wa] koneksi putus, kode:", code, "- akan menyambung ulang otomatis.");
+
         // Belum pernah login & QR kedaluwarsa: berhenti, admin klik Hubungkan lagi.
-        if (!auth.creds.registered) {
+        if (!sudahTertaut(auth.creds)) {
           state.status = "disconnected";
           state.wantConnected = false;
           return;
@@ -226,6 +276,17 @@ export async function startWhatsApp() {
 export function ensureWaWatchdog() {
   if (g.__waWatchdog) return;
   g.__waWatchdog = setInterval(() => {
+    // Koneksi "zombie": status connected tapi websocket sudah tertutup diam-diam.
+    const ws = state.sock?.ws;
+    const wsMati = ws && ws.isOpen === false && ws.isConnecting === false;
+    if (state.status === "connected" && wsMati) {
+      console.warn("[wa] penjaga: websocket mati, memulai ulang koneksi");
+      try {
+        state.sock?.end(undefined);
+      } catch {}
+      state.sock = null;
+      state.status = "connecting";
+    }
     if (!state.sock && !state.starting && !state.timer && hasSavedSession()) {
       console.log("[wa] penjaga: koneksi mati, menyambung ulang");
       state.retry = 0;

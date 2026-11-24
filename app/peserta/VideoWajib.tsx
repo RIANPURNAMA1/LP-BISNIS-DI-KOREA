@@ -201,9 +201,12 @@ const fmt = (s: number) => {
 
 export default function VideoWajib({
   url,
+  poster,
   onDone,
 }: {
   url: string;
+  /** Thumbnail dari admin; bila kosong dipakai poster bawaan. */
+  poster?: string;
   /** Dipanggil sekali ketika video diputar sampai habis. */
   onDone: () => void;
 }) {
@@ -351,7 +354,9 @@ export default function VideoWajib({
             <div
               aria-hidden
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/thumbnail-video-pengarahan.svg')" }}
+              style={{
+                backgroundImage: `url('${poster || "/thumbnail-video-pengarahan.svg"}')`,
+              }}
             />
             <div
               aria-hidden

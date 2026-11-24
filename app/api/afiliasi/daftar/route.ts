@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { nama, email, whatsapp, password } = result.data;
+    const { nama, email, whatsapp, password, provinsi, kabupaten, kecamatan, desa } = result.data;
     const sudahAda = await prisma.affiliate.findUnique({
       where: { email },
       select: { id: true },
@@ -51,7 +51,17 @@ export async function POST(req: NextRequest) {
     for (let attempt = 0; attempt < 5 && !affiliate; attempt++) {
       try {
         affiliate = await prisma.affiliate.create({
-          data: { nama, email, whatsapp, password: passwordHash, kode: buatKodeAfiliasi() },
+          data: {
+            nama,
+            email,
+            whatsapp,
+            password: passwordHash,
+            provinsi,
+            kabupaten,
+            kecamatan,
+            desa,
+            kode: buatKodeAfiliasi(),
+          },
           select: { id: true, kode: true },
         });
       } catch (e) {

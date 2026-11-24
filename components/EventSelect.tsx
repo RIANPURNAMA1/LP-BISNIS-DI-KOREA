@@ -6,6 +6,7 @@ import { EVENT_OPTIONS } from "@/lib/event";
 
 const TONE: Record<string, { pill: string; dot: string }> = {
   "": { pill: "bg-slate-100 text-slate-500 hover:bg-slate-200/70", dot: "bg-slate-400" },
+  join: { pill: "bg-amber-50 text-amber-700 hover:bg-amber-100", dot: "bg-amber-500" },
   webinar: { pill: "bg-sky-50 text-sky-700 hover:bg-sky-100", dot: "bg-sky-500" },
   seminar: { pill: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100", dot: "bg-emerald-500" },
   keduanya: { pill: "bg-[#0052A4]/10 text-[#0052A4] hover:bg-[#0052A4]/15", dot: "bg-[#0052A4]" },

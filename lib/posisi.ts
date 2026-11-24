@@ -23,3 +23,11 @@ export function formatPosisi(kode?: string | null): string {
   const label = posisiLabel(kode);
   return label ? `${kode?.toUpperCase()}. ${label}` : "";
 }
+
+/** Filter query kategori A–D; nilai selain itu diabaikan (= semua kategori). */
+export function posisiWhere(filter: string | null | undefined) {
+  const kode = filter?.trim().toUpperCase();
+  return kode && POSISI_OPSI.some((o) => o.kode === kode)
+    ? { posisiKonsultasi: kode }
+    : {};
+}

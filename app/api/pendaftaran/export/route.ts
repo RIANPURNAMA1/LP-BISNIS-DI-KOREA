@@ -6,7 +6,7 @@ import prisma from "@/lib/db";
 import { parseTujuan } from "@/lib/validations";
 import { formatJadwal, pilihJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
 import { afiliasiLabel } from "@/lib/afiliasi-info";
-import { posisiLabel } from "@/lib/posisi";
+import { posisiLabel, posisiWhere } from "@/lib/posisi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,9 +40,9 @@ const COLUMNS: Column[] = [
   { header: "Afiliasi", width: 26 },
   { header: "Tanggal Daftar", width: 20, align: "center" },
   { header: "Wilayah Grup", width: 20, align: "center" },
-  { header: "Status Event", width: 20, align: "center" },
+  { header: "Status Join Program", width: 20, align: "center" },
   { header: "Video Selesai", width: 20, align: "center" },
-  { header: "Meeting Lanjutan", width: 20, align: "center" },
+  { header: "Konsultasi Lanjutan", width: 20, align: "center" },
   { header: "Posisi Konsultasi", width: 42 },
   { header: "Jadwal Konsultasi", width: 24, align: "center" },
   { header: "Status Jadwal", width: 20, align: "center" },
@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
     }
 
     const search = (req.nextUrl.searchParams.get("search") ?? "").trim();
+    const kategoriWhere = posisiWhere(req.nextUrl.searchParams.get("kategori"));
     const where = {
       ...(search
         ? {
@@ -106,8 +107,14 @@ export async function GET(req: NextRequest) {
           }
         : {}),
       ...eventWhere(req.nextUrl.searchParams.get("event")),
+      ...kategoriWhere,
       ...(req.nextUrl.searchParams.get("meeting") === "1"
-        ? { konsultasiAt: { not: null }, posisiKonsultasi: { not: null } }
+        ? {
+            konsultasiAt: { not: null },
+            ...("posisiKonsultasi" in kategoriWhere
+              ? {}
+              : { posisiKonsultasi: { not: null } }),
+          }
         : {}),
     };
 

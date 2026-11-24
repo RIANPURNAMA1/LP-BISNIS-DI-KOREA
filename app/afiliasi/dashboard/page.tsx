@@ -1,26 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { signOut } from "next-auth/react";
+import type { ReactNode } from "react";
 import {
   AlertCircle,
+  ArrowRight,
+  Check,
   CheckCircle2,
   Clock,
   Copy,
-  Gift,
-  Link2,
+  Info,
   Loader2,
-  LogOut,
-  RefreshCw,
+  Mail,
+  Phone,
   Save,
+  Send,
   Users,
-  Wallet,
+  type LucideIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { STATUS_PAYOUT, STATUS_REFERRAL } from "@/lib/afiliasi-konstanta";
 import {
-  STATUS_KOMISI,
-  STATUS_PAYOUT,
-  STATUS_REFERRAL,
-} from "@/lib/afiliasi-konstanta";
+  AfiliasiHeader,
+  Badge,
+  FOCUS,
+  KontakPeserta,
+  SisaWaktu,
+  StatusJoin,
+  Statistik,
+  tanggal,
+} from "./referral-ui";
 
 type DashboardData = {
   profil: {
@@ -47,12 +56,23 @@ type DashboardData = {
     komisi: number;
     pencairan: number;
   };
+  berlakuHari: number;
   referrals: {
     id: number;
     kode: string;
     status: string;
     createdAt: string;
-    pendaftaran: { nama: string; email: string; aksesAktifAt: string | null };
+    batasAt: string;
+    /** Sisa hari menunggu closing; null bila sudah closing / kedaluwarsa. */
+    sisaHari: number | null;
+    pendaftaran: {
+      nama: string;
+      email: string;
+      whatsapp: string;
+      aksesAktifAt: string | null;
+      eventStatus: string;
+      joinAt: string | null;
+    };
   }[];
   komisi: {
     id: number;
@@ -76,48 +96,90 @@ type DashboardData = {
   }[];
 };
 
+
+/** Jumlah baris referral di tampilan awal, dan tambahan tiap "Lihat lebih banyak". */
+const JUMLAH_AWAL = 5;
+const JUMLAH_TAMBAH = 10;
+
 const rupiah = (n: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
-const tanggal = (iso: string) =>
-  new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  }).format(new Date(iso));
-
 const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
-const labelCls = "mb-1.5 block text-xs font-semibold text-slate-600";
-const card = "overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60";
-const cardHead = "flex items-center gap-3 border-b border-slate-100 px-5 py-4";
-const iconBox = "grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#0052A4]/10 text-[#0052A4]";
-const th = "px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500";
-const td = "px-4 py-3 text-sm text-slate-700";
+  "w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
+const labelCls = "mb-1.5 block text-sm font-medium text-slate-700";
 
-function badge(status: string, map: Record<string, string>) {
-  const style =
-    status === "terverifikasi" || status === "dibayar" || status === "tersedia"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-      : status === "menunggu" || status === "diproses" || status === "terdaftar"
-        ? "bg-amber-50 text-amber-700 ring-amber-200"
-        : "bg-slate-100 text-slate-600 ring-slate-200";
+/* ---------- Komponen kecil ---------- */
+
+function Step({
+  no,
+  title,
+  status,
+  done,
+  last,
+  children,
+}: {
+  no: number;
+  title: string;
+  status?: string;
+  done?: boolean;
+  last?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${style}`}>
-      {map[status] ?? status}
-    </span>
+    <li className="relative flex gap-4 pb-10 last:pb-0">
+      {!last && (
+        <span
+          aria-hidden="true"
+          className={`absolute left-4 top-9 -ml-px h-[calc(100%-2.25rem)] w-px ${
+            done ? "bg-[#0052A4]" : "bg-slate-200"
+          }`}
+        />
+      )}
+      <span
+        className={`relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${
+          done
+            ? "bg-[#0052A4] text-white"
+            : "border-2 border-[#0052A4] bg-white text-[#0052A4]"
+        }`}
+      >
+        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : no}
+      </span>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          {status && <span className="text-sm text-slate-500">{status}</span>}
+        </div>
+        <div className="mt-3">{children}</div>
+      </div>
+    </li>
   );
 }
+
+function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3 py-3">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+      <div className="min-w-0">
+        <dt className="text-sm text-slate-500">{label}</dt>
+        <dd className="truncate text-sm font-medium text-slate-900" title={value}>
+          {value || "-"}
+        </dd>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Halaman ---------- */
 
 export default function DashboardAfiliasi() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [tampil, setTampil] = useState(JUMLAH_AWAL);
+  const [copied, setCopied] = useState<"link" | "kode" | null>(null);
   const [rekening, setRekening] = useState({ bankNama: "", bankNo: "", bankAtasNama: "" });
   const [simpanLoading, setSimpanLoading] = useState(false);
-  const [pesanRekening, setPesanRekening] = useState("");
-  const [konfirmasi, setKonfirmasi] = useState(false);
-  const [cairLoading, setCairLoading] = useState(false);
-  const [pesanCair, setPesanCair] = useState("");
+  const [pesanRekening, setPesanRekening] = useState<{ ok: boolean; text: string } | null>(null);
 
   const muat = useCallback(async () => {
     try {
@@ -146,20 +208,20 @@ export default function DashboardAfiliasi() {
     void muat();
   }, [muat]);
 
-  async function salinLink() {
+  async function salin(jenis: "link" | "kode") {
     if (!data) return;
     try {
-      await navigator.clipboard.writeText(data.link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(jenis === "link" ? data.link : data.kode);
+      setCopied(jenis);
+      setTimeout(() => setCopied(null), 2000);
     } catch {
-      setPesanCair("Salin tautan manual dari kolom yang tersedia.");
+      /* clipboard tidak tersedia; link tetap bisa disalin manual dari kolomnya */
     }
   }
 
   async function simpanRekening(e: React.FormEvent) {
     e.preventDefault();
-    setPesanRekening("");
+    setPesanRekening(null);
     setSimpanLoading(true);
     try {
       const res = await fetch("/api/afiliasi/profil", {
@@ -169,50 +231,36 @@ export default function DashboardAfiliasi() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success) throw new Error(json.error || "Gagal menyimpan rekening.");
-      setPesanRekening("Rekening berhasil disimpan.");
+      setPesanRekening({ ok: true, text: "Rekening berhasil disimpan." });
       await muat();
     } catch (e) {
-      setPesanRekening(e instanceof Error ? e.message : "Gagal menyimpan rekening.");
+      setPesanRekening({
+        ok: false,
+        text: e instanceof Error ? e.message : "Gagal menyimpan rekening.",
+      });
     } finally {
       setSimpanLoading(false);
     }
   }
 
-  async function ajukanCair() {
-    setPesanCair("");
-    setCairLoading(true);
-    try {
-      const res = await fetch("/api/afiliasi/pencairan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ konfirmasi }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json.success) throw new Error(json.error || "Pengajuan gagal.");
-      setKonfirmasi(false);
-      await muat();
-    } catch (e) {
-      setPesanCair(e instanceof Error ? e.message : "Pengajuan gagal.");
-    } finally {
-      setCairLoading(false);
-    }
-  }
-
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#EEF1F8]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0052A4]" />
+      <div className="grid min-h-screen place-items-center bg-white">
+        <Loader2 className="h-7 w-7 animate-spin text-[#0052A4]" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#EEF1F8] px-4">
-        <div className="max-w-md rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
+      <div className="grid min-h-screen place-items-center bg-white px-4">
+        <div className="max-w-sm text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-red-500" />
           <p className="mt-3 text-sm font-medium text-slate-700">{error || "Data tidak tersedia."}</p>
-          <button onClick={() => void muat()} className="mt-4 rounded-full bg-[#0052A4] px-4 py-2 text-sm font-semibold text-white">
+          <button
+            onClick={() => void muat()}
+            className={`mt-4 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
+          >
             Coba lagi
           </button>
         </div>
@@ -220,228 +268,226 @@ export default function DashboardAfiliasi() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#EEF1F8]">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#0052A4] text-white">
-            <Gift className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-900">Dashboard Affiliate</p>
-            <p className="truncate text-[11px] text-slate-500">
-              {data.profil.nama} · {data.profil.email}
-            </p>
-          </div>
-          <button
-            onClick={() => void muat()}
-            aria-label="Muat ulang"
-            className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => void signOut({ callbackUrl: "/login" })}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-          >
-            <LogOut className="h-3.5 w-3.5" /> Keluar
-          </button>
-        </div>
-      </header>
+  const { referrals, berlakuHari } = data;
+  const belumIkut = referrals.filter((r) => !r.pendaftaran.eventStatus).length;
+  const closing = referrals.filter((r) => r.pendaftaran.eventStatus === "join").length;
+  const rekeningLengkap = !!(data.profil.bankNama && data.profil.bankNo && data.profil.bankAtasNama);
+  const pesanWa = `Halo! Yuk gabung program Indonesia-Korea Business Project lewat link saya: ${data.link}`;
 
-      <main className="mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6">
-        {/* Kode & tautan */}
-        <section className={card}>
-          <div className={cardHead}>
-            <span className={iconBox}><Link2 className="h-4 w-4" /></span>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900">Kode & tautan undangan Anda</h2>
-              <p className="text-[11px] text-slate-500">Bagikan kepada calon peserta. Komisi dihitung otomatis setelah pembayaran mereka terverifikasi.</p>
-            </div>
-          </div>
-          <div className="grid gap-4 p-5 md:grid-cols-[180px_1fr]">
-            <div className="rounded-xl bg-[#0052A4]/5 px-4 py-3 text-center ring-1 ring-[#0052A4]/10">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#0052A4]/70">Kode affiliate</p>
-              <p className="mt-1 text-lg font-extrabold tracking-widest text-[#0052A4]">{data.kode}</p>
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="link-afiliasi">Tautan pendaftaran</label>
+  return (
+    <div className="min-h-screen bg-white">
+      <AfiliasiHeader aktif="dashboard" onRefresh={() => void muat()} />
+
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+        {/* Sapaan */}
+        <div className="mb-10 max-w-2xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            Halo, {data.profil.nama}
+          </h1>
+          <p className="mt-2 text-base leading-7 text-slate-600">
+            Ajak calon peserta lewat link Anda.
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+          {/* ALUR */}
+          <ol className="min-w-0">
+            {/* 1. Bagikan */}
+            <Step
+              no={1}
+              title="Bagikan link Anda"
+              done={referrals.length > 0}
+              status={referrals.length > 0 ? `${referrals.length} referral` : "Belum ada referral"}
+            >
+              <p className="max-w-prose text-sm leading-6 text-slate-600">
+                Setiap orang yang mendaftar lewat link ini tercatat sebagai referral Anda.
+              </p>
+
+              <label className={`${labelCls} mt-4`} htmlFor="link-afiliasi">
+                Link pendaftaran
+              </label>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <input id="link-afiliasi" readOnly value={data.link} className={`${inputCls} font-mono text-xs`} onFocus={(e) => e.target.select()} />
+                <input
+                  id="link-afiliasi"
+                  readOnly
+                  value={data.link}
+                  onFocus={(e) => e.target.select()}
+                  className={`${inputCls} font-mono text-[13px]`}
+                />
                 <button
-                  onClick={() => void salinLink()}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#004080]"
+                  type="button"
+                  onClick={() => void salin("link")}
+                  className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
                 >
-                  {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? "Tersalin" : "Salin"}
+                  {copied === "link" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copied === "link" ? "Tersalin" : "Salin link"}
                 </button>
               </div>
-              {pesanCair && !konfirmasi && <p className="mt-1 text-xs text-amber-600">{pesanCair}</p>}
-            </div>
-          </div>
-        </section>
 
-        {/* Statistik */}
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: "Saldo tersedia", value: rupiah(data.saldo), icon: Wallet },
-            { label: "Total komisi", value: rupiah(data.totalKomisi), icon: Gift },
-            { label: "Total referral", value: String(data.statistik.referral), icon: Users },
-            { label: "Terverifikasi", value: String(data.statistik.terverifikasi), icon: CheckCircle2 },
-          ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
-              <div className="flex items-center gap-2 text-slate-500">
-                <s.icon className="h-4 w-4 text-[#0052A4]" />
-                <span className="text-[11px] font-semibold uppercase tracking-wide">{s.label}</span>
-              </div>
-              <p className="mt-2 text-xl font-bold text-slate-900">{s.value}</p>
-            </div>
-          ))}
-        </section>
-
-        {/* Rekening & pencairan */}
-        <section className="grid gap-5 lg:grid-cols-2">
-          <div className={card}>
-            <div className={cardHead}>
-              <span className={iconBox}><Wallet className="h-4 w-4" /></span>
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">Rekening pencairan</h2>
-                <p className="text-[11px] text-slate-500">Snapshot rekening disimpan saat Anda mengajukan pencairan.</p>
-              </div>
-            </div>
-            <form onSubmit={simpanRekening} className="space-y-3 p-5">
-              <div>
-                <label className={labelCls} htmlFor="rek-bank">Nama bank</label>
-                <input id="rek-bank" className={inputCls} value={rekening.bankNama} onChange={(e) => setRekening({ ...rekening, bankNama: e.target.value })} placeholder="BCA" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className={labelCls} htmlFor="rek-no">Nomor rekening</label>
-                  <input id="rek-no" inputMode="numeric" className={inputCls} value={rekening.bankNo} onChange={(e) => setRekening({ ...rekening, bankNo: e.target.value })} placeholder="1234567890" />
-                </div>
-                <div>
-                  <label className={labelCls} htmlFor="rek-nama">Atas nama</label>
-                  <input id="rek-nama" className={inputCls} value={rekening.bankAtasNama} onChange={(e) => setRekening({ ...rekening, bankAtasNama: e.target.value })} placeholder="Nama pemilik rekening" />
-                </div>
-              </div>
-              {pesanRekening && (
-                <p className={`text-xs font-medium ${pesanRekening.includes("berhasil") ? "text-emerald-600" : "text-red-600"}`}>{pesanRekening}</p>
-              )}
-              <button type="submit" disabled={simpanLoading} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
-                {simpanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Simpan rekening
-              </button>
-            </form>
-          </div>
-
-          <div className={card}>
-            <div className={cardHead}>
-              <span className={iconBox}><Gift className="h-4 w-4" /></span>
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">Ajukan pencairan</h2>
-                <p className="text-[11px] text-slate-500">Minimal pencairan {rupiah(data.minimalPencairan)}.</p>
-              </div>
-            </div>
-            <div className="space-y-4 p-5">
-              <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                <p className="text-xs text-slate-500">Saldo siap dicairkan</p>
-                <p className="mt-1 text-2xl font-bold text-slate-900">{rupiah(data.saldo)}</p>
-              </div>
-              {data.adaPencairanAktif && (
-                <p className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
-                  <Clock className="h-4 w-4" /> Pengajuan sebelumnya masih diproses admin.
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(pesanWa)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 ${FOCUS}`}
+                >
+                  <Send className="h-4 w-4 text-[#1B9A4B]" /> Bagikan lewat WhatsApp
+                </a>
+                <p className="text-sm text-slate-500">
+                  Kode:{" "}
+                  <button
+                    type="button"
+                    onClick={() => void salin("kode")}
+                    title="Salin kode"
+                    className={`rounded px-1 font-mono font-semibold tracking-wider text-[#0052A4] hover:bg-slate-100 ${FOCUS}`}
+                  >
+                    {data.kode}
+                  </button>
+                  {copied === "kode" && <span className="ml-1 text-emerald-600">tersalin</span>}
                 </p>
+              </div>
+            </Step>
+
+            {/* 2. Pantau referral */}
+            <Step
+              no={2}
+              last
+              title="Pantau referral Anda"
+              done={closing > 0}
+              status={closing > 0 ? `${closing} sudah join` : undefined}
+            >
+              <div className="mb-4 flex items-start gap-2.5 rounded-md bg-slate-50 px-3.5 py-3 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
+                <Clock className="mt-1 h-4 w-4 shrink-0 text-[#0052A4]" />
+                <span>
+                  Peserta harus <b>Join Bisnis dalam {berlakuHari} hari</b> sejak mendaftar lewat link
+                  Anda. Selama masa itu peserta <b>terkunci atas nama Anda</b> dan tidak bisa ikut
+                  affiliate lain. Begitu peserta join, hitung mundur berhenti dan tercatat{" "}
+                  <b>Sudah join</b> beserta tanggalnya. Lewat {berlakuHari} hari tanpa join, peserta
+                  tidak bisa lagi dihitung join atas nama Anda dan tidak lagi terafiliasi dengan link
+                  Anda.
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <Statistik label="Total" nilai={referrals.length} hint="Semua referral" />
+                <Statistik label="Belum ikut" nilai={belumIkut} hint="Belum ikut program" />
+                <Statistik label="Sudah join" nilai={closing} hint="Join program" />
+              </div>
+
+              {referrals.length === 0 ? (
+                <div className="mt-4 rounded-md border border-dashed border-slate-300 px-4 py-8 text-center">
+                  <Users className="mx-auto h-6 w-6 text-slate-400" />
+                  <p className="mt-2 text-sm font-medium text-slate-900">Belum ada referral</p>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    Bagikan link di langkah 1. Peserta yang mendaftar akan muncul di sini.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <div className="overflow-x-auto rounded-md border border-slate-200">
+                    <table className="w-full min-w-[760px] border-collapse text-left">
+                      <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
+                        <tr>
+                          <th scope="col" className="px-4 py-2.5">Nama</th>
+                          <th scope="col" className="px-4 py-2.5">Kontak (follow up)</th>
+                          <th scope="col" className="px-4 py-2.5">Mendaftar</th>
+                          <th scope="col" className="px-4 py-2.5">Status Join Program</th>
+                          <th scope="col" className="px-4 py-2.5">Sisa waktu bayar</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {referrals.slice(0, tampil).map((r) => (
+                          <tr key={r.id} className="align-top">
+                            <td className="px-4 py-3">
+                              <p className="max-w-[220px] truncate text-sm font-semibold text-slate-900">
+                                {r.pendaftaran.nama}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3">
+                              {r.status === "kedaluwarsa" ? (
+                                <span className="text-xs text-slate-400">Tidak lagi terafiliasi</span>
+                              ) : (
+                                <KontakPeserta r={r} />
+                              )}
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                              {tanggal(r.createdAt)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <StatusJoin value={r.pendaftaran.eventStatus} />
+                            </td>
+                            <td className="px-4 py-3">
+                              <SisaWaktu r={r} total={berlakuHari} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-slate-500">
+                      Menampilkan {Math.min(tampil, referrals.length)} dari {referrals.length} referral
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href="/afiliasi/dashboard/pendaftar"
+                        className={`inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-4 py-2 text-sm font-medium text-white hover:bg-[#00438a] ${FOCUS}`}
+                      >
+                        <Users className="h-4 w-4" /> Data pendaftar
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      {tampil > JUMLAH_AWAL && (
+                        <button
+                          type="button"
+                          onClick={() => setTampil(JUMLAH_AWAL)}
+                          className={`rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 ${FOCUS}`}
+                        >
+                          Tampilkan lebih sedikit
+                        </button>
+                      )}
+                      {tampil < referrals.length && (
+                        <button
+                          type="button"
+                          onClick={() => setTampil((n) => n + JUMLAH_TAMBAH)}
+                          className={`rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 ${FOCUS}`}
+                        >
+                          Lihat lebih banyak
+                          <span className="ml-1.5 text-slate-500">
+                            ({Math.min(JUMLAH_TAMBAH, referrals.length - tampil)} lagi)
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
-              <label className="flex cursor-pointer items-start gap-2.5 text-sm text-slate-600">
-                <input type="checkbox" checked={konfirmasi} onChange={(e) => setKonfirmasi(e.target.checked)} className="mt-1 h-4 w-4 accent-[#0052A4]" />
-                Saya mengajukan pencairan seluruh saldo tersedia ke rekening yang tersimpan.
-              </label>
-              <button
-                onClick={() => void ajukanCair()}
-                disabled={!data.bisaCairkan || !konfirmasi || cairLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0052A4] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#004080] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {cairLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-                Ajukan pencairan
-              </button>
-              {!data.bisaCairkan && !data.adaPencairanAktif && (
-                <p className="text-center text-xs text-slate-500">
-                  Saldo belum mencapai minimal atau rekening belum lengkap.
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
+            </Step>
+          </ol>
 
-        {/* Riwayat */}
-        <section className={card}>
-          <div className={cardHead}>
-            <span className={iconBox}><Users className="h-4 w-4" /></span>
-            <h2 className="text-sm font-bold text-slate-900">Referral Anda</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] border-collapse">
-              <thead className="bg-slate-50"><tr><th className={th}>Nama</th><th className={th}>Email</th><th className={th}>Status</th><th className={th}>Waktu</th></tr></thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.referrals.length === 0 && <tr><td colSpan={4} className={`${td} text-center text-slate-400`}>Belum ada referral.</td></tr>}
-                {data.referrals.map((r) => (
-                  <tr key={r.id}>
-                    <td className={td}>{r.pendaftaran.nama}</td>
-                    <td className={td}>{r.pendaftaran.email}</td>
-                    <td className={td}>{badge(r.status, STATUS_REFERRAL)}</td>
-                    <td className={td}>{tanggal(r.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+          {/* SIDEBAR */}
+          <aside className="space-y-6 lg:border-l lg:border-slate-200 lg:pl-8">
+            <section>
+              <p className="truncate text-base font-semibold text-slate-900">{data.profil.nama}</p>
+              <p className="text-sm text-slate-500">Affiliate · bergabung {tanggal(data.profil.createdAt)}</p>
+              <dl className="mt-3 divide-y divide-slate-100 border-t border-slate-200">
+                <InfoRow icon={Phone} label="WhatsApp" value={data.profil.whatsapp} />
+                <InfoRow icon={Mail} label="Email" value={data.profil.email} />
+              </dl>
+            </section>
 
-        <section className="grid gap-5 lg:grid-cols-2">
-          <div className={card}>
-            <div className={cardHead}><span className={iconBox}><Gift className="h-4 w-4" /></span><h2 className="text-sm font-bold text-slate-900">Riwayat komisi</h2></div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[420px] border-collapse">
-                <thead className="bg-slate-50"><tr><th className={th}>Referral</th><th className={th}>Jumlah</th><th className={th}>Status</th></tr></thead>
-                <tbody className="divide-y divide-slate-100">
-                  {data.komisi.length === 0 && <tr><td colSpan={3} className={`${td} text-center text-slate-400`}>Belum ada komisi.</td></tr>}
-                  {data.komisi.map((k) => (
-                    <tr key={k.id}>
-                      <td className={td}>{k.referral.pendaftaran.nama}<span className="block text-[11px] text-slate-400">{tanggal(k.createdAt)}</span></td>
-                      <td className={`${td} font-semibold`}>{rupiah(k.jumlah)}</td>
-                      <td className={td}>{badge(k.status, STATUS_KOMISI as Record<string, string>)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className={card}>
-            <div className={cardHead}><span className={iconBox}><Wallet className="h-4 w-4" /></span><h2 className="text-sm font-bold text-slate-900">Riwayat pencairan</h2></div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[420px] border-collapse">
-                <thead className="bg-slate-50"><tr><th className={th}>Jumlah</th><th className={th}>Status</th><th className={th}>Bukti</th></tr></thead>
-                <tbody className="divide-y divide-slate-100">
-                  {data.payouts.length === 0 && <tr><td colSpan={3} className={`${td} text-center text-slate-400`}>Belum ada pencairan.</td></tr>}
-                  {data.payouts.map((p) => (
-                    <tr key={p.id}>
-                      <td className={`${td} font-semibold`}>{rupiah(p.jumlah)}<span className="block text-[11px] font-normal text-slate-400">{tanggal(p.createdAt)}</span></td>
-                      <td className={td}>{badge(p.status, STATUS_PAYOUT)}</td>
-                      <td className={td}>
-                        {p.bukti ? (
-                          <a href={p.bukti} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#0052A4] hover:underline">Lihat bukti</a>
-                        ) : (
-                          <span className="text-xs text-slate-400">-</span>
-                        )}
-                        {p.catatanAdmin && <span className="mt-1 block text-[11px] text-slate-500">{p.catatanAdmin}</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+            <section className="border-t border-slate-200 pt-6">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <Info className="h-4 w-4 text-[#0052A4]" /> Ketentuan singkat
+              </h3>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                <li>Peserta tercatat saat mendaftar lewat link Anda.</li>
+                <li>Peserta harus Join Bisnis maksimal {berlakuHari} hari sejak mendaftar.</li>
+                <li>Selama {berlakuHari} hari itu, peserta terkunci untuk Anda dan tidak bisa ikut affiliate lain.</li>
+              </ul>
+            </section>
+          </aside>
+        </div>
       </main>
     </div>
   );

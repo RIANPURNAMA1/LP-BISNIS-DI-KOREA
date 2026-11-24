@@ -71,6 +71,8 @@ export const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(10000).default(20),
   search: z.string().optional().default(""),
   event: z.string().optional().default(""),
+  // Kategori konsultasi A–D (posisiKonsultasi); kosong = semua kategori.
+  kategori: z.string().optional().default(""),
   // "1" = hanya pendaftar yang sudah submit konfirmasi meeting lanjutan.
   meeting: z.string().optional().default(""),
   sort: z
@@ -157,6 +159,10 @@ export const affiliateDaftarSchema = z.object({
     .min(1, "Nomor WhatsApp wajib diisi.")
     .regex(/^\+?[0-9][0-9\s-]{6,24}$/, "Masukkan nomor WhatsApp yang valid."),
   password: passwordSchema,
+  provinsi: z.string().trim().min(1, "Pilih provinsi.").max(100),
+  kabupaten: z.string().trim().min(1, "Pilih kabupaten/kota.").max(100),
+  kecamatan: z.string().trim().min(1, "Pilih kecamatan.").max(100),
+  desa: z.string().trim().min(1, "Pilih desa/kelurahan.").max(100),
 });
 
 export const affiliateProfilSchema = z.object({

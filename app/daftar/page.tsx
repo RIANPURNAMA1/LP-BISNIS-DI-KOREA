@@ -27,6 +27,15 @@ function DaftarDenganReferral() {
       if (res.status === 409 && err?.field === "email") {
         throw new RegistrationFieldError("email", err.error);
       }
+      // 400 = validasi gagal di server: tampilkan alasan pertamanya, bukan pesan koneksi.
+      if (res.status === 400 && err?.errors) {
+        const [kolom, pesan] =
+          Object.entries(err.errors as Record<string, string[]>).find(
+            ([, v]) => v?.length,
+          ) ?? [];
+        if (kolom && pesan?.[0])
+          throw new Error(`Data belum valid (${kolom}): ${pesan[0]}`);
+      }
       throw new Error(
         "Pendaftaran belum terkirim. Periksa koneksi Anda lalu coba lagi.",
       );

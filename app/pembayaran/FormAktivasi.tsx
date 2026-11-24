@@ -13,7 +13,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 import {
-  BANK_OPTIONS,
+  BANK_LIST,
+  EWALLET_LIST,
   formatRupiah,
   HARGA_KONSULTASI,
   STATUS_BAYAR,
@@ -45,7 +46,7 @@ export default function FormAktivasi({
 }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState(pembayaran?.status ?? "");
-  const [namaChannel, setNamaChannel] = useState<string>(BANK_OPTIONS[0]);
+  const [namaChannel, setNamaChannel] = useState<string>(BANK_LIST[0]);
   const [namaPengirim, setNamaPengirim] = useState(nama);
   const [bukti, setBukti] = useState<File | null>(null);
   const [error, setError] = useState("");
@@ -230,7 +231,7 @@ export default function FormAktivasi({
             <form onSubmit={kirimBukti} className="mt-4 space-y-4">
               <div>
                 <label htmlFor="namaChannel" className="block text-xs font-medium text-slate-700">
-                  Bank pengirim
+                  Bank / e-wallet pengirim
                 </label>
                 <select
                   id="namaChannel"
@@ -238,17 +239,26 @@ export default function FormAktivasi({
                   onChange={(e) => setNamaChannel(e.target.value)}
                   className={input}
                 >
-                  {BANK_OPTIONS.map((bank) => (
-                    <option key={bank} value={bank}>
-                      {bank}
-                    </option>
-                  ))}
+                  <optgroup label="Bank">
+                    {BANK_LIST.map((bank) => (
+                      <option key={bank} value={bank}>
+                        {bank}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="E-wallet">
+                    {EWALLET_LIST.map((e) => (
+                      <option key={e} value={e}>
+                        {e}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="namaPengirim" className="block text-xs font-medium text-slate-700">
-                  Nama pada rekening pengirim
+                  Nama pada rekening / akun pengirim
                 </label>
                 <input
                   id="namaPengirim"
@@ -302,24 +312,6 @@ export default function FormAktivasi({
           Status terakhir: {STATUS_BAYAR[status as keyof typeof STATUS_BAYAR] ?? status} &middot;{" "}
           {new Date(pembayaran.createdAt).toLocaleString("id-ID")}
         </p>
-      )}
-
-      {grupUmum.url && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm">
-          <p className="text-sm font-semibold text-slate-900">Butuh bantuan verifikasi?</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            Hubungi admin melalui grup {grupUmum.nama} dengan menyertakan nama dan email Anda
-            ({email} / {whatsapp}).
-          </p>
-          <a
-            href={grupUmum.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Buka grup WhatsApp <ExternalLink className="h-4 w-4" />
-          </a>
-        </div>
       )}
     </div>
   );

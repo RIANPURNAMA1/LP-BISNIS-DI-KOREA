@@ -17,6 +17,7 @@ export const BUKTI_PENCAIRAN_PREFIX = "/api/bukti-pencairan/";
 export const STATUS_REFERRAL = {
   terdaftar: "Terdaftar",
   terverifikasi: "Terverifikasi",
+  kedaluwarsa: "Kedaluwarsa",
   batal: "Batal",
 } as const;
 
@@ -59,3 +60,22 @@ export const BANK_AFILIASI = [
   "Bank Syariah Indonesia (BSI)",
   "Bank lainnya",
 ] as const;
+
+/**
+ * Masa atribusi referral: peserta yang mendaftar lewat link affiliate harus
+ * menyelesaikan pembayaran dalam jangka waktu ini (dihitung dari tanggal daftar).
+ * Lewat dari itu, peserta tidak lagi terafiliasi dan komisi tidak diberikan.
+ */
+export const REFERRAL_BERLAKU_HARI = 90;
+
+const HARI_MS = 24 * 60 * 60 * 1000;
+
+/** Batas akhir atribusi referral. */
+export function batasReferral(daftarAt: Date | string): Date {
+  return new Date(new Date(daftarAt).getTime() + REFERRAL_BERLAKU_HARI * HARI_MS);
+}
+
+/** Sisa hari (dibulatkan ke atas) sampai batas; 0 atau kurang = sudah lewat. */
+export function sisaHariReferral(daftarAt: Date | string, now: Date = new Date()): number {
+  return Math.ceil((batasReferral(daftarAt).getTime() - now.getTime()) / HARI_MS);
+}

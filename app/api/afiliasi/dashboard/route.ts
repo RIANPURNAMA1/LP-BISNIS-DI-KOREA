@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAfiliasi } from "@/lib/guard";
 import prisma from "@/lib/db";
-import { getAfiliasiSettings, linkAfiliasi } from "@/lib/afiliasi";
+import {
+  REFERRAL_BERLAKU_HARI,
+  batasReferral,
+  getAfiliasiSettings,
+  linkAfiliasi,
+  sisaHariReferral,
+} from "@/lib/afiliasi";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +44,7 @@ export async function GET() {
           status: true,
           createdAt: true,
           pendaftaran: {
-            select: { nama: true, email: true, aksesAktifAt: true },
+            select: { nama: true, email: true, whatsapp: true, aksesAktifAt: true, eventStatus: true, joinAt: true },
           },
         },
       }),
@@ -61,6 +67,27 @@ export async function GET() {
       getAfiliasiSettings(),
     ]);
     if (!affiliate) return fail("Data affiliate tidak ditemukan.", 404);
+
+    // Status tampilan mengikuti Status Join Program (admin): sudah join = hitung mundur berhenti.
+    const sekarang = new Date();
+    const referralView = referrals.map((r) => {
+      const sisaHari = sisaHariReferral(r.createdAt, sekarang);
+      // Hitung mundur berhenti saat admin menandai peserta "Sudah join".
+      const sudahJoin = r.pendaftaran.eventStatus === "join";
+      const aktif = !sudahJoin && r.status !== "kedaluwarsa";
+      return {
+        ...r,
+        status: sudahJoin
+          ? "terverifikasi"
+          : aktif && sisaHari <= 0
+            ? "kedaluwarsa"
+            : r.status === "terverifikasi"
+              ? "terdaftar"
+              : r.status,
+        batasAt: batasReferral(r.createdAt).toISOString(),
+        sisaHari: aktif ? Math.max(0, sisaHari) : null,
+      };
+    });
 
     const saldo = komisi
       .filter((k) => k.status === "tersedia")
@@ -93,7 +120,8 @@ export async function GET() {
           komisi: komisi.length,
           pencairan: payouts.length,
         },
-        referrals,
+        berlakuHari: REFERRAL_BERLAKU_HARI,
+        referrals: referralView,
         komisi,
         payouts,
       },

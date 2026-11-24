@@ -452,9 +452,6 @@ Jika upload masih mentok di persentase tertentu di VPS:
 
 pass: email yjzqtuoyvxyzyghf
 
-
-
-
 PEMBAYARAN MUNCUL DI PESERTA SAJA TIDAK DI AWALL 
 sebelum itu muncul di bayar 
 
@@ -470,3 +467,4 @@ pencairan di hide
 andri dalam 90 hari kedepan klik ikutan 91 hari sudah tidak trafiliasi ke si andri dan bisa
 ada waktu di member affiliasi peserta 
 bisa follow up
+

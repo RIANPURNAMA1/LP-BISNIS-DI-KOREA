@@ -66,7 +66,8 @@ export default function JadwalSesi({
       return;
     }
     if (slot.sisa <= 0) {
-      setError("Jadwal sudah full. Silakan klik tombol waitinglist.");
+      // Slot penuh: otomatis masuk waitinglist.
+      await daftarWaitinglist();
       return;
     }
     setSaving(true);
@@ -187,8 +188,8 @@ export default function JadwalSesi({
           <p className="text-sm leading-6 text-slate-600">
             Jadwal konsultasi untuk kategori{" "}
             <b>{formatPosisi(posisi) || "yang Anda pilih"}</b>. Pilih salah satu slot yang sudah
-            ditetapkan admin; setiap slot maksimal diisi <b>5 peserta</b>. Jika penuh, Anda otomatis
-            masuk waitinglist.
+            ditetapkan admin; setiap slot maksimal diisi <b>5 peserta</b>. Jika slot yang Anda pilih
+            sudah penuh, Anda otomatis masuk waitinglist.
           </p>
 
           {data.slots.length === 0 ? (
@@ -210,7 +211,6 @@ export default function JadwalSesi({
                         <button
                           key={s.id}
                           type="button"
-                          disabled={full}
                           onClick={() => {
                             setSlotId(s.id);
                             setError("");
@@ -219,13 +219,13 @@ export default function JadwalSesi({
                             slotId === s.id
                               ? "bg-[#0052A4] text-white"
                               : full
-                                ? "cursor-not-allowed bg-slate-100 text-slate-400 line-through"
+                                ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
                                 : "bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
                           }`}
                         >
                           <span className="block font-medium">{s.jam}</span>
                           <span className={`block text-[11px] ${slotId === s.id ? "text-white/80" : "text-slate-500"}`}>
-                            {full ? "Jadwal sudah full" : `${s.sisa}/${s.kuota} tersedia`}
+                            {full ? "Penuh · waitinglist" : `${s.sisa}/${s.kuota} tersedia`}
                           </span>
                         </button>
                       );
@@ -237,8 +237,8 @@ export default function JadwalSesi({
 
           {penuh && (
             <p role="status" className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
-              Jadwal sudah full. Klik tombol waitinglist — kami akan prioritaskan yang sudah isi data
-              di waitinglist.
+              Jadwal ini sudah penuh. Jika dilanjutkan, Anda akan otomatis masuk waitinglist dan kami
+              akan menghubungi Anda bila ada slot tersedia.
             </p>
           )}
 
@@ -265,24 +265,25 @@ export default function JadwalSesi({
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               type="submit"
-              disabled={saving || !pilihan || penuh}
+              disabled={saving || !pilihan}
               className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 text-sm font-semibold text-white hover:bg-[#00438a] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              <CalendarClock className="h-4 w-4" /> Kirim jadwal
+              <CalendarClock className="h-4 w-4" /> {penuh ? "Masuk waitinglist" : "Kirim jadwal"}
             </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={daftarWaitinglist}
-              className="h-11 rounded-full border border-[#0052A4] px-5 text-sm font-semibold text-[#0052A4] hover:bg-[#0052A4]/5 disabled:opacity-60"
-            >
-              Waitinglist
-            </button>
+            {data.slots.length === 0 && (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={daftarWaitinglist}
+                className="h-11 rounded-full border border-[#0052A4] px-5 text-sm font-semibold text-[#0052A4] hover:bg-[#0052A4]/5 disabled:opacity-60"
+              >
+                Waitinglist
+              </button>
+            )}
           </div>
           <p className="text-xs leading-5 text-slate-500">
-            Jika semua jadwal penuh, pilih waitinglist. Kami akan prioritaskan peserta yang sudah
-            mengisi data di waitinglist.
+            Peserta di waitinglist kami prioritaskan saat ada slot baru atau yang batal.
           </p>
         </form>
       )}

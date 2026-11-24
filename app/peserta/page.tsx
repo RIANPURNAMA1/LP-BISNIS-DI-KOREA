@@ -120,6 +120,7 @@ export default async function PesertaPage() {
 
         <PesertaFlow
           videoUrl={konten.videoUrl}
+          thumbnailUrl={konten.thumbnailUrl}
           videoSelesai={!!p?.videoSelesaiAt}
           konsultasiSelesai={konsultasiSelesai}
           posisi={p?.posisiKonsultasi ?? null}

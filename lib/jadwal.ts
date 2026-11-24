@@ -2,6 +2,8 @@ import prisma from "@/lib/db";
 
 // Kunci pengaturan (tabel `pengaturan`) untuk halaman peserta.
 export const KEY_VIDEO_URL = "peserta_video_url";
+export const KEY_VIDEO_THUMB = "peserta_video_thumb";
+export const THUMB_PREFIX = "/api/thumbnail/";
 export const KEY_ARAHAN = "peserta_arahan";
 export const KEY_JAM = "jadwal_jam";
 
@@ -17,7 +19,7 @@ export const STATUS_AKTIF = ["menunggu", "dikonfirmasi"] as const;
 export const STATUS_JADWAL = ["menunggu", "dikonfirmasi", "selesai", "batal", "ditolak"] as const;
 export type StatusJadwal = (typeof STATUS_JADWAL)[number];
 
-export type KontenPeserta = { videoUrl: string; arahan: string; jam: string[] };
+export type KontenPeserta = { videoUrl: string; thumbnailUrl: string; arahan: string; jam: string[] };
 
 const HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -29,12 +31,13 @@ export function parseJam(input: string): string[] {
 
 export async function getKontenPeserta(): Promise<KontenPeserta> {
   const rows = await prisma.pengaturan.findMany({
-    where: { key: { in: [KEY_VIDEO_URL, KEY_ARAHAN, KEY_JAM] } },
+    where: { key: { in: [KEY_VIDEO_URL, KEY_VIDEO_THUMB, KEY_ARAHAN, KEY_JAM] } },
   });
   const m = new Map(rows.map((r) => [r.key, r.value]));
   const jam = parseJam(m.get(KEY_JAM) ?? "");
   return {
     videoUrl: (m.get(KEY_VIDEO_URL) ?? "").trim(),
+    thumbnailUrl: (m.get(KEY_VIDEO_THUMB) ?? "").trim(),
     arahan: (m.get(KEY_ARAHAN) ?? "").trim() || DEFAULT_ARAHAN,
     jam: jam.length ? jam : DEFAULT_JAM,
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,78 @@ const inputCls =
 const labelCls = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 type Errors = Record<string, string>;
+type Wilayah = { code: string; name: string };
+
+/** Ambil daftar wilayah dari wilayah.id (lewat proxy /api/wilayah). */
+function useWilayah(path: string | null) {
+  const [list, setList] = useState<Wilayah[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!path) {
+      setList([]);
+      return;
+    }
+    let batal = false;
+    setLoading(true);
+    fetch(`/api/wilayah/${path}`)
+      .then((r) => r.json())
+      .then((json) => !batal && setList(json.data ?? []))
+      .catch(() => !batal && setList([]))
+      .finally(() => !batal && setLoading(false));
+    return () => {
+      batal = true;
+    };
+  }, [path]);
+  return { list, loading };
+}
+
+const nama = (list: Wilayah[], code: string) => list.find((w) => w.code === code)?.name ?? "";
+
+function WilayahSelect({
+  id,
+  label,
+  value,
+  onChange,
+  list,
+  loading,
+  disabled,
+  placeholder,
+  error,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  list: Wilayah[];
+  loading: boolean;
+  disabled: boolean;
+  placeholder: string;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className={labelCls} htmlFor={id}>
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled || loading}
+        aria-invalid={!!error}
+        className={`${inputCls} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400`}
+      >
+        <option value="">{loading ? "Memuat…" : placeholder}</option>
+        {list.map((w) => (
+          <option key={w.code} value={w.code}>
+            {w.name}
+          </option>
+        ))}
+      </select>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
 
 export default function DaftarAfiliasi() {
   const router = useRouter();
@@ -28,7 +100,15 @@ export default function DaftarAfiliasi() {
     password: "",
     konfirmasi: "",
     setuju: false,
+    provinsiId: "",
+    kabupatenId: "",
+    kecamatanId: "",
+    desaId: "",
   });
+  const provinsi = useWilayah("provinces.json");
+  const kabupaten = useWilayah(form.provinsiId ? `regencies/${form.provinsiId}.json` : null);
+  const kecamatan = useWilayah(form.kabupatenId ? `districts/${form.kabupatenId}.json` : null);
+  const desa = useWilayah(form.kecamatanId ? `villages/${form.kecamatanId}.json` : null);
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,6 +116,22 @@ export default function DaftarAfiliasi() {
   function set(field: keyof typeof form, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
+  }
+
+  /** Ganti pilihan wilayah; pilihan di bawahnya ikut direset. */
+  function setWilayah(field: "provinsiId" | "kabupatenId" | "kecamatanId" | "desaId", value: string) {
+    const urutan = ["provinsiId", "kabupatenId", "kecamatanId", "desaId"] as const;
+    const idx = urutan.indexOf(field);
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      for (const f of urutan.slice(idx + 1)) next[f] = "";
+      return next;
+    });
+    setErrors((prev) => {
+      const next = { ...prev };
+      for (const f of urutan.slice(idx)) next[f] = "";
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -46,6 +142,10 @@ export default function DaftarAfiliasi() {
     if (!/^\S+@\S+\.\S+$/.test(form.email)) err.email = "Email tidak valid.";
     if (!/^\+?[0-9][0-9\s-]{6,24}$/.test(form.whatsapp.trim()))
       err.whatsapp = "Nomor WhatsApp tidak valid.";
+    if (!form.provinsiId) err.provinsiId = "Pilih provinsi.";
+    if (!form.kabupatenId) err.kabupatenId = "Pilih kabupaten/kota.";
+    if (!form.kecamatanId) err.kecamatanId = "Pilih kecamatan.";
+    if (!form.desaId) err.desaId = "Pilih desa/kelurahan.";
     if (form.password.length < 8) err.password = "Password minimal 8 karakter.";
     if (form.password !== form.konfirmasi)
       err.konfirmasi = "Konfirmasi password tidak cocok.";
@@ -63,6 +163,10 @@ export default function DaftarAfiliasi() {
           email: form.email.trim(),
           whatsapp: form.whatsapp.trim(),
           password: form.password,
+          provinsi: nama(provinsi.list, form.provinsiId),
+          kabupaten: nama(kabupaten.list, form.kabupatenId),
+          kecamatan: nama(kecamatan.list, form.kecamatanId),
+          desa: nama(desa.list, form.desaId),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -119,8 +223,8 @@ export default function DaftarAfiliasi() {
               </div>
             </div>
             <p className="mt-4 text-sm leading-6 text-blue-100">
-              Bagikan tautan undangan dan dapatkan komisi saat peserta yang Anda undang
-              menyelesaikan pembayaran aktivasi. Pendaftaran affiliate gratis dan langsung aktif.
+              Bagikan link undangan dan pantau peserta yang Anda undang. Pendaftaran affiliate
+              gratis dan langsung aktif.
             </p>
           </div>
 
@@ -173,6 +277,53 @@ export default function DaftarAfiliasi() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+              <WilayahSelect
+                id="af-provinsi"
+                label="Provinsi"
+                value={form.provinsiId}
+                onChange={(v) => setWilayah("provinsiId", v)}
+                list={provinsi.list}
+                loading={provinsi.loading}
+                disabled={false}
+                placeholder="Pilih Provinsi"
+                error={errors.provinsiId || errors.provinsi}
+              />
+              <WilayahSelect
+                id="af-kabupaten"
+                label="Kabupaten / Kota"
+                value={form.kabupatenId}
+                onChange={(v) => setWilayah("kabupatenId", v)}
+                list={kabupaten.list}
+                loading={kabupaten.loading}
+                disabled={!form.provinsiId}
+                placeholder="Pilih Kabupaten"
+                error={errors.kabupatenId || errors.kabupaten}
+              />
+              <WilayahSelect
+                id="af-kecamatan"
+                label="Kecamatan"
+                value={form.kecamatanId}
+                onChange={(v) => setWilayah("kecamatanId", v)}
+                list={kecamatan.list}
+                loading={kecamatan.loading}
+                disabled={!form.kabupatenId}
+                placeholder="Pilih Kecamatan"
+                error={errors.kecamatanId || errors.kecamatan}
+              />
+              <WilayahSelect
+                id="af-desa"
+                label="Desa / Kelurahan"
+                value={form.desaId}
+                onChange={(v) => setWilayah("desaId", v)}
+                list={desa.list}
+                loading={desa.loading}
+                disabled={!form.kecamatanId}
+                placeholder="Pilih Desa"
+                error={errors.desaId || errors.desa}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className={labelCls} htmlFor="af-pass">
                   Password
@@ -221,8 +372,7 @@ export default function DaftarAfiliasi() {
                 className="mt-1 h-4 w-4 accent-[#0052A4]"
               />
               <span className="text-slate-600">
-                Saya menyetujui penggunaan data saya untuk program affiliate dan memahami bahwa
-                komisi dibayarkan manual oleh admin setelah pembayaran referral terverifikasi.
+                Saya menyetujui penggunaan data saya untuk program affiliate.
               </span>
             </label>
             {errors.setuju && <p className="-mt-2 text-xs text-red-600">{errors.setuju}</p>}

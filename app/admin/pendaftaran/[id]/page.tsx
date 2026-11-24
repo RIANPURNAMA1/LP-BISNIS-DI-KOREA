@@ -555,7 +555,7 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
             </dl>
           </SectionCard>
 
-          <SectionCard icon={CalendarCheck} title="Status Event">
+          <SectionCard icon={CalendarCheck} title="Status Join Program">
             <div className="py-4">
               <EventSelect
                 value={data.eventStatus ?? ""}

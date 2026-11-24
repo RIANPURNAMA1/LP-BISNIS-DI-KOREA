@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { requireAdmin } from "@/lib/guard";
 import prisma from "@/lib/db";
 import { eventWhere } from "@/lib/event";
+import { posisiWhere } from "@/lib/posisi";
+import { terkunciAffiliateLain } from "@/lib/afiliasi";
 import { notifyPendaftaranBaru } from "@/lib/wa-notif";
 import { notifyPesertaTerdaftar } from "@/lib/email";
 import { pilihJadwal } from "@/lib/jadwal-format";
@@ -71,6 +73,11 @@ export async function POST(req: NextRequest) {
         candidates.email === email ||
         (waPendaftar.length >= 8 && waPendaftar === waAfiliasi);
       affiliate = selfReferral ? null : candidates;
+      // Peserta yang masih terikat ke affiliate lain (masa 90 hari / sudah closing)
+      // tidak boleh diklaim affiliate baru. Pendaftaran tetap berjalan tanpa atribusi.
+      if (affiliate && (await terkunciAffiliateLain(result.data.whatsapp, affiliate.id))) {
+        affiliate = null;
+      }
     }
 
     // Sumber akuisisi mengikuti atribusi affiliate agar masuk statistik admin.
@@ -149,6 +156,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = listQuerySchema.parse(Object.fromEntries(searchParams));
 
+    const kategoriWhere = posisiWhere(query.kategori);
     const baseWhere = {
       ...(query.search
         ? {
@@ -162,13 +170,17 @@ export async function GET(req: NextRequest) {
           }
         : {}),
       ...eventWhere(query.event),
+      ...kategoriWhere,
     };
     // Meeting lanjutan = peserta yang sudah submit konfirmasi(posisi A–D).
-    // Data lama yang hanya punya konsultasiAt dari checkout tidak dihitung.
+    // Syarat "punya posisi" hanya dipakai bila tidak ada filter kategori,
+    // supaya tidak menimpa posisiKonsultasi: "A"–"D" dari filter.
     const meetingWhere = {
       ...baseWhere,
       konsultasiAt: { not: null },
-      posisiKonsultasi: { not: null },
+      ...("posisiKonsultasi" in kategoriWhere
+        ? {}
+        : { posisiKonsultasi: { not: null } }),
     };
     const where = query.meeting === "1" ? meetingWhere : baseWhere;
 

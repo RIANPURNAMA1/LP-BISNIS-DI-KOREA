@@ -85,6 +85,8 @@ const th = "px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-w
 /** Tabel daftar: lebar kolom proporsional, rapi di desktop maupun saat scroll di mobile. */
 const tableCls =
   "w-full min-w-[680px] table-fixed border-separate border-spacing-0 text-left text-[13px]";
+/** Jarak tabel dari tepi kartu supaya tidak mepet di sisi kiri/kanan. */
+const tableWrapCls = "min-h-0 flex-1 overflow-auto px-3 pb-3 sm:px-4";
 const headCls =
   "sticky top-0 z-10 whitespace-nowrap border-y border-r border-slate-200 bg-slate-100 px-3 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500";
 const headLastCls =
@@ -224,7 +226,7 @@ export default function AdminAfiliasi() {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Afiliasi</h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Kelola affiliate, komisi, dan pencairan manual dengan bukti transfer.
+            Kelola affiliate dan pantau referral yang mendaftar lewat link mereka.
           </p>
         </div>
       </div>
@@ -386,7 +388,7 @@ export default function AdminAfiliasi() {
             <p className="shrink-0 border-b border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] text-slate-500 lg:hidden">
               Geser tabel ke samping untuk melihat semua kolom &rarr;
             </p>
-            <div className="min-h-0 flex-1 overflow-auto">
+            <div className={tableWrapCls}>
               <table className={tableCls}>
                 <colgroup>
                   <col className="w-11" />
@@ -405,8 +407,6 @@ export default function AdminAfiliasi() {
                     <th className={headCls}>Kode</th>
                     <th className={`${headCls} text-right`}>Referral</th>
                     <th className={`${headCls} text-right`}>Terverifikasi</th>
-                    <th className={`${headCls} text-right`}>Total komisi</th>
-                    <th className={`${headCls} text-right`}>Saldo</th>
                     <th className={headLastCls}>Aksi</th>
                   </tr>
                 </thead>
@@ -446,10 +446,6 @@ export default function AdminAfiliasi() {
                         </td>
                         <td className={`${cellCls} ${bg} ${angka}`}>{a.totalReferral}</td>
                         <td className={`${cellCls} ${bg} ${angka}`}>{a.terverifikasi}</td>
-                        <td className={`${cellCls} ${bg} ${angka} text-slate-600`}>{rupiah(a.totalKomisi)}</td>
-                        <td className={`${cellCls} ${bg} ${angka} font-semibold text-slate-900`}>
-                          {rupiah(a.saldo)}
-                        </td>
                         <td className={`${cellLastCls} ${bawahAkhir}`}>
                           <IconAction onClick={() => void bukaDetail(a.id)} icon={Eye} label="Detail" />
                         </td>
@@ -468,7 +464,7 @@ export default function AdminAfiliasi() {
             <p className="shrink-0 border-b border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] text-slate-500 lg:hidden">
               Geser tabel ke samping untuk melihat semua kolom &rarr;
             </p>
-            <div className="min-h-0 flex-1 overflow-auto">
+            <div className={tableWrapCls}>
               <table className={tableCls}>
                 <colgroup>
                   <col className="w-11" />
@@ -598,19 +594,6 @@ export default function AdminAfiliasi() {
                       <tbody className="divide-y divide-slate-100">
                         {detail.referrals.length === 0 && <tr><td colSpan={3} className={`${td} text-center text-slate-400`}>Belum ada.</td></tr>}
                         {detail.referrals.map((r) => <tr key={r.id}><td className={td}>{r.pendaftaran.nama}</td><td className={td}>{badge(r.status, STATUS_REFERRAL)}</td><td className={td}>{tanggal(r.createdAt)}</td></tr>)}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="mb-2 text-sm font-bold text-slate-800">Komisi</h4>
-                  <div className="overflow-x-auto rounded-xl ring-1 ring-slate-200">
-                    <table className="w-full min-w-[420px] border-collapse">
-                      <thead className="bg-slate-50"><tr><th className={th}>Referral</th><th className={th}>Jumlah</th><th className={th}>Status</th></tr></thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {detail.komisi.length === 0 && <tr><td colSpan={3} className={`${td} text-center text-slate-400`}>Belum ada.</td></tr>}
-                        {detail.komisi.map((k) => <tr key={k.id}><td className={td}>{k.referral.pendaftaran.nama}</td><td className={td}>{rupiah(k.jumlah)}</td><td className={td}>{badge(k.status, STATUS_KOMISI)}</td></tr>)}
                       </tbody>
                     </table>
                   </div>
