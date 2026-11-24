@@ -181,7 +181,7 @@ export function SisaWaktu({ r, total }: { r: Referral; total: number }) {
     return (
       <div>
         <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-          <CheckCircle2 className="h-4 w-4" /> Sudah join
+          <CheckCircle2 className="h-4 w-4" /> Sudah join bisnis
         </span>
         {r.pendaftaran.joinAt && (
           <p className="mt-0.5 text-xs text-slate-500">{tanggal(r.pendaftaran.joinAt)}</p>

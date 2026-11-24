@@ -362,7 +362,7 @@ export default function DashboardAfiliasi() {
                   Peserta harus <b>Join Bisnis dalam {berlakuHari} hari</b> sejak mendaftar lewat link
                   Anda. Selama masa itu peserta <b>terkunci atas nama Anda</b> dan tidak bisa ikut
                   affiliate lain. Begitu peserta join, hitung mundur berhenti dan tercatat{" "}
-                  <b>Sudah join</b> beserta tanggalnya. Lewat {berlakuHari} hari tanpa join, peserta
+                  <b>Sudah join bisnis</b> beserta tanggalnya. Lewat {berlakuHari} hari tanpa join, peserta
                   tidak bisa lagi dihitung join atas nama Anda dan tidak lagi terafiliasi dengan link
                   Anda.
                 </span>
@@ -371,7 +371,7 @@ export default function DashboardAfiliasi() {
               <div className="grid grid-cols-3 gap-3">
                 <Statistik label="Total" nilai={referrals.length} hint="Semua referral" />
                 <Statistik label="Belum ikut" nilai={belumIkut} hint="Belum ikut program" />
-                <Statistik label="Sudah join" nilai={closing} hint="Join program" />
+                <Statistik label="Sudah join bisnis" nilai={closing} hint="Join bisnis" />
               </div>
 
               {referrals.length === 0 ? (

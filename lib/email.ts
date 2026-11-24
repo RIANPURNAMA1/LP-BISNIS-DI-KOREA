@@ -137,7 +137,7 @@ const esc = (v: string) =>
 /** Ganti {nama} pada teks admin. */
 const fill = (text: string, nama: string) => text.replace(/\{nama\}/gi, nama);
 
-const loginUrl = () => `${(process.env.AUTH_URL || SITE_URL).replace(/\/+$/, "")}/login`;
+const loginUrl = () => `${SITE_URL.replace(/\/+$/, "")}/login`;
 
 function buildMail(s: EmailSettings, nama: string) {
   const url = loginUrl();
@@ -170,7 +170,7 @@ function buildMail(s: EmailSettings, nama: string) {
   return { subject: fill(s.subject, nama), text, html };
 }
 
-const pesertaUrl = () => `${(process.env.AUTH_URL || SITE_URL).replace(/\/+$/, "")}/peserta`;
+const pesertaUrl = () => `${SITE_URL.replace(/\/+$/, "")}/peserta`;
 
 /** Email kedua: bukti pembayaran konsultasi online sudah diverifikasi admin. */
 function buildPaymentMail(
@@ -568,7 +568,7 @@ export async function kirimEmailResetPassword(p: {
   tipe: "admin" | "afiliasi" | "peserta";
   token: string;
 }) {
-  const base = (process.env.AUTH_URL || SITE_URL).replace(/\/+$/, "");
+  const base = SITE_URL.replace(/\/+$/, "");
   const peran = p.tipe === "afiliasi" ? "affiliate" : p.tipe;
   await kirimEmailTransaksional({
     nama: p.nama,

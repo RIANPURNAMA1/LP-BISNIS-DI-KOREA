@@ -1,7 +1,7 @@
 // Status Join Program pendaftar (diisi manual) (diatur admin).
 export const EVENT_OPTIONS = [
   { value: "", label: "Belum ikut" },
-  { value: "join", label: "Sudah join" },
+  { value: "join", label: "Sudah join bisnis" },
   { value: "webinar", label: "Ikut webinar" },
   { value: "seminar", label: "Ikut seminar" },
   { value: "keduanya", label: "Webinar & seminar" },

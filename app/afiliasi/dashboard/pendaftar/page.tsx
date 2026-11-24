@@ -21,7 +21,7 @@ const FILTER: { kunci: Filter; label: string }[] = [
   { kunci: "semua", label: "Semua" },
   { kunci: "belum", label: "Belum ikut" },
   { kunci: "event", label: "Ikut webinar / seminar" },
-  { kunci: "join", label: "Sudah join" },
+  { kunci: "join", label: "Sudah join bisnis" },
 ];
 
 function cocokFilter(r: ReferralItem, f: Filter) {
@@ -133,7 +133,7 @@ export default function DataPendaftarAfiliasi() {
               <Statistik label="Total" nilai={hitung.semua} hint="Semua pendaftar" />
               <Statistik label="Belum ikut" nilai={hitung.belum} hint="Belum ikut program" />
               <Statistik label="Ikut event" nilai={hitung.event} hint="Webinar / seminar" />
-              <Statistik label="Sudah join" nilai={hitung.join} hint="Join program" />
+              <Statistik label="Sudah join bisnis" nilai={hitung.join} hint="Join bisnis" />
             </div>
 
             {/* Cari & filter */}

@@ -72,7 +72,7 @@ export async function GET() {
     const sekarang = new Date();
     const referralView = referrals.map((r) => {
       const sisaHari = sisaHariReferral(r.createdAt, sekarang);
-      // Hitung mundur berhenti saat admin menandai peserta "Sudah join".
+      // Hitung mundur berhenti saat admin menandai peserta "Sudah join bisnis".
       const sudahJoin = r.pendaftaran.eventStatus === "join";
       const aktif = !sudahJoin && r.status !== "kedaluwarsa";
       return {
