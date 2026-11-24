@@ -105,8 +105,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     });
 
     const berubah = statusSebelumnya !== status;
+    let emailTerkirim: boolean | null = null;
     if (berubah && status === "dikonfirmasi") {
-      await notifyPembayaranDikonfirmasi({
+      emailTerkirim = await notifyPembayaranDikonfirmasi({
         nama: pembayaran.nama,
         email: pembayaran.email,
         metode: pembayaran.metode,
@@ -122,7 +123,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       });
     }
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({ success: true, data: updated, emailTerkirim });
   } catch (e) {
     console.error("PUT /api/admin/pembayaran/[id] error:", e);
     return fail("Terjadi kesalahan server.", 500);

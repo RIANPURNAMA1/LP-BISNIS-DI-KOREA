@@ -330,7 +330,7 @@ export async function notifyPembayaranDikonfirmasi(p: {
   metode: string;
   namaChannel: string;
   namaPengirim: string;
-}) {
+}): Promise<boolean> {
   try {
     // Email pembayaran bersifat transaksional: tetap dikirim walau notifikasi
     // pendaftaran otomatis dimatikan, selama SMTP sudah dikonfigurasi.
@@ -340,8 +340,10 @@ export async function notifyPembayaranDikonfirmasi(p: {
       throw new Error("Pengaturan email belum lengkap.");
     }
     await kirim(s, decrypt(rawPass), { to: p.email, ...buildPaymentMail(s, p) });
+    return true;
   } catch (e) {
     console.error("[email] gagal mengirim notifikasi pembayaran:", e);
+    return false;
   }
 }
 

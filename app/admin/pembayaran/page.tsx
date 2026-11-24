@@ -236,11 +236,13 @@ export default function AdminPembayaran() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success) throw new Error(json.error || "Gagal menyimpan status.");
       setToast({
-        type: "success",
+        type: json.emailTerkirim === false ? "error" : "success",
         text:
           status === "dikonfirmasi"
-            ? "Pembayaran dikonfirmasi. Email konfirmasi telah dikirim ke peserta."
-            : "Pembayaran ditolak.",
+            ? json.emailTerkirim === false
+              ? "Pembayaran dikonfirmasi, tetapi email ke peserta GAGAL terkirim. Periksa pengaturan SMTP di Pengaturan > Email."
+              : `Pembayaran dikonfirmasi. Email konfirmasi telah dikirim ke ${dialog.item.email}.`
+            : "Pembayaran ditolak. Email pemberitahuan dikirim ke peserta.",
       });
       setDialog(null);
       setCatatan("");
