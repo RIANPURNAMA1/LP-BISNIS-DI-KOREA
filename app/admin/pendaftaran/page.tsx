@@ -631,7 +631,7 @@ function PendaftaranList() {
       if (!res.ok || !json.success) throw new Error();
       setAkunBaru(json.data);
       if (json.data.length === 0) {
-        alert("Belum ada peserta.");
+        alert("Semua peserta sudah punya akun. Tidak ada akun baru yang perlu dibuat.");
         return;
       }
       await buatPdfAkun(json.data);

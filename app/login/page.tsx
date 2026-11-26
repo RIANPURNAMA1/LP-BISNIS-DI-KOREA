@@ -46,15 +46,13 @@ export default function LoginPage() {
 
       const prefix =
         role === "admin" ? "/admin" : role === "afiliasi" ? "/afiliasi" : "/peserta";
-      // Peserta belum lunas => langsung ke gerbang pembayaran, bukan dashboard.
+      // Peserta selalu masuk ke /peserta; yang belum aktif melihat kartu aktivasi di sana.
       const home =
         role === "admin"
           ? "/admin"
           : role === "afiliasi"
             ? "/afiliasi/dashboard"
-            : aksesAktif
-              ? "/peserta"
-              : "/pembayaran";
+            : "/peserta";
       const callbackAllowed =
         callbackUrl &&
         callbackUrl.startsWith(prefix) &&
@@ -101,7 +99,7 @@ export default function LoginPage() {
         </svg>
 
         {/* Logo */}
-        <header className="relative pt-8">
+        <header className="relative flex flex-col items-center pt-8">
           <Link href="/" aria-label="Kembali ke beranda">
             <Image
               src="/logo/4.png"
@@ -112,15 +110,15 @@ export default function LoginPage() {
               className="h-auto w-28 sm:w-32"
             />
           </Link>
+          <p className="mt-2 text-center text-sm font-semibold tracking-wide text-[#0052A4]">
+            bisnisdikorea.com
+          </p>
         </header>
 
         {/* Form */}
         <div className="relative flex w-full flex-1 items-center justify-center px-4 py-10">
-          <div className="w-full max-w-[312px] rounded-md border border-[#D9DFF3] bg-white/70 p-5 shadow-sm backdrop-blur-md">
-            <h1 className="text-sm font-semibold text-gray-900">Masuk</h1>
-            <p className="mt-0.5 text-xs leading-5 text-gray-500">
-              Peserta, admin, dan affiliate masuk dengan email dan password terdaftar.
-            </p>
+          <div className="w-full max-w-[340px] rounded-lg border border-[#D9DFF3] bg-white/80 p-6 shadow-sm backdrop-blur-md">
+            <h1 className="text-center text-base font-bold text-gray-900">Masuk</h1>
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
               {error && (
@@ -173,9 +171,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-5 space-y-2 text-xs text-gray-800">
+            <div className="mt-5 space-y-2 border-t border-[#E6ECF8] pt-4 text-center text-xs text-gray-800">
               <p>
-                <Link href="/daftar" className="font-medium hover:underline">
+                <Link href="/daftar" className="font-semibold text-[#0052A4] hover:underline">
                   Buat akun peserta baru
                 </Link>
               </p>
@@ -189,7 +187,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <footer className="relative pb-8 text-xs text-gray-800">
+        <footer className="relative pb-8 text-center text-xs text-gray-600">
           <span>© {new Date().getFullYear()} Indonesia-Korea Business Project</span>
           <span className="mx-3 text-gray-400">·</span>
           <Link href="/" className="hover:underline">

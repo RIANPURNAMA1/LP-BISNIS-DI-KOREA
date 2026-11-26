@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import LogoutButton from "./LogoutButton";
+import ProfilButton from "./ProfilButton";
 import VideoWajib from "./VideoWajib";
 import JadwalSesi from "./JadwalSesi";
 import { POSISI_OPSI } from "@/lib/posisi";
@@ -727,6 +728,9 @@ export default function PesertaFlow({
                 value={WILAYAH_LABEL[kontak?.wilayah ?? ""] || kontak?.wilayah || "-"}
               />
             </dl>
+            <div className="mt-3">
+              <ProfilButton nama={nama} whatsapp={kontak?.whatsapp ?? ""} email={kontak?.email ?? ""} />
+            </div>
           </section>
 
           <div className="lg:hidden">

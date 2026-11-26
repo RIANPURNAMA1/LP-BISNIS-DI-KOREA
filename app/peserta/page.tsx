@@ -8,7 +8,6 @@ import StatusVerifikasi from "./StatusVerifikasi";
 import KartuAktivasi from "./KartuAktivasi";
 import LogoutButton from "./LogoutButton";
 import ThemeToggle from "./ThemeToggle";
-
 export const dynamic = "force-dynamic";
 
 export default async function PesertaPage() {
