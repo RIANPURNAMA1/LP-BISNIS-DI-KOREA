@@ -12,6 +12,7 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
+import FormKupon from "./FormKupon";
 import {
   BANK_LIST,
   EWALLET_LIST,
@@ -33,7 +34,7 @@ type Props = {
 };
 
 const input =
-  "mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
+  "mt-1.5 h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3.5 text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#0052A4] dark:focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20";
 
 export default function FormAktivasi({
   nama,
@@ -102,6 +103,15 @@ export default function FormAktivasi({
     }
   }
 
+  // Kupon membuka akses langsung: popup ditutup, atau pindah ke ruang member.
+  function kuponBerhasil() {
+    if (onSelesai) onSelesai();
+    else {
+      router.push("/peserta");
+      router.refresh();
+    }
+  }
+
   const menunggu = status === "menunggu";
   const dikonfirmasi = status === "dikonfirmasi";
   const ditolak = status === "ditolak";
@@ -109,33 +119,33 @@ export default function FormAktivasi({
   return (
     <div className="space-y-5">
       <section className="flex items-start gap-3">
-        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#0052A4]/10 text-[#0052A4]">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-md bg-[#0052A4]/10 dark:bg-sky-400/15 text-[#0052A4] dark:text-sky-400">
           <CreditCard className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
+          <h1 className="text-xl font-bold leading-snug tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl">
             Aktifasi Akun Peserta
           </h1>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
             Untuk masuk ke ruang member, transfer biaya layanan{" "}
-            <b className="text-slate-900">{formatRupiah(HARGA_KONSULTASI)}</b> lalu unggah
+            <b className="text-slate-900 dark:text-slate-50">{formatRupiah(HARGA_KONSULTASI)}</b> lalu unggah
             bukti transfernya. Akun Anda aktif setelah admin memverifikasi pembayaran.
           </p>
         </div>
       </section>
 
       {dikonfirmasi ? (
-        <div className="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
+        <div className="rounded-md border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-slate-900 p-6 shadow-sm">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600" />
+            <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <h2 className="font-bold text-slate-900">Pembayaran dikonfirmasi</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <h2 className="font-bold text-slate-900 dark:text-slate-50">Pembayaran dikonfirmasi</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 Akun Anda sudah aktif. Silakan masuk ke halaman peserta.
               </p>
               <a
                 href="/peserta"
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#0052A4] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#00438a]"
+                className="mt-4 inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#00438a]"
               >
                 Masuk ke Halaman Peserta <ArrowRight className="h-4 w-4" />
               </a>
@@ -143,34 +153,38 @@ export default function FormAktivasi({
           </div>
         </div>
       ) : menunggu ? (
-        <div className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
+        <div className="rounded-md border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-slate-900 p-6 shadow-sm">
           <div className="flex items-start gap-3">
-            <Loader2 className="mt-0.5 h-6 w-6 shrink-0 animate-spin text-amber-600" />
+            <Loader2 className="mt-0.5 h-6 w-6 shrink-0 animate-spin text-amber-600 dark:text-amber-400" />
             <div>
-              <h2 className="font-bold text-slate-900">Menunggu verifikasi admin</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <h2 className="font-bold text-slate-900 dark:text-slate-50">Menunggu verifikasi admin</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 Bukti transfer Anda sudah kami terima. Akses peserta akan terbuka otomatis
                 setelah admin menyetujui pembayaran. Biasanya memakan waktu beberapa saat.
               </p>
               <button
                 type="button"
                 onClick={() => router.refresh()}
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                className="mt-4 inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <RefreshCw className="h-4 w-4" /> Cek status terbaru
               </button>
             </div>
           </div>
+          <div className="mt-5 border-t border-amber-100 dark:border-amber-500/20 pt-5">
+            <FormKupon onBerhasil={kuponBerhasil} />
+          </div>
         </div>
       ) : (
         <>
+          <FormKupon onBerhasil={kuponBerhasil} />
           {ditolak && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+            <div className="rounded-md border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-5">
               <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
                 <div>
-                  <h2 className="font-bold text-red-800">Bukti perlu diperbaiki</h2>
-                  <p className="mt-1 text-sm leading-6 text-red-700">
+                  <h2 className="font-bold text-red-800 dark:text-red-300">Bukti perlu diperbaiki</h2>
+                  <p className="mt-1 text-sm leading-6 text-red-700 dark:text-red-300">
                     {pembayaran?.catatanAdmin ||
                       "Admin tidak dapat memverifikasi bukti Anda. Silakan unggah ulang."}
                   </p>
@@ -179,25 +193,25 @@ export default function FormAktivasi({
             </div>
           )}
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-sm font-bold text-slate-900">1. Transfer ke rekening berikut</h2>
-            <div className="mt-3 rounded-xl bg-slate-50 p-4">
+          <section className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-6">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-50">1. Transfer ke rekening berikut</h2>
+            <div className="mt-3 rounded-md bg-slate-50 dark:bg-slate-800/60 p-4">
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Bank</dt>
-                  <dd className="font-semibold text-slate-900">
+                  <dt className="text-slate-500 dark:text-slate-400">Bank</dt>
+                  <dd className="font-semibold text-slate-900 dark:text-slate-50">
                     {rekening.bankNama || "-"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Nomor rekening</dt>
-                  <dd className="flex items-center gap-2 font-semibold text-slate-900">
+                  <dt className="text-slate-500 dark:text-slate-400">Nomor rekening</dt>
+                  <dd className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-50">
                     {rekening.bankNo || "-"}
                     {rekening.bankNo && (
                       <button
                         type="button"
                         onClick={salinNoRekening}
-                        className="rounded p-1 text-[#0052A4] hover:bg-blue-50"
+                        className="rounded p-1 text-[#0052A4] dark:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-400/10"
                         aria-label="Salin nomor rekening"
                       >
                         <Copy className="h-4 w-4" />
@@ -206,31 +220,31 @@ export default function FormAktivasi({
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Atas nama</dt>
-                  <dd className="font-semibold text-slate-900">
+                  <dt className="text-slate-500 dark:text-slate-400">Atas nama</dt>
+                  <dd className="font-semibold text-slate-900 dark:text-slate-50">
                     {rekening.bankAtasNama || "-"}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-4 border-t border-slate-200 pt-2">
-                  <dt className="text-slate-500">Jumlah</dt>
-                  <dd className="font-bold text-[#0052A4]">
+                <div className="flex justify-between gap-4 border-t border-slate-200 dark:border-slate-700 pt-2">
+                  <dt className="text-slate-500 dark:text-slate-400">Jumlah</dt>
+                  <dd className="font-bold text-[#0052A4] dark:text-sky-400">
                     {formatRupiah(HARGA_KONSULTASI)}
                   </dd>
                 </div>
               </dl>
               {disalin && (
-                <p className="mt-2 text-xs font-medium text-emerald-600">Nomor rekening disalin.</p>
+                <p className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">Nomor rekening disalin.</p>
               )}
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-sm font-bold text-slate-900">
+          <section className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-6">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-50">
               2. Unggah bukti transfer {ditolak ? "yang benar" : ""}
             </h2>
             <form onSubmit={kirimBukti} className="mt-4 space-y-4">
               <div>
-                <label htmlFor="namaChannel" className="block text-xs font-medium text-slate-700">
+                <label htmlFor="namaChannel" className="block text-xs font-medium text-slate-700 dark:text-slate-200">
                   Bank / e-wallet pengirim
                 </label>
                 <select
@@ -257,7 +271,7 @@ export default function FormAktivasi({
               </div>
 
               <div>
-                <label htmlFor="namaPengirim" className="block text-xs font-medium text-slate-700">
+                <label htmlFor="namaPengirim" className="block text-xs font-medium text-slate-700 dark:text-slate-200">
                   Nama pada rekening / akun pengirim
                 </label>
                 <input
@@ -273,7 +287,7 @@ export default function FormAktivasi({
               </div>
 
               <div>
-                <label htmlFor="bukti" className="block text-xs font-medium text-slate-700">
+                <label htmlFor="bukti" className="block text-xs font-medium text-slate-700 dark:text-slate-200">
                   Gambar bukti transfer (JPG/PNG/WebP, maks. 5 MB)
                 </label>
                 <input
@@ -281,14 +295,14 @@ export default function FormAktivasi({
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => setBukti(e.target.files?.[0] ?? null)}
-                  className="mt-1.5 block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0052A4] file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-[#00438a]"
+                  className="mt-1.5 block w-full text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-[#0052A4] file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-[#00438a]"
                 />
               </div>
 
               {error && (
                 <div
                   role="alert"
-                  className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+                  className="flex items-center gap-2 rounded-md border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-2.5 text-sm text-red-700 dark:text-red-300"
                 >
                   <AlertCircle className="h-4 w-4 shrink-0" /> {error}
                 </div>
@@ -297,7 +311,7 @@ export default function FormAktivasi({
               <button
                 type="submit"
                 disabled={loading}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#0052A4] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#00438a] disabled:opacity-60"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#0052A4] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#00438a] disabled:opacity-60"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {ditolak ? "Unggah Ulang Bukti" : "Kirim Bukti Pembayaran"}
@@ -308,7 +322,7 @@ export default function FormAktivasi({
       )}
 
       {pembayaran && (
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-slate-500 dark:text-slate-400">
           Status terakhir: {STATUS_BAYAR[status as keyof typeof STATUS_BAYAR] ?? status} &middot;{" "}
           {new Date(pembayaran.createdAt).toLocaleString("id-ID")}
         </p>

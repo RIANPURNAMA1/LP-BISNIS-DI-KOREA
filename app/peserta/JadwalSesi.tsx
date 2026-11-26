@@ -130,9 +130,9 @@ export default function JadwalSesi({
     return (
       <div className="grid h-40 place-items-center">
         {loadError ? (
-          <p className="px-4 text-sm text-red-600">{loadError}</p>
+          <p className="px-4 text-sm text-red-600 dark:text-red-400">{loadError}</p>
         ) : (
-          <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+          <Loader2 className="h-5 w-5 animate-spin text-slate-400 dark:text-slate-500" />
         )}
       </div>
     );
@@ -147,45 +147,45 @@ export default function JadwalSesi({
   return (
     <div className="space-y-4">
       {loadError && (
-        <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
+        <p role="alert" className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" /> {loadError}
         </p>
       )}
 
       {aktif ? (
-        <section className="rounded-lg border border-slate-200 p-4">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <CalendarCheck className="h-4 w-4 text-[#0052A4]" /> Jadwal konsultasi Anda
+        <section className="rounded-md border border-slate-200 dark:border-slate-700 p-4">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-50">
+            <CalendarCheck className="h-4 w-4 text-[#0052A4] dark:text-sky-400" /> Jadwal konsultasi Anda
           </h3>
-          <p className="mt-2 text-base font-semibold text-slate-900">
+          <p className="mt-2 text-base font-semibold text-slate-900 dark:text-slate-50">
             {formatTanggal(aktif.tanggal)} · {aktif.jam} WIB
           </p>
-          <p className="mt-1 text-xs text-slate-500">{formatPosisi(posisi)}</p>
-          <span className="mt-2 inline-block rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#0052A4]">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPosisi(posisi)}</p>
+          <span className="mt-2 inline-block rounded-md bg-blue-50 dark:bg-sky-400/10 px-2.5 py-1 text-xs font-semibold text-[#0052A4] dark:text-sky-400">
             {STATUS_LABEL[aktif.status]?.label ?? aktif.status}
           </span>
-          {aktif.catatan && <p className="mt-2 text-sm text-slate-600">Catatan: {aktif.catatan}</p>}
-          <p className="mt-2 text-xs text-slate-500">
+          {aktif.catatan && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Catatan: {aktif.catatan}</p>}
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Admin akan menghubungi Anda untuk informasi selanjutnya.
           </p>
           <button
             onClick={() => batalkan(aktif.id)}
-            className="mt-3 rounded-full px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50"
+            className="mt-3 rounded-md px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10"
           >
             Batalkan &amp; pilih ulang
           </button>
         </section>
       ) : data.waitinglist ? (
-        <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <h3 className="text-sm font-semibold text-amber-900">Anda sudah masuk waitinglist</h3>
-          <p className="mt-1.5 text-sm leading-6 text-amber-800">
+        <section className="rounded-md border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4">
+          <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200">Anda sudah masuk waitinglist</h3>
+          <p className="mt-1.5 text-sm leading-6 text-amber-800 dark:text-amber-300">
             Terima kasih. Data Anda akan kami prioritaskan dan admin akan menghubungi Anda untuk
             informasi selanjutnya.
           </p>
         </section>
       ) : (
         <form onSubmit={submit} className="space-y-4">
-          <p className="text-sm leading-6 text-slate-600">
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
             Jadwal konsultasi untuk kategori{" "}
             <b>{formatPosisi(posisi) || "yang Anda pilih"}</b>. Pilih salah satu slot yang sudah
             ditetapkan admin; setiap slot maksimal diisi <b>5 peserta</b>. Jika slot yang Anda pilih
@@ -193,13 +193,13 @@ export default function JadwalSesi({
           </p>
 
           {data.slots.length === 0 ? (
-            <div className="rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
+            <div className="rounded-md bg-slate-50 dark:bg-slate-800/60 px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-300">
               Admin belum menetapkan jadwal. Anda bisa mendaftar ke waitinglist agar diprioritaskan.
             </div>
           ) : (
             tanggalGroup.map((tanggal) => (
               <div key={tanggal}>
-                <p className="mb-2 text-sm font-semibold text-slate-800">
+                <p className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
                   {formatTanggal(tanggal)}
                 </p>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -215,16 +215,16 @@ export default function JadwalSesi({
                             setSlotId(s.id);
                             setError("");
                           }}
-                          className={`h-auto min-h-14 rounded-lg px-2 py-2 text-center text-sm transition-colors ${
+                          className={`h-auto min-h-14 rounded-md px-2 py-2 text-center text-sm transition-colors ${
                             slotId === s.id
                               ? "bg-[#0052A4] text-white"
                               : full
-                                ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
-                                : "bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                                ? "bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/20"
+                                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 ring-1 ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                           }`}
                         >
                           <span className="block font-medium">{s.jam}</span>
-                          <span className={`block text-[11px] ${slotId === s.id ? "text-white/80" : "text-slate-500"}`}>
+                          <span className={`block text-[11px] ${slotId === s.id ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
                             {full ? "Penuh · waitinglist" : `${s.sisa}/${s.kuota} tersedia`}
                           </span>
                         </button>
@@ -236,15 +236,15 @@ export default function JadwalSesi({
           )}
 
           {penuh && (
-            <p role="status" className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+            <p role="status" className="rounded-md bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-sm text-amber-800 dark:text-amber-300">
               Jadwal ini sudah penuh. Jika dilanjutkan, Anda akan otomatis masuk waitinglist dan kami
               akan menghubungi Anda bila ada slot tersedia.
             </p>
           )}
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-slate-700">
-              Catatan <span className="font-normal text-slate-500">(opsional)</span>
+            <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200">
+              Catatan <span className="font-normal text-slate-500 dark:text-slate-400">(opsional)</span>
             </span>
             <textarea
               value={catatan}
@@ -252,12 +252,12 @@ export default function JadwalSesi({
               maxLength={500}
               rows={2}
               placeholder="Hal yang ingin dibahas saat konsultasi"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#0052A4] focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
+              className="w-full rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-[#0052A4] dark:focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-[#0052A4]/20"
             />
           </label>
 
           {error && (
-            <p role="alert" className="flex items-start gap-2 text-sm text-red-600">
+            <p role="alert" className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
             </p>
           )}
@@ -266,7 +266,7 @@ export default function JadwalSesi({
             <button
               type="submit"
               disabled={saving || !pilihan}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0052A4] px-5 text-sm font-semibold text-white hover:bg-[#00438a] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-[#0052A4] px-5 text-sm font-semibold text-white hover:bg-[#00438a] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               <CalendarClock className="h-4 w-4" /> {penuh ? "Masuk waitinglist" : "Kirim jadwal"}
@@ -276,28 +276,28 @@ export default function JadwalSesi({
                 type="button"
                 disabled={saving}
                 onClick={daftarWaitinglist}
-                className="h-11 rounded-full border border-[#0052A4] px-5 text-sm font-semibold text-[#0052A4] hover:bg-[#0052A4]/5 disabled:opacity-60"
+                className="h-11 rounded-md border border-[#0052A4] dark:border-sky-400 px-5 text-sm font-semibold text-[#0052A4] dark:text-sky-400 hover:bg-[#0052A4]/5 dark:hover:bg-sky-400/10 disabled:opacity-60"
               >
                 Waitinglist
               </button>
             )}
           </div>
-          <p className="text-xs leading-5 text-slate-500">
+          <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
             Peserta di waitinglist kami prioritaskan saat ada slot baru atau yang batal.
           </p>
         </form>
       )}
 
       {riwayat.length > 0 && (
-        <section className="border-t border-slate-200 pt-4">
-          <h3 className="text-sm font-semibold text-slate-900">Riwayat jadwal</h3>
-          <ul className="mt-2 divide-y divide-slate-100 text-sm">
+        <section className="border-t border-slate-200 dark:border-slate-700 pt-4">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Riwayat jadwal</h3>
+          <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-800 text-sm">
             {riwayat.map((j) => (
               <li key={j.id} className="flex items-center justify-between gap-3 py-2">
-                <span className="text-slate-600">
+                <span className="text-slate-600 dark:text-slate-300">
                   {formatTanggal(j.tanggal, false)} · {j.jam}
                 </span>
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
                   {STATUS_LABEL[j.status]?.label ?? j.status}
                 </span>
               </li>

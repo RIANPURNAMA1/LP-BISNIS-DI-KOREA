@@ -11,6 +11,25 @@ body {
   color: #0c2342;
 }
 
+/* Tema gelap dashboard peserta: samakan latar html/body (overscroll, area di luar wrapper)
+   dan beri warna dasar untuk kontrol form yang tidak punya kelas warna sendiri. */
+html:has(#peserta-root.dark),
+html:has(#peserta-root.dark) body {
+  background: #020617;
+  color: #f1f5f9;
+}
+
+#peserta-root.dark
+  :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]) {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+#peserta-root.dark :is(input, textarea)::placeholder {
+  color: #64748b;
+}
+
 .hero-bg {
   background:
     linear-gradient(90deg, rgba(12, 35, 66, 0.55) 0%, rgba(31, 90, 142, 0.76) 55%, rgba(12, 35, 66, 0.55) 100%),
@@ -332,5 +351,53 @@ html {
   .tip-in {
     animation: none;
     transform: translateY(-50%);
+  }
+}
+
+/* Border berkilau yang berputar mengelilingi kartu (hanya tema gelap peserta). */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes glow-spin {
+  to {
+    --glow-angle: 360deg;
+  }
+}
+
+.dark .glow-border::before,
+.dark .glow-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--glow-angle),
+    transparent 0deg,
+    transparent 230deg,
+    rgba(56, 189, 248, 0.25) 280deg,
+    #7dd3fc 330deg,
+    #ffffff 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: glow-spin 4s linear infinite;
+}
+
+/* Lapisan kedua: pendar lembut di sekitar garis */
+.dark .glow-border::after {
+  filter: blur(7px);
+  opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dark .glow-border::before,
+  .dark .glow-border::after {
+    animation: none;
   }
 }

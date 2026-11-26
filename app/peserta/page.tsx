@@ -7,6 +7,7 @@ import PesertaFlow from "./PesertaFlow";
 import StatusVerifikasi from "./StatusVerifikasi";
 import KartuAktivasi from "./KartuAktivasi";
 import LogoutButton from "./LogoutButton";
+import ThemeToggle from "./ThemeToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -66,27 +67,45 @@ export default async function PesertaPage() {
   const pembayaranRingkas = ringkasPembayaran(pembayaranTerakhir);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-md bg-[#0052A4]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo/3.webp" alt="" className="h-8 w-8 object-contain" />
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo/4-header.png"
+              alt=""
+              className="h-12 w-auto shrink-0 object-contain dark:hidden"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo/3-header.png"
+              alt=""
+              className="hidden h-12 w-auto shrink-0 object-contain dark:block"
+            />
             <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold text-slate-900">
+              <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-50">
                 Indonesia-Korea Business Project
               </p>
-              <p className="truncate text-sm text-slate-500">Ruang member</p>
+              <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                Ruang member
+              </p>
             </div>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <div className="hidden lg:block">
+              <LogoutButton />
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-12 lg:pb-12">
+        <PesertaFlow
+          atas={
+            <>
         {menungguVerifikasi && pembayaranTerakhir && (
           <StatusVerifikasi createdAt={pembayaranTerakhir.createdAt.toISOString()} />
         )}
@@ -103,22 +122,31 @@ export default async function PesertaPage() {
         )}
 
         {/* Sapaan */}
-        <div className="mb-10 max-w-2xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-            Halo, {nama}
-          </h1>
-          <p className="mt-2 text-base leading-7 text-slate-600">
-            Selamat datang di Ruang Member Bisnis di Korea.
-          </p>
+        <section className="glow-border relative mb-6 overflow-hidden rounded-md bg-gradient-to-br from-[#0C2242] via-[#0A3D7A] to-[#0052A4] p-5 text-white shadow-xl shadow-[#0052A4]/20 ring-1 ring-white/10 sm:p-8 lg:mb-10">
+          <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full bg-sky-300/20 blur-3xl" />
+          <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 left-1/3 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative flex items-start gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-white/15 text-lg sm:h-14 sm:w-14 sm:text-xl font-bold uppercase ring-1 ring-white/25 backdrop-blur">
+              {nama.trim().charAt(0) || "P"}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white/70">Selamat datang kembali</p>
+              <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{nama}</h1>
+              <p className="mt-1.5 max-w-xl text-sm leading-6 text-white/75">
+                Ruang Member Bisnis di Korea. Selesaikan tiap langkah untuk memulai perjalanan
+                bisnismu.
+              </p>
+            </div>
+          </div>
           {konten.arahan && konten.arahan !== DEFAULT_ARAHAN && (
-            <div className="mt-5 border-l-2 border-[#0052A4] bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
-              <p className="font-semibold text-slate-900">Catatan dari admin</p>
-              <p className="mt-0.5">{konten.arahan}</p>
+            <div className="relative mt-5 rounded-md bg-white/10 px-4 py-3 text-sm leading-6 ring-1 ring-white/15 backdrop-blur">
+              <p className="font-semibold">Catatan dari admin</p>
+              <p className="mt-0.5 text-white/85">{konten.arahan}</p>
             </div>
           )}
-        </div>
-
-        <PesertaFlow
+        </section>
+            </>
+          }
           videoUrl={konten.videoUrl}
           thumbnailUrl={konten.thumbnailUrl}
           videoSelesai={!!p?.videoSelesaiAt}

@@ -362,7 +362,7 @@ export default function VideoWajib({
               aria-hidden
               className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent"
             />
-            <span className="absolute bottom-3 left-3 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white ring-1 ring-white/25 backdrop-blur-sm">
+            <span className="absolute bottom-3 left-3 rounded-md bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white ring-1 ring-white/25 backdrop-blur-sm">
               Video Pengarahan
             </span>
           </>
@@ -378,7 +378,7 @@ export default function VideoWajib({
         >
           {status === "loading" && <Loader2 className="h-9 w-9 animate-spin text-white" />}
           {status === "ready" && !playing && (
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 text-slate-900 shadow-lg">
+            <span className="grid h-16 w-16 place-items-center rounded-md bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-slate-50 shadow-lg">
               <Play className="ml-1 h-7 w-7" />
             </span>
           )}
@@ -392,7 +392,7 @@ export default function VideoWajib({
         {warn && (
           <div
             role="status"
-            className="pointer-events-none absolute inset-x-3 top-3 rounded-lg bg-slate-900/90 px-3 py-2 text-center text-xs font-medium text-white"
+            className="pointer-events-none absolute inset-x-3 top-3 rounded-md bg-slate-900/90 px-3 py-2 text-center text-xs font-medium text-white"
           >
             {warn}
           </div>
@@ -426,7 +426,7 @@ export default function VideoWajib({
           onClick={() => setExpanded((v) => !v)}
           aria-label={besar ? "Kecilkan video" : "Perbesar video"}
           title={besar ? "Kecilkan" : "Perbesar video"}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/10 px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 sm:px-2.5"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-white/10 px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 sm:px-2.5"
         >
           {besar ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           <span className="hidden sm:inline">{besar ? "Kecilkan" : "Perbesar"}</span>
@@ -451,7 +451,7 @@ export default function VideoWajib({
           className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/90 p-3 backdrop-blur-sm sm:p-6"
           onClick={(e) => e.target === e.currentTarget && setExpanded(false)}
         >
-          <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-slate-900 shadow-2xl ring-1 ring-white/10">
+          <div className="relative w-full max-w-5xl overflow-hidden rounded-md bg-slate-900 shadow-2xl ring-1 ring-white/10">
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-white">Video pengarahan</p>
@@ -463,7 +463,7 @@ export default function VideoWajib({
                 type="button"
                 onClick={() => setExpanded(false)}
                 aria-label="Tutup video"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/10 text-white transition-colors hover:bg-white/20"
               >
                 <X className="h-4 w-4" />
               </button>

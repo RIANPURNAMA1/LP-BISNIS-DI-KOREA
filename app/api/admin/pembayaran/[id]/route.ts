@@ -63,8 +63,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         where: { id: pembayaran.pendaftaranId },
         data:
           status === "dikonfirmasi"
-            ? { aksesAktifAt: verifiedAt, konsultasiAt: verifiedAt }
-            : { aksesAktifAt: null, konsultasiAt: null },
+            ? { aksesAktifAt: verifiedAt, konsultasiAt: verifiedAt, aksesVia: "pembayaran", aksesCatatan: null }
+            : { aksesAktifAt: null, konsultasiAt: null, aksesVia: null, aksesCatatan: null },
       });
 
       if (

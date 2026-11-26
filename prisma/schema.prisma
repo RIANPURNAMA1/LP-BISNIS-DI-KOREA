@@ -34,6 +34,9 @@ model Pendaftaran {
   // Gerbang akses member: HANYA diisi admin saat pembayaran terverifikasi.
   // null = peserta belum boleh masuk area /peserta.
   aksesAktifAt DateTime? @map("akses_aktif_at")
+  // Asal akses: pembayaran | kupon | manual (diaktifkan admin). null = terkunci.
+  aksesVia     String?   @map("akses_via") @db.VarChar(20)
+  aksesCatatan String?   @map("akses_catatan") @db.VarChar(255)
   // Progres alur peserta: selesai menonton video, lalu konfirmasi konsultasi lanjutan.
   videoSelesaiAt DateTime? @map("video_selesai_at")
   // Diisi saat peserta mengirim konfirmasi konsultasi lanjutan (bukan lagi oleh pembayaran).
@@ -47,6 +50,7 @@ model Pendaftaran {
   waitinglist Waitinglist?
   pembayaran  PembayaranKonsultasi[]
   referral    Referral?
+  kupon       PemakaianKupon?
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -272,4 +276,36 @@ model PasswordReset {
 
   @@index([tipe, userId])
   @@map("password_reset")
+}
+
+// Kupon aktivasi akun: memakai kupon valid membuka akses member tanpa transfer.
+// Satu kode boleh dipakai banyak peserta sampai `kuota` habis.
+model Kupon {
+  id            Int       @id @default(autoincrement())
+  kode          String    @unique @db.VarChar(40)
+  kuota         Int
+  terpakai      Int       @default(0)
+  aktif         Boolean   @default(true)
+  berlakuSampai DateTime? @map("berlaku_sampai")
+  catatan       String?   @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  pemakaian PemakaianKupon[]
+
+  @@map("kupon")
+}
+
+// Riwayat pemakaian. pendaftaranId unik: satu peserta hanya bisa memakai satu kupon.
+model PemakaianKupon {
+  id            Int         @id @default(autoincrement())
+  kuponId       Int         @map("kupon_id")
+  pendaftaranId Int         @unique @map("pendaftaran_id")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  kupon       Kupon       @relation(fields: [kuponId], references: [id], onDelete: Cascade)
+  pendaftaran Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade)
+
+  @@index([kuponId])
+  @@map("pemakaian_kupon")
 }

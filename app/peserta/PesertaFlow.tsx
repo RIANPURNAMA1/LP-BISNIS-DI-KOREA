@@ -7,19 +7,27 @@ import {
   ArrowRight,
   CalendarClock,
   Check,
+  ChevronRight,
+  Home,
   Lock,
   Mail,
   MapPin,
   Phone,
+  PlayCircle,
   User,
+  UserRound,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
+import LogoutButton from "./LogoutButton";
 import VideoWajib from "./VideoWajib";
 import JadwalSesi from "./JadwalSesi";
 import { POSISI_OPSI } from "@/lib/posisi";
 
 export type Grup = { nama: string; deskripsi: string; url: string }[];
+
+type Tab = "beranda" | "video" | "konsultasi" | "grup" | "profil";
 
 type Popup = "grupAwal" | "video" | "posisi" | "jadwal" | "selamat" | null;
 
@@ -56,11 +64,11 @@ function Modal({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-900/60 p-4"
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
-        className={`relative my-4 w-full rounded-md bg-white p-6 shadow-xl ${
+        className={`relative my-4 w-full rounded-md bg-white dark:bg-slate-900 p-6 shadow-xl ${
           size === "lg" ? "max-w-2xl" : "max-w-md"
         }`}
       >
@@ -68,12 +76,12 @@ function Modal({
           <button
             onClick={onClose}
             aria-label="Tutup"
-            className={`absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md text-slate-500 hover:bg-slate-100 ${FOCUS}`}
+            className={`absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 ${FOCUS}`}
           >
             <X className="h-4 w-4" />
           </button>
         )}
-        <h2 className="pr-8 text-lg font-semibold text-slate-900">{title}</h2>
+        <h2 className="pr-8 text-lg font-semibold text-slate-900 dark:text-slate-50">{title}</h2>
         {children}
       </div>
     </div>
@@ -90,18 +98,18 @@ const WaIcon = () => (
 
 function GrupList({ grup, terkunci = false }: { grup: Grup; terkunci?: boolean }) {
   return (
-    <ul className="divide-y divide-slate-200 rounded-md border border-slate-200">
+    <ul className="divide-y divide-slate-200 dark:divide-slate-700 rounded-md border border-slate-200 dark:border-slate-700">
       {grup.map((g) => (
         <li
           key={g.nama}
           className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900">{g.nama}</p>
-            <p className="mt-0.5 text-sm leading-6 text-slate-600">{g.deskripsi}</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{g.nama}</p>
+            <p className="mt-0.5 text-sm leading-6 text-slate-600 dark:text-slate-300">{g.deskripsi}</p>
           </div>
           {terkunci ? (
-            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400">
+            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-4 py-2 text-sm font-medium text-slate-400 dark:text-slate-500">
               <Lock className="h-4 w-4" /> Terkunci
             </span>
           ) : g.url ? (
@@ -109,12 +117,12 @@ function GrupList({ grup, terkunci = false }: { grup: Grup; terkunci?: boolean }
               href={g.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 ${FOCUS}`}
+              className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-800/60 ${FOCUS}`}
             >
               <WaIcon /> Gabung grup
             </a>
           ) : (
-            <p className="shrink-0 text-sm text-slate-500">Link akan dibagikan admin</p>
+            <p className="shrink-0 text-sm text-slate-500 dark:text-slate-400">Link akan dibagikan admin</p>
           )}
         </li>
       ))}
@@ -130,6 +138,7 @@ function Step({
   state,
   status,
   last,
+  hideMobile,
   children,
 }: {
   no: number;
@@ -137,40 +146,46 @@ function Step({
   state: StepState;
   status?: string;
   last?: boolean;
+  /** Di mobile hanya satu bagian tampil sesuai tab bawah. */
+  hideMobile?: boolean;
   children: ReactNode;
 }) {
   const marker =
     state === "done"
       ? "bg-[#0052A4] text-white"
       : state === "active"
-        ? "border-2 border-[#0052A4] bg-white text-[#0052A4]"
-        : "border border-slate-300 bg-white text-slate-400";
+        ? "border-2 border-[#0052A4] dark:border-sky-400 bg-white dark:bg-slate-900 text-[#0052A4] dark:text-sky-400"
+        : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500";
 
   return (
-    <li className="relative flex gap-4 pb-10 last:pb-0">
+    <li
+      className={`relative gap-4 pb-0 lg:flex lg:pb-10 lg:last:pb-0 ${
+        hideMobile ? "hidden" : "block"
+      }`}
+    >
       {!last && (
         <span
           aria-hidden="true"
-          className={`absolute left-4 top-9 -ml-px h-[calc(100%-2.25rem)] w-px ${
-            state === "done" ? "bg-[#0052A4]" : "bg-slate-200"
+          className={`absolute left-4 top-9 -ml-px hidden h-[calc(100%-2.25rem)] w-px lg:block ${
+            state === "done" ? "bg-[#0052A4]" : "bg-slate-200 dark:bg-slate-700"
           }`}
         />
       )}
       <span
-        className={`relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${marker}`}
+        className={`relative hidden h-8 w-8 shrink-0 place-items-center rounded-md text-sm font-semibold lg:grid ${marker}`}
       >
         {state === "done" ? <Check className="h-4 w-4" strokeWidth={3} /> : no}
       </span>
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4">
           <h2
-            className={`text-base font-semibold ${
-              state === "locked" ? "text-slate-500" : "text-slate-900"
+            className={`text-lg font-bold lg:text-base lg:font-semibold ${
+              state === "locked" ? "text-slate-500 dark:text-slate-400" : "text-slate-900 dark:text-slate-50"
             }`}
           >
             {title}
           </h2>
-          {status && <span className="text-sm text-slate-500">{status}</span>}
+          {status && <span className="text-sm text-slate-500 dark:text-slate-400">{status}</span>}
         </div>
         <div className="mt-3">{children}</div>
       </div>
@@ -189,10 +204,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-3 py-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
       <div className="min-w-0">
-        <dt className="text-sm text-slate-500">{label}</dt>
-        <dd className="truncate text-sm font-medium text-slate-900" title={value}>
+        <dt className="text-sm text-slate-500 dark:text-slate-400">{label}</dt>
+        <dd className="truncate text-sm font-medium text-slate-900 dark:text-slate-50" title={value}>
           {value || "-"}
         </dd>
       </div>
@@ -211,9 +226,9 @@ function RingkasanMeeting({
   posisi: string;
 }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
-      <h3 className="text-sm font-semibold text-slate-900">Data meeting lanjutan</h3>
-      <dl className="mt-1 divide-y divide-slate-100 px-1">
+    <section className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 p-3">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Data meeting lanjutan</h3>
+      <dl className="mt-1 divide-y divide-slate-100 dark:divide-slate-800 px-1">
         <InfoRow icon={User} label="Nama" value={nama} />
         <InfoRow icon={Phone} label="WhatsApp" value={kontak?.whatsapp ?? ""} />
         <InfoRow icon={Mail} label="Email" value={kontak?.email ?? ""} />
@@ -243,7 +258,9 @@ export default function PesertaFlow({
   terkunci,
   nama,
   kontak,
+  atas,
 }: {
+  atas?: ReactNode;
   videoUrl: string;
   thumbnailUrl?: string;
   videoSelesai: boolean;
@@ -267,6 +284,7 @@ export default function PesertaFlow({
   const [posisiTerpilih, setPosisiTerpilih] = useState(posisi);
   const [jadwalDone, setJadwalDone] = useState(jadwalSelesai);
   const [popup, setPopup] = useState<Popup>(null);
+  const [tab, setTab] = useState<Tab>("beranda");
   const [infoVideo, setInfoVideo] = useState("");
   const [pilihanPosisi, setPilihanPosisi] = useState(posisi ?? "");
   const [ijazahS1, setIjazahS1] = useState(false);
@@ -316,6 +334,11 @@ export default function PesertaFlow({
     }
   }
 
+  function pindahTab(t: Tab) {
+    setTab(t);
+    window.scrollTo({ top: 0 });
+  }
+
   function bukaPosisi() {
     setPilihanPosisi(posisiTerpilih ?? "");
     setIjazahS1(false);
@@ -326,7 +349,8 @@ export default function PesertaFlow({
   function bukaKonsultasi() {
     if (terkunci) return;
     if (!videoDone) {
-      setInfoVideo("silahkan tonton dulu video diatas");
+      setInfoVideo("silahkan tonton dulu video pengarahan");
+      pindahTab("video");
       return;
     }
     setInfoVideo("");
@@ -392,18 +416,91 @@ export default function PesertaFlow({
 
   return (
     <>
+      <div className={tab === "beranda" ? "" : "hidden lg:block"}>{atas}</div>
+
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         {/* ALUR */}
         <div className="min-w-0">
-          <div className="mb-8">
-            <p className="text-sm font-medium text-slate-900">
+          {/* Mobile: ringkasan langkah (tab Beranda) */}
+          <div className={`${tab === "beranda" ? "" : "hidden"} lg:hidden`}>
+            <div className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                {doneCount} dari {done.length} langkah selesai
+              </p>
+              <div className="mt-2.5 grid grid-cols-3 gap-1.5" aria-hidden="true">
+                {done.map((d, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 rounded-full ${
+                      d ? "bg-[#0052A4] dark:bg-sky-400" : "bg-slate-200 dark:bg-slate-700"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            <ul className="mt-3 space-y-2">
+              {(
+                [
+                  { t: "grup", icon: Users, judul: "Grup Korean Bisnis Klub", state: stateGrup },
+                  { t: "video", icon: PlayCircle, judul: "Video pengarahan", state: stateVideo },
+                  { t: "konsultasi", icon: CalendarClock, judul: "Konsultasi lanjutan", state: stateKonsultasi },
+                ] as { t: Tab; icon: LucideIcon; judul: string; state: StepState }[]
+              ).map((it) => (
+                <li key={it.t}>
+                  <button
+                    type="button"
+                    onClick={() => pindahTab(it.t)}
+                    className={`flex w-full items-center gap-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3.5 text-left active:bg-slate-50 dark:active:bg-slate-800/60 ${FOCUS}`}
+                  >
+                    <span
+                      className={`grid h-10 w-10 shrink-0 place-items-center rounded-md ${
+                        it.state === "done"
+                          ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : it.state === "active"
+                            ? "bg-[#0052A4]/10 dark:bg-sky-400/15 text-[#0052A4] dark:text-sky-400"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                      }`}
+                    >
+                      {it.state === "done" ? (
+                        <Check className="h-5 w-5" strokeWidth={3} />
+                      ) : it.state === "locked" ? (
+                        <Lock className="h-5 w-5" />
+                      ) : (
+                        <it.icon className="h-5 w-5" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+                        {it.judul}
+                      </span>
+                      <span
+                        className={`text-xs font-medium ${
+                          it.state === "done"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : it.state === "active"
+                              ? "text-[#0052A4] dark:text-sky-400"
+                              : "text-slate-400 dark:text-slate-500"
+                        }`}
+                      >
+                        {it.state === "done" ? "Selesai" : it.state === "active" ? "Lanjutkan" : "Terkunci"}
+                      </span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mb-8 hidden lg:block">
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
               {doneCount} dari {done.length} langkah selesai
             </p>
             <div className="mt-2 grid grid-cols-3 gap-1.5" aria-hidden="true">
               {done.map((d, i) => (
                 <span
                   key={i}
-                  className={`h-1.5 rounded-sm ${d ? "bg-[#0052A4]" : "bg-slate-200"}`}
+                  className={`h-1.5 rounded-sm ${d ? "bg-[#0052A4]" : "bg-slate-200 dark:bg-slate-700"}`}
                 />
               ))}
             </div>
@@ -416,11 +513,19 @@ export default function PesertaFlow({
               title="Gabung grup Korean Bisnis Klub"
               state={stateGrup}
               status={terkunci ? "Terkunci" : "Selesai"}
+              hideMobile={tab !== "grup"}
             >
-              <p className="mb-3 max-w-prose text-sm leading-6 text-slate-600">
+              <p className="mb-3 max-w-prose text-sm leading-6 text-slate-600 dark:text-slate-300">
                 Info program dan diskusi antar peserta ada di grup ini.
               </p>
               <GrupList grup={[grupUmum]} terkunci={terkunci} />
+              {/* Mobile: grup konsultasi lanjutan ikut di tab Grup */}
+              <div className="mt-6 lg:hidden">
+                <h3 className="mb-2 text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  Grup konsultasi lanjutan
+                </h3>
+                <GrupList grup={[grupKonsultasi]} terkunci={terkunci || !bolehGrupKonsultasi} />
+              </div>
             </Step>
 
             {/* 2. Video */}
@@ -429,8 +534,9 @@ export default function PesertaFlow({
               title="Tonton video pengarahan"
               state={stateVideo}
               status={terkunci ? "Terkunci" : videoDone ? "Selesai" : "Belum ditonton"}
+              hideMobile={tab !== "video"}
             >
-              <div className="overflow-hidden rounded-md border border-slate-200">
+              <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
                 {terkunci ? (
                   <div className="relative grid aspect-video place-items-center bg-slate-900 px-6 text-center">
                     <div>
@@ -444,27 +550,27 @@ export default function PesertaFlow({
                 ) : videoUrl ? (
                   <VideoWajib url={videoUrl} poster={thumbnailUrl} onDone={handleVideoDone} />
                 ) : (
-                  <div className="grid aspect-video place-items-center bg-slate-50 px-6 text-center text-sm text-slate-500">
+                  <div className="grid aspect-video place-items-center bg-slate-50 dark:bg-slate-800/60 px-6 text-center text-sm text-slate-500 dark:text-slate-400">
                     Video belum tersedia. Silakan cek kembali nanti.
                   </div>
                 )}
               </div>
-              <p className="mt-3 flex max-w-prose items-start gap-2 text-sm leading-6 text-slate-600">
+              <p className="mt-3 flex max-w-prose items-start gap-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {terkunci ? (
                   <>
-                    <Lock className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
+                    <Lock className="mt-1 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
                     <span>
                       Video dan grup akan terbuka otomatis setelah admin memverifikasi pembayaran.
                     </span>
                   </>
                 ) : videoDone ? (
                   <>
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-[#0052A4]" />
+                    <Check className="mt-1 h-4 w-4 shrink-0 text-[#0052A4] dark:text-sky-400" />
                     Video selesai ditonton. Konsultasi lanjutan sekarang sudah bisa diisi.
                   </>
                 ) : (
                   <>
-                    <Lock className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
+                    <Lock className="mt-1 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
                     <span>
                       <b>Wajib tonton sampai selesai video ini dulu sebelum melanjutkan.</b> Setelah
                       selesai, konfirmasi data diri dan pilih jadwal konsultasi lanjutan.
@@ -472,11 +578,11 @@ export default function PesertaFlow({
                   </>
                 )}
               </p>
-              {saving && <p className="mt-2 text-sm text-slate-500">Menyimpan progres…</p>}
+              {saving && <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Menyimpan progres…</p>}
               {error && !popupTampil && (
                 <div
                   role="alert"
-                  className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+                  className="mt-3 flex items-start gap-2 rounded-md border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-2.5 text-sm text-red-700 dark:text-red-300"
                 >
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
                 </div>
@@ -500,8 +606,9 @@ export default function PesertaFlow({
                         : "Terbuka setelah video selesai"
               }
               last
+              hideMobile={tab !== "konsultasi"}
             >
-              <p className="max-w-prose text-sm leading-6 text-slate-600">
+              <p className="max-w-prose text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {terkunci ? (
                   <>Tonton video dan gabung grup setelah admin memverifikasi pembayaran Anda.</>
                 ) : videoDone ? (
@@ -526,7 +633,7 @@ export default function PesertaFlow({
                 onClick={bukaKonsultasi}
                 disabled={terkunci}
                 title={terkunci ? "Menunggu verifikasi admin" : undefined}
-                className={`mt-3 inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] disabled:cursor-not-allowed disabled:bg-slate-300 ${FOCUS}`}
+                className={`mt-3 inline-flex items-center gap-2 rounded-md bg-[#0052A4] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#00438a] disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-600 ${FOCUS}`}
               >
                 {terkunci ? (
                   <Lock className="h-4 w-4" />
@@ -535,7 +642,7 @@ export default function PesertaFlow({
                 {terkunci ? null : <ArrowRight className="h-4 w-4" />}
               </button>
               {terkunci && (
-                <p className="mt-2 flex items-center gap-2 text-sm font-medium text-amber-700">
+                <p className="mt-2 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
                   <Lock className="h-4 w-4 shrink-0" /> Menunggu verifikasi admin.
                 </p>
               )}
@@ -543,7 +650,7 @@ export default function PesertaFlow({
               {infoVideo && (
                 <p
                   role="status"
-                  className="mt-3 flex items-center gap-2 text-sm font-medium text-amber-700"
+                  className="mt-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"
                 >
                   <Lock className="h-4 w-4 shrink-0" /> {infoVideo}
                 </p>
@@ -553,7 +660,7 @@ export default function PesertaFlow({
                 <div className="mt-5 space-y-4">
                   <RingkasanMeeting nama={nama} kontak={kontak} posisi={posisiTampil} />
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold text-slate-900">
+                    <h3 className="mb-2 text-sm font-semibold text-slate-900 dark:text-slate-50">
                       Jadwal meeting lanjutan
                     </h3>
                     <JadwalSesi posisi={posisiTerpilih} onSelesai={onJadwalSelesai} />
@@ -562,17 +669,17 @@ export default function PesertaFlow({
               )}
 
               {konsultasiDone && jadwalDone && (
-                <p className="mt-3 flex items-center gap-2 text-sm text-emerald-700">
+                <p className="mt-3 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400">
                   <Check className="h-4 w-4 shrink-0" /> Data sudah kami terima. Admin akan
                   menghubungi Anda untuk informasi selanjutnya.
                 </p>
               )}
 
               {(bolehGrupKonsultasi || terkunci) && (
-                <div className="mt-6">
+                <div className="mt-6 hidden lg:block">
                   <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4">
-                    <h3 className="text-sm font-semibold text-slate-900">Grup konsultasi lanjutan</h3>
-                    <span className="text-sm text-slate-500">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Grup konsultasi lanjutan</h3>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
                       {terkunci ? "Terkunci" : "Aktif"}
                     </span>
                   </div>
@@ -584,11 +691,15 @@ export default function PesertaFlow({
         </div>
 
         {/* SIDEBAR */}
-        <aside className="space-y-6 lg:border-l lg:border-slate-200 lg:pl-8">
+        <aside
+          className={`space-y-6 lg:block lg:border-l lg:border-slate-200 dark:lg:border-slate-700 lg:pl-8 ${
+            tab === "profil" ? "" : "hidden"
+          }`}
+        >
           <section>
-            <p className="truncate text-base font-semibold text-slate-900">{nama}</p>
-            <p className="text-sm text-slate-500">Peserta Indonesia-Korea Business Project</p>
-            <dl className="mt-3 divide-y divide-slate-100 border-t border-slate-200">
+            <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-50">{nama}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Peserta Indonesia-Korea Business Project</p>
+            <dl className="mt-3 divide-y divide-slate-100 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-700">
               <InfoRow icon={Phone} label="WhatsApp" value={kontak?.whatsapp ?? ""} />
               <InfoRow icon={Mail} label="Email" value={kontak?.email ?? ""} />
               <InfoRow
@@ -599,13 +710,17 @@ export default function PesertaFlow({
             </dl>
           </section>
 
-          <section className="border-t border-slate-200 pt-6">
-            <h3 className="text-sm font-semibold text-slate-900">Butuh bantuan?</h3>
-            <p className="mt-1.5 text-sm leading-6 text-slate-600">
+          <div className="lg:hidden">
+            <LogoutButton />
+          </div>
+
+          <section className="border-t border-slate-200 dark:border-slate-700 pt-6">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Butuh bantuan?</h3>
+            <p className="mt-1.5 text-sm leading-6 text-slate-600 dark:text-slate-300">
               Tanyakan seputar program atau konsultasi lanjutan di grup WhatsApp. Tim kami akan
               menjawab di sana.
             </p>
-            <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
+            <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
               <li>Selesaikan video sebelum mengisi konfirmasi.</li>
               <li>Pilih jadwal yang masih tersedia (maks. 5 peserta per jadwal).</li>
               <li>Cek grup secara berkala untuk info terbaru.</li>
@@ -614,10 +729,58 @@ export default function PesertaFlow({
         </aside>
       </div>
 
+      {/* Bottom nav (mobile) */}
+      <nav
+        aria-label="Navigasi peserta"
+        className="fixed inset-x-3 bottom-3 z-40 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      >
+        <ul className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-md border border-slate-200/80 bg-white/90 p-1.5 shadow-[0_12px_40px_-10px_rgba(12,35,66,0.35)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/90 dark:shadow-[0_12px_40px_-10px_rgba(0,0,0,0.7)]">
+          {(
+            [
+              { t: "beranda", label: "Beranda", icon: Home, kunci: false },
+              { t: "video", label: "Video", icon: PlayCircle, kunci: terkunci },
+              { t: "konsultasi", label: "Konsultasi", icon: CalendarClock, kunci: terkunci },
+              { t: "grup", label: "Grup", icon: Users, kunci: terkunci },
+              { t: "profil", label: "Profil", icon: UserRound, kunci: false },
+            ] as { t: Tab; label: string; icon: LucideIcon; kunci: boolean }[]
+          ).map((it) => {
+            const aktif = tab === it.t;
+            return (
+              <li key={it.t}>
+                <button
+                  type="button"
+                  onClick={() => pindahTab(it.t)}
+                  aria-current={aktif ? "page" : undefined}
+                  className={`relative flex w-full flex-col items-center gap-0.5 rounded-md px-1 py-2 text-[11px] font-semibold transition-all ${
+                    aktif
+                      ? "bg-[#0052A4] text-white shadow-md shadow-[#0052A4]/30 dark:bg-sky-500 dark:shadow-sky-500/20"
+                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  } ${FOCUS}`}
+                >
+                  <span className="relative">
+                    <it.icon className="h-[22px] w-[22px]" strokeWidth={aktif ? 2.2 : 1.8} />
+                    {it.kunci && (
+                      <Lock
+                        className={`absolute -right-2 -top-1 h-3 w-3 rounded-full p-px ${
+                          aktif
+                            ? "bg-white text-[#0052A4]"
+                            : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300"
+                        }`}
+                      />
+                    )}
+                  </span>
+                  {it.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
       {/* Popup: masuk grup umum (sebelum video) */}
       {popupTampil === "grupAwal" && (
         <Modal title="Gabung grup dulu" onClose={tutupPopupGrupAwal}>
-          <p className="mb-4 mt-2 text-sm leading-6 text-slate-600">
+          <p className="mb-4 mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
             Pendaftaran Anda berhasil. Gabung ke grup <b>Korean Bisnis Klub</b>, lalu lanjut
             menonton video pengarahan.
           </p>
@@ -634,7 +797,7 @@ export default function PesertaFlow({
       {/* Popup: video selesai */}
       {popupTampil === "video" && (
         <Modal title="Video selesai ditonton" onClose={() => setPopup(null)}>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
             Langkah berikutnya: konfirmasi data diri dan pilih posisi kamu saat ini, lalu jadwalkan
             konsultasi lanjutan bersama tim Bisnis di Korea.
           </p>
@@ -646,7 +809,7 @@ export default function PesertaFlow({
           </button>
           <button
             onClick={() => setPopup(null)}
-            className={`mt-2 w-full rounded-md py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 ${FOCUS}`}
+            className={`mt-2 w-full rounded-md py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 ${FOCUS}`}
           >
             Nanti saja
           </button>
@@ -660,10 +823,10 @@ export default function PesertaFlow({
           onClose={() => setPopup(null)}
           size="lg"
         >
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
             Silakan cek kembali data Anda di bawah ini sebelum melanjutkan.
           </p>
-          <dl className="mt-3 divide-y divide-slate-100 rounded-md border border-slate-200 px-4">
+          <dl className="mt-3 divide-y divide-slate-100 dark:divide-slate-800 rounded-md border border-slate-200 dark:border-slate-700 px-4">
             <InfoRow icon={Check} label="Nama" value={nama} />
             <InfoRow icon={Phone} label="WhatsApp" value={kontak?.whatsapp ?? ""} />
             <InfoRow icon={Mail} label="Email" value={kontak?.email ?? ""} />
@@ -673,7 +836,7 @@ export default function PesertaFlow({
               value={WILAYAH_LABEL[kontak?.wilayah ?? ""] || kontak?.wilayah || "-"}
             />
           </dl>
-          <p className="mt-4 text-sm font-semibold leading-6 text-slate-900">
+          <p className="mt-4 text-sm font-semibold leading-6 text-slate-900 dark:text-slate-50">
             Sebelum melanjutkan konsultasi lanjutan bersama tim Bisnis di Korea silahkan pilih posisi
             kamu saat ini
           </p>
@@ -684,8 +847,8 @@ export default function PesertaFlow({
                 key={o.kode}
                 className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors ${
                   pilihanPosisi === o.kode
-                    ? "border-[#0052A4] bg-[#0052A4]/5 text-slate-900"
-                    : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                    ? "border-[#0052A4] dark:border-sky-400 bg-[#0052A4]/5 dark:bg-sky-400/10 text-slate-900 dark:text-slate-50"
+                    : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                 }`}
               >
                 <input
@@ -707,7 +870,7 @@ export default function PesertaFlow({
             ))}
 
             {pilihanPosisi === "D" && (
-              <label className="flex cursor-pointer items-start gap-3 rounded-md bg-amber-50 px-3 py-2.5 text-sm text-amber-900 ring-1 ring-amber-200">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-sm text-amber-900 dark:text-amber-200 ring-1 ring-amber-200 dark:ring-amber-500/30">
                 <input
                   type="checkbox"
                   checked={ijazahS1}
@@ -724,7 +887,7 @@ export default function PesertaFlow({
             )}
 
             {error && (
-              <p role="alert" className="flex items-start gap-2 text-sm text-red-600">
+              <p role="alert" className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
               </p>
             )}
@@ -760,7 +923,7 @@ export default function PesertaFlow({
         <Modal
           title={jenisSelesai === "jadwal" ? "Selamat!" : "Jadwal sudah penuh"}
           onClose={() => setPopup(null)}>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
             {jenisSelesai === "jadwal"
               ? "Jadwal konsultasi lanjutan Anda sudah dikonfirmasi. Admin akan menghubungi Anda untuk informasi selanjutnya."
               : "Mohon maaf, jadwal yang Anda pilih sudah penuh. Anda otomatis kami masukkan ke waitinglist dan akan diprioritaskan. Admin akan menghubungi Anda bila ada slot tersedia."}

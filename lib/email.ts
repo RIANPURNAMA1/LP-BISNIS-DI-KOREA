@@ -415,6 +415,20 @@ export async function notifyBuktiDiterima(p: { nama: string; email: string }) {
   });
 }
 
+/** Dipanggil saat admin mengaktifkan akses peserta secara manual. Tidak pernah melempar error. */
+export async function notifyAksesDiaktifkan(p: { nama: string; email: string }) {
+  await kirimEmailTransaksional({
+    ...p,
+    subjek: "Akun Anda sudah aktif",
+    judul: "Akun Peserta Aktif",
+    pesan:
+      "Akses ruang member Anda sudah diaktifkan oleh admin. Silakan login untuk menonton video pengarahan, bergabung ke grup, dan memilih jadwal konsultasi lanjutan.",
+    ctaLabel: "Masuk ke halaman peserta",
+    ctaHref: "/peserta",
+    label: "akses diaktifkan",
+  });
+}
+
 /** Dipanggil saat admin menolak bukti pembayaran. Tidak pernah melempar error. */
 export async function notifyPembayaranDitolak(p: {
   nama: string;

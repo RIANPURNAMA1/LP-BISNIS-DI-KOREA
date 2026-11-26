@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import EventSelect from "@/components/EventSelect";
 import ResetPassword from "@/components/ResetPassword";
+import AksesPeserta from "@/components/AksesPeserta";
 import { formatJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
 import { afiliasiLabel, type AfiliasiInfo } from "@/lib/afiliasi-info";
 import { formatPosisi } from "@/lib/posisi";
@@ -54,6 +55,9 @@ type Pendaftar = {
   updated_at?: string;
   konsultasiAt?: string | null;
   posisiKonsultasi?: string | null;
+  aksesAktifAt?: string | null;
+  aksesVia?: string | null;
+  aksesCatatan?: string | null;
   ijazahS1?: boolean;
   afiliasi?: AfiliasiInfo;
   jadwal?: {
@@ -301,6 +305,14 @@ export default function PendaftaranDetail({ params }: { params: { id: string } }
         <ChevronRight className="h-4 w-4 text-gray-300" />
         <span className="font-medium text-gray-900">{data.nama}</span>
       </nav>
+
+      <AksesPeserta
+        key={`${data.id}-${data.aksesAktifAt ?? ""}`}
+        id={data.id}
+        aksesAktifAt={data.aksesAktifAt}
+        aksesVia={data.aksesVia}
+        aksesCatatan={data.aksesCatatan}
+      />
 
       <ResetPassword id={data.id} />
 

@@ -22,6 +22,10 @@ import {
   Clock,
   Users,
   MessagesSquare,
+  KeyRound,
+  FileText,
+  ShieldCheck,
+  ShieldOff,
   type LucideIcon,
 } from "lucide-react";
 
@@ -55,6 +59,8 @@ type PendaftarRow = {
   konsultasiAt?: string | null;
   posisiKonsultasi?: string | null;
   ijazahS1?: boolean;
+  aksesAktifAt?: string | null;
+  aksesVia?: string | null;
   jadwal?: JadwalRow | null;
   afiliasi?: AfiliasiInfo;
   createdAt?: string;
@@ -70,6 +76,35 @@ type ApiResp = {
   page: number;
   totalPages: number;
 };
+
+type AkunBaru = { id: number; nama: string; email: string; whatsapp: string; password: string };
+
+async function buatPdfAkun(akun: AkunBaru[]) {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+  const doc = new jsPDF({ orientation: "landscape" });
+  const tgl = new Date().toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" });
+  doc.setFontSize(14);
+  doc.text("Akses Akun Peserta - Bisnis di Korea", 14, 15);
+  doc.setFontSize(9);
+  doc.text(
+    `Dibuat: ${tgl}  |  Total: ${akun.length} akun  |  Login memakai Email + Password di halaman /login`,
+    14,
+    21,
+  );
+  doc.text("RAHASIA: dokumen ini berisi password. Jangan disebarluaskan.", 14, 26);
+  autoTable(doc, {
+    startY: 31,
+    head: [["No", "Nama", "Email (username)", "WhatsApp", "Password"]],
+    body: akun.map((a, i) => [i + 1, a.nama, a.email, a.whatsapp, a.password]),
+    styles: { fontSize: 9, cellPadding: 2 },
+    headStyles: { fillColor: [0, 82, 164] },
+    columnStyles: { 4: { font: "courier", fontStyle: "bold" } },
+  });
+  doc.save(`akses-akun-peserta-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
 
 type Tab = "semua" | "meeting" | "waiting";
 
@@ -193,6 +228,7 @@ const COLUMNS: { key: string; label: string; width: number; get: (r: PendaftarRo
     get: (r) => (r.provinsi === "Luar Negeri" ? r.desa : r.kabupaten) ?? "",
   },
   { key: "status", label: "Pekerjaan", width: 130, get: (r) => r.status ?? "" },
+  { key: "akses", label: "Akses", width: 130, get: (r) => (r.aksesAktifAt ? "Aktif" : "Terkunci") },
   { key: "event", label: "Status Join Program", width: 170, get: (r) => eventLabel(r.eventStatus) },
   { key: "ide", label: "Ide Bisnis", width: 220, get: (r) => r.ide ?? "" },
   { key: "pendapatan", label: "Personal Income", width: 150, get: (r) => r.pendapatan ?? "" },
@@ -259,6 +295,11 @@ function PendaftaranList() {
   const [exporting, setExporting] = useState<"csv" | "excel" | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [aksesBusy, setAksesBusy] = useState(false);
+  const [aksesRow, setAksesRow] = useState<number | null>(null);
+  // Password plain hanya ada sekali (di DB berupa hash); simpan agar PDF bisa diunduh ulang.
+  const [akunBaru, setAkunBaru] = useState<AkunBaru[]>([]);
 
   // Jumlah baris per halaman = jumlah baris yang muat penuh di tinggi tabel layar ini.
   // Halaman baru (pagination) baru muncul jika data lebih banyak dari itu.
@@ -569,6 +610,90 @@ function PendaftaranList() {
     }
   }
 
+  async function handleGenerateAkun() {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/admin/pendaftaran/generate-akun", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error();
+      setAkunBaru(json.data);
+      if (json.data.length === 0) {
+        alert("Belum ada peserta.");
+        return;
+      }
+      await buatPdfAkun(json.data);
+      alert(`Berhasil generate ${json.data.length} akun. Password: bisniskorea2026`);
+    } catch {
+      alert("Gagal generate akun. Coba lagi.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  // Aktifkan / cabut akses satu peserta langsung dari tabel (tanpa ke halaman detail).
+  async function handleAksesRow(r: PendaftarRow) {
+    const aktif = !!r.aksesAktifAt;
+    const pesan = aktif
+      ? `Cabut akses "${r.nama}"? Progresnya tetap tersimpan.`
+      : `Aktifkan akses "${r.nama}" tanpa pembayaran?`;
+    if (!confirm(pesan)) return;
+    setAksesRow(r.id);
+    try {
+      const res = await fetch("/api/admin/pendaftaran/akses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [r.id], aksi: aktif ? "cabut" : "aktifkan" }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.error || "Gagal memproses.");
+      setData((list) =>
+        list.map((x) =>
+          x.id === r.id
+            ? {
+                ...x,
+                aksesAktifAt: aktif ? null : new Date().toISOString(),
+                aksesVia: aktif ? null : "manual",
+              }
+            : x,
+        ),
+      );
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal memproses.");
+    } finally {
+      setAksesRow(null);
+    }
+  }
+
+  async function handleAksesSelected(aksi: "aktifkan" | "cabut") {
+    const n = selected.size;
+    const pesan =
+      aksi === "aktifkan"
+        ? `Aktifkan akses ${n} peserta terpilih tanpa pembayaran?`
+        : `Cabut akses ${n} peserta terpilih? Progres mereka tetap tersimpan.`;
+    if (!confirm(pesan)) return;
+    setAksesBusy(true);
+    try {
+      const res = await fetch("/api/admin/pendaftaran/akses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected), aksi }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.error || "Gagal memproses.");
+      alert(
+        `${aksi === "aktifkan" ? "Diaktifkan" : "Dicabut"}: ${json.diubah} peserta` +
+          (json.dilewati ? ` (${json.dilewati} dilewati karena statusnya sudah sesuai)` : "") +
+          ".",
+      );
+      setSelected(new Set());
+      fetchData();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal memproses.");
+    } finally {
+      setAksesBusy(false);
+    }
+  }
+
   function toggleOne(id: number) {
     setSelected((prev) => {
       const n = new Set(prev);
@@ -728,6 +853,27 @@ function PendaftaranList() {
           </div>
           {tab !== "waiting" && (
           <div className="flex flex-wrap items-center gap-2">
+            {akunBaru.length > 0 && (
+              <button
+                onClick={() => buatPdfAkun(akunBaru)}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
+              >
+                <FileText className="h-4 w-4" />
+                Unduh PDF ({akunBaru.length})
+              </button>
+            )}
+            <button
+              onClick={handleGenerateAkun}
+              disabled={generating}
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <KeyRound className="h-4 w-4" />
+              )}
+              {generating ? "Membuat akun..." : "Generate Akun"}
+            </button>
             <button
               onClick={handleExportCsv}
               disabled={exporting !== null}
@@ -977,6 +1123,18 @@ function PendaftaranList() {
                               {text}
                             </a>
                           );
+                        } else if (c.key === "akses") {
+                          content = (
+                            <span
+                              className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                                r.aksesAktifAt
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {text}
+                            </span>
+                          );
                         } else if (c.key === "event") {
                           content = (
                             <EventSelect
@@ -1055,6 +1213,14 @@ function PendaftaranList() {
                         }`}
                       >
                         <div className="flex items-center justify-end gap-1">
+                          <IconAction
+                            onClick={() => handleAksesRow(r)}
+                            disabled={aksesRow === r.id}
+                            icon={aksesRow === r.id ? Loader2 : r.aksesAktifAt ? ShieldOff : ShieldCheck}
+                            label={r.aksesAktifAt ? "Cabut akses" : "Aktifkan akses"}
+                            danger={!!r.aksesAktifAt}
+                            success={!r.aksesAktifAt}
+                          />
                           <IconAction
                             href={`/admin/pendaftaran/${r.id}`}
                             icon={Eye}
@@ -1144,6 +1310,21 @@ function PendaftaranList() {
           </span>
           <span className="mr-2 hidden text-sm sm:inline">dipilih</span>
           <button
+            onClick={() => handleAksesSelected("aktifkan")}
+            disabled={aksesBusy}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-emerald-500 px-4 text-sm font-semibold hover:bg-emerald-600 disabled:opacity-60"
+          >
+            {aksesBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+            Aktifkan akses
+          </button>
+          <button
+            onClick={() => handleAksesSelected("cabut")}
+            disabled={aksesBusy}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-sm font-semibold hover:bg-white/20 disabled:opacity-60"
+          >
+            <ShieldOff className="h-4 w-4" /> Cabut
+          </button>
+          <button
             onClick={handleExportSelected}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-sm font-semibold hover:bg-white/20"
           >
@@ -1199,6 +1380,7 @@ function IconAction({
   icon: Icon,
   label,
   danger,
+  success,
 }: {
   href?: string;
   onClick?: () => void;
@@ -1206,9 +1388,14 @@ function IconAction({
   icon: LucideIcon;
   label: string;
   danger?: boolean;
+  success?: boolean;
 }) {
   const cls = `grid h-8 w-8 place-items-center rounded-full text-slate-400 transition-colors disabled:opacity-50 ${
-    danger ? "hover:bg-rose-50 hover:text-rose-600" : "hover:bg-[#0052A4]/10 hover:text-[#0052A4]"
+    danger
+      ? "hover:bg-rose-50 hover:text-rose-600"
+      : success
+        ? "hover:bg-emerald-50 hover:text-emerald-600"
+        : "hover:bg-[#0052A4]/10 hover:text-[#0052A4]"
   }`;
   const icon = <Icon className={`h-4 w-4 ${disabled ? "animate-spin" : ""}`} />;
   return href ? (
