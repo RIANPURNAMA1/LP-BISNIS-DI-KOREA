@@ -101,7 +101,7 @@ export default function LoginPage() {
         </svg>
 
         {/* Logo */}
-        <header className="relative pt-10">
+        <header className="relative pt-8">
           <Link href="/" aria-label="Kembali ke beranda">
             <Image
               src="/logo/4.png"
@@ -109,7 +109,7 @@ export default function LoginPage() {
               width={1079}
               height={1349}
               priority
-              className="h-auto w-16"
+              className="h-auto w-28 sm:w-32"
             />
           </Link>
         </header>

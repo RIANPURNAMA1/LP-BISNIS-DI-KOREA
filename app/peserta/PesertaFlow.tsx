@@ -538,13 +538,32 @@ export default function PesertaFlow({
             >
               <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
                 {terkunci ? (
-                  <div className="relative grid aspect-video place-items-center bg-slate-900 px-6 text-center">
-                    <div>
-                      <Lock className="mx-auto h-8 w-8 text-white/60" />
-                      <p className="mt-3 text-sm font-semibold text-white">Video pengarahan</p>
-                      <p className="mt-1 text-xs leading-5 text-white/60">
-                        Terkunci sampai pembayaran terverifikasi.
-                      </p>
+                  <div
+                    className="relative aspect-video select-none overflow-hidden bg-slate-900"
+                    aria-label="Video pengarahan terkunci"
+                  >
+                    {/* Thumbnail tetap tampil, tapi video tidak bisa diputar sebelum akun aktif */}
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url('${thumbnailUrl || "/thumbnail-video-pengarahan.svg"}')`,
+                      }}
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-slate-950/30"
+                    />
+                    <div className="absolute inset-0 grid place-items-center px-6 text-center">
+                      <div>
+                        <span className="mx-auto grid h-14 w-14 place-items-center rounded-md bg-white/15 ring-1 ring-white/30 backdrop-blur">
+                          <Lock className="h-6 w-6 text-white" />
+                        </span>
+                        <p className="mt-3 text-sm font-semibold text-white">Video pengarahan</p>
+                        <p className="mt-1 text-xs leading-5 text-white/75">
+                          Terkunci sampai akun Anda aktif.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ) : videoUrl ? (
