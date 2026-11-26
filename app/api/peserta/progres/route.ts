@@ -17,18 +17,60 @@ export async function POST(req: NextRequest) {
     if (!peserta) return fail("Akses peserta belum aktif.", 403);
 
     const body = await req.json().catch(() => null);
-    if (body?.aksi !== "video") return fail("Aksi tidak dikenal.", 400);
+    if (body?.aksi !== "video" && body?.aksi !== "heartbeat") {
+      return fail("Aksi tidak dikenal.", 400);
+    }
 
     const row = await prisma.pendaftaran.findUnique({
       where: { id: peserta.id },
-      select: { videoSelesaiAt: true },
+      select: {
+        videoSelesaiAt: true,
+        videoMulaiAt: true,
+        videoTerakhirAt: true,
+        videoPersen: true,
+        videoPosisiDetik: true,
+      },
     });
     if (!row) return fail("Data peserta tidak ditemukan.", 404);
+    const now = new Date();
+
+    if (body.aksi === "heartbeat") {
+      const detik = Math.floor(Number(body.detik));
+      const persen = Math.floor(Number(body.persen));
+      const valid =
+        Number.isFinite(detik) && detik >= 0 && Number.isFinite(persen) && persen >= 0 && persen <= 100;
+
+      // Tolak lonjakan tidak wajar: posisi tidak boleh maju lebih cepat dari waktu nyata.
+      const selang = row.videoTerakhirAt
+        ? Math.max(0, (now.getTime() - row.videoTerakhirAt.getTime()) / 1000)
+        : 0;
+      const wajar = valid && detik <= row.videoPosisiDetik + selang + 45;
+
+      const data: {
+        videoMulaiAt?: Date;
+        videoTerakhirAt: Date;
+        videoPersen?: number;
+        videoPosisiDetik?: number;
+      } = { videoTerakhirAt: now };
+      if (!row.videoMulaiAt) data.videoMulaiAt = now;
+      // Persen tidak boleh turun; yang sudah selesai tetap 100.
+      if (wajar && !row.videoSelesaiAt) {
+        if (persen > row.videoPersen) data.videoPersen = Math.min(persen, 99);
+        if (detik > row.videoPosisiDetik) data.videoPosisiDetik = detik;
+      }
+      await prisma.pendaftaran.update({ where: { id: peserta.id }, data });
+      return NextResponse.json({ success: true });
+    }
 
     if (!row.videoSelesaiAt) {
       await prisma.pendaftaran.update({
         where: { id: peserta.id },
-        data: { videoSelesaiAt: new Date() },
+        data: {
+          videoSelesaiAt: now,
+          videoTerakhirAt: now,
+          videoPersen: 100,
+          ...(row.videoMulaiAt ? {} : { videoMulaiAt: now }),
+        },
       });
     }
     return NextResponse.json({ success: true });

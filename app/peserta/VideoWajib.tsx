@@ -336,6 +336,44 @@ export default function VideoWajib({
     };
   }, [expanded]);
 
+  // Heartbeat tracking: kirim posisi terjauh tiap 20 dtk saat video berjalan,
+  // dan sekali lagi saat dijeda / tab ditutup. Gagal kirim tidak mengganggu peserta.
+  const durasiRef = useRef(0);
+  durasiRef.current = duration;
+  useEffect(() => {
+    const kirim = (beacon = false) => {
+      const d = durasiRef.current;
+      if (!d || maxRef.current <= 0 || doneRef.current) return;
+      const body = JSON.stringify({
+        aksi: "heartbeat",
+        detik: Math.floor(maxRef.current),
+        persen: Math.min(99, Math.floor((maxRef.current / d) * 100)),
+      });
+      if (beacon && navigator.sendBeacon) {
+        navigator.sendBeacon("/api/peserta/progres", new Blob([body], { type: "application/json" }));
+      } else {
+        fetch("/api/peserta/progres", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
+    const onHide = () => kirim(true);
+    window.addEventListener("pagehide", onHide);
+    if (!playing) {
+      kirim();
+      return () => window.removeEventListener("pagehide", onHide);
+    }
+    kirim();
+    const t = window.setInterval(() => kirim(), 20_000);
+    return () => {
+      window.clearInterval(t);
+      window.removeEventListener("pagehide", onHide);
+    };
+  }, [playing]);
+
   const toggle = () => (playing ? engineRef.current?.pause() : engineRef.current?.play());
   const pct = duration ? Math.min(100, (current / duration) * 100) : 0;
 

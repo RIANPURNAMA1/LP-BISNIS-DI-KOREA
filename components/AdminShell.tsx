@@ -19,6 +19,7 @@ import {
   UserCircle2,
   Users,
   Ticket,
+  Eye,
   ChevronDown,
   Search,
   Menu,
@@ -34,6 +35,7 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/afiliasi", label: "Afiliasi", icon: Users },
   { href: "/admin/jadwal", label: "Jadwal Konsultasi", icon: CalendarDays },
   { href: "/admin/video", label: "Kelola Video", icon: Video },
+  { href: "/admin/video-tracking", label: "Tracking Video", icon: Eye },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
   { href: "/admin/notifikasi", label: "Notifikasi WA", icon: BellRing },
   { href: "/admin/email", label: "Notifikasi Email", icon: Mail },
@@ -153,7 +155,8 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive =
-            item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+            pathname === item.href ||
+            (item.href !== "/admin" && pathname.startsWith(item.href + "/"));
           const badge = item.href === "/admin/pembayaran" ? pembayaranMenunggu : 0;
           const tipLabel =
             badge > 0 ? `${item.label} — ${badge} menunggu verifikasi` : item.label;

@@ -39,6 +39,11 @@ model Pendaftaran {
   aksesCatatan String?   @map("akses_catatan") @db.VarChar(255)
   // Progres alur peserta: selesai menonton video, lalu konfirmasi konsultasi lanjutan.
   videoSelesaiAt DateTime? @map("video_selesai_at")
+  // Tracking tonton video: dikirim berkala (heartbeat) oleh pemutar peserta.
+  videoMulaiAt     DateTime? @map("video_mulai_at")
+  videoTerakhirAt  DateTime? @map("video_terakhir_at")
+  videoPersen      Int       @default(0) @map("video_persen")
+  videoPosisiDetik Int       @default(0) @map("video_posisi_detik")
   // Diisi saat peserta mengirim konfirmasi konsultasi lanjutan (bukan lagi oleh pembayaran).
   konsultasiAt   DateTime? @map("konsultasi_at")
   // Posisi peserta: A | B | C | D (lihat redaksi di modal konsultasi lanjutan).
