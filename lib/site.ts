@@ -5,7 +5,7 @@ export const SITE_URL = (
 export const SITE_NAME = "Indonesia-Korea Business Project";
 
 export const SITE_TITLE =
-  "Bisnis di Korea | Program Inkubasi & Pendirian Perusahaan Korea";
+  "Bisnis di Korea | Program Inkubasi & Pengembangan Bisnis di Korea";
 
 export const SITE_SHORT_TITLE = "Bisnis di Korea";
 
