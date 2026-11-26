@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
+  Ban,
   CheckCircle2,
   Copy,
   ExternalLink,
@@ -13,6 +14,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  Trash2,
   type LucideIcon,
   Wallet,
   X,
@@ -128,6 +130,7 @@ export default function AdminAfiliasi() {
   const [linkTersalin, setLinkTersalin] = useState(false);
   const [linkPesan, setLinkPesan] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [aksiBusy, setAksiBusy] = useState<number | null>(null);
 
   const muat = useCallback(async () => {
     setLoading(true);
@@ -186,6 +189,48 @@ export default function AdminAfiliasi() {
       setPesan(e instanceof Error ? e.message : "Gagal memuat detail.");
     } finally {
       setDetailLoading(false);
+    }
+  }
+
+  async function toggleAktif(a: AffiliateRow) {
+    const pesanKonfirmasi = a.aktif
+      ? `Nonaktifkan "${a.nama}"? Affiliate tidak bisa login dan kodenya tidak berlaku untuk pendaftar baru.`
+      : `Aktifkan kembali "${a.nama}"?`;
+    if (!confirm(pesanKonfirmasi)) return;
+    setAksiBusy(a.id);
+    try {
+      const res = await fetch(`/api/admin/afiliasi/${a.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aktif: !a.aktif }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || "Gagal mengubah status.");
+      setAffiliates((list) => list.map((x) => (x.id === a.id ? { ...x, aktif: !a.aktif } : x)));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal mengubah status.");
+    } finally {
+      setAksiBusy(null);
+    }
+  }
+
+  async function hapusAffiliate(a: AffiliateRow) {
+    if (
+      !confirm(
+        `Hapus affiliate "${a.nama}" secara permanen?\n\nReferral dan riwayat komisi/pencairannya ikut terhapus. Jika hanya ingin menghentikan, pilih Nonaktifkan.`,
+      )
+    )
+      return;
+    setAksiBusy(a.id);
+    try {
+      const res = await fetch(`/api/admin/afiliasi/${a.id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || "Gagal menghapus affiliate.");
+      await muat();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal menghapus affiliate.");
+    } finally {
+      setAksiBusy(null);
     }
   }
 
@@ -389,31 +434,41 @@ export default function AdminAfiliasi() {
               Geser tabel ke samping untuk melihat semua kolom &rarr;
             </p>
             <div className={tableWrapCls}>
-              <table className={tableCls}>
+              <table className="w-full min-w-[1560px] table-fixed border-separate border-spacing-0 text-left text-[13px]">
                 <colgroup>
-                  <col className="w-11" />
-                  <col className="w-[25%]" />
-                  <col className="w-[15%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[12%]" />
-                  <col className="w-[15%]" />
-                  <col className="w-[13%]" />
-                  <col className="w-14" />
+                  <col style={{ width: 48 }} />
+                  <col style={{ width: 250 }} />
+                  <col style={{ width: 140 }} />
+                  <col style={{ width: 130 }} />
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 110 }} />
+                  <col style={{ width: 130 }} />
+                  <col style={{ width: 130 }} />
+                  <col style={{ width: 230 }} />
+                  <col style={{ width: 100 }} />
+                  <col style={{ width: 160 }} />
+                  <col style={{ width: 130 }} />
                 </colgroup>
                 <thead>
                   <tr>
                     <th className={`${headCls} rounded-tl-lg border-l text-center`}>#</th>
                     <th className={headCls}>Affiliate</th>
+                    <th className={headCls}>WhatsApp</th>
                     <th className={headCls}>Kode</th>
                     <th className={`${headCls} text-right`}>Referral</th>
                     <th className={`${headCls} text-right`}>Terverifikasi</th>
+                    <th className={`${headCls} text-right`}>Total Komisi</th>
+                    <th className={`${headCls} text-right`}>Saldo</th>
+                    <th className={headCls}>Rekening</th>
+                    <th className={headCls}>Status</th>
+                    <th className={headCls}>Terdaftar</th>
                     <th className={headLastCls}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {affiliates.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="border-b border-slate-200 px-4 py-10 text-center text-slate-400">
+                      <td colSpan={12} className="border-b border-slate-200 px-4 py-10 text-center text-slate-400">
                         Belum ada affiliate.
                       </td>
                     </tr>
@@ -423,6 +478,7 @@ export default function AdminAfiliasi() {
                     const bg = "bg-white group-hover:bg-slate-50";
                     const bawah = terakhir ? "rounded-bl-lg" : "";
                     const bawahAkhir = terakhir ? "rounded-br-lg" : "";
+                    const adaRekening = !!(a.bankNama || a.bankNo);
                     return (
                       <tr key={a.id} className="group">
                         <td className={`${cellCls} ${bg} ${bawah} text-center text-slate-400`}>
@@ -434,11 +490,12 @@ export default function AdminAfiliasi() {
                               {(a.nama || "A").trim().charAt(0).toUpperCase()}
                             </span>
                             <span className="min-w-0 leading-tight">
-                              <span className="block truncate font-semibold text-slate-900">{a.nama}</span>
-                              <span className="block truncate text-[11px] text-slate-400">{a.email}</span>
+                              <span className="block truncate font-semibold text-slate-900" title={a.nama}>{a.nama}</span>
+                              <span className="block truncate text-[11px] text-slate-400" title={a.email}>{a.email}</span>
                             </span>
                           </div>
                         </td>
+                        <td className={`${cellCls} ${bg} whitespace-nowrap`}>{a.whatsapp || "-"}</td>
                         <td className={`${cellCls} ${bg}`}>
                           <span className="inline-flex max-w-full truncate rounded-md bg-[#0052A4]/5 px-2 py-1 font-mono text-[11px] font-semibold text-[#0052A4] ring-1 ring-[#0052A4]/10">
                             {a.kode}
@@ -446,8 +503,50 @@ export default function AdminAfiliasi() {
                         </td>
                         <td className={`${cellCls} ${bg} ${angka}`}>{a.totalReferral}</td>
                         <td className={`${cellCls} ${bg} ${angka}`}>{a.terverifikasi}</td>
+                        <td className={`${cellCls} ${bg} ${angka}`}>{rupiah(a.totalKomisi)}</td>
+                        <td className={`${cellCls} ${bg} ${angka} font-semibold text-slate-900`}>{rupiah(a.saldo)}</td>
+                        <td className={`${cellCls} ${bg}`}>
+                          {adaRekening ? (
+                            <>
+                              <span className="block truncate" title={`${a.bankNama} · ${a.bankNo}`}>
+                                {a.bankNama} · {a.bankNo}
+                              </span>
+                              <span className="block truncate text-[11px] text-slate-400">a.n. {a.bankAtasNama || "-"}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-400">Belum diisi</span>
+                          )}
+                        </td>
+                        <td className={`${cellCls} ${bg}`}>
+                          <span
+                            className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${
+                              a.aktif
+                                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                                : "bg-slate-100 text-slate-600 ring-slate-200"
+                            }`}
+                          >
+                            {a.aktif ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </td>
+                        <td className={`${cellCls} ${bg} whitespace-nowrap text-slate-500`}>{tanggal(a.createdAt)}</td>
                         <td className={`${cellLastCls} ${bawahAkhir}`}>
-                          <IconAction onClick={() => void bukaDetail(a.id)} icon={Eye} label="Detail" />
+                          <div className="flex items-center justify-end gap-1">
+                            <IconAction onClick={() => void bukaDetail(a.id)} icon={Eye} label="Detail" />
+                            <IconAction
+                              onClick={() => void toggleAktif(a)}
+                              disabled={aksiBusy === a.id}
+                              icon={aksiBusy === a.id ? Loader2 : a.aktif ? Ban : CheckCircle2}
+                              label={a.aktif ? "Nonaktifkan" : "Aktifkan"}
+                              tone={a.aktif ? "warn" : "success"}
+                            />
+                            <IconAction
+                              onClick={() => void hapusAffiliate(a)}
+                              disabled={aksiBusy === a.id}
+                              icon={Trash2}
+                              label="Hapus"
+                              tone="danger"
+                            />
+                          </div>
                         </td>
                       </tr>
                     );
@@ -581,6 +680,7 @@ export default function AdminAfiliasi() {
                   <p><span className="text-slate-500">Nama: </span><b>{detail.nama}</b></p>
                   <p><span className="text-slate-500">Email: </span>{detail.email}</p>
                   <p><span className="text-slate-500">WhatsApp: </span>{detail.whatsapp}</p>
+                  <p><span className="text-slate-500">Status: </span><b className={detail.aktif ? "text-emerald-600" : "text-slate-500"}>{detail.aktif ? "Aktif" : "Nonaktif"}</b></p>
                   <p><span className="text-slate-500">Kode: </span><b className="font-mono text-[#0052A4]">{detail.kode}</b></p>
                   <p className="sm:col-span-2"><span className="text-slate-500">Tautan: </span><span className="break-all text-xs text-[#0052A4]">{detail.link}</span></p>
                   <p className="sm:col-span-2"><span className="text-slate-500">Rekening: </span>{detail.bankNama} · {detail.bankNo} a.n. {detail.bankAtasNama}</p>
@@ -668,20 +768,33 @@ function IconAction({
   onClick,
   icon: Icon,
   label,
+  disabled,
+  tone,
 }: {
   onClick: () => void;
   icon: LucideIcon;
   label: string;
+  disabled?: boolean;
+  tone?: "danger" | "warn" | "success";
 }) {
+  const hover =
+    tone === "danger"
+      ? "hover:bg-rose-50 hover:text-rose-600"
+      : tone === "warn"
+        ? "hover:bg-amber-50 hover:text-amber-600"
+        : tone === "success"
+          ? "hover:bg-emerald-50 hover:text-emerald-600"
+          : "hover:bg-[#0052A4]/10 hover:text-[#0052A4]";
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       title={label}
       aria-label={label}
-      className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition-colors hover:bg-[#0052A4]/10 hover:text-[#0052A4]"
+      className={`grid h-8 w-8 place-items-center rounded-full text-slate-400 transition-colors disabled:opacity-50 ${hover}`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className={`h-4 w-4 ${disabled && label !== "Hapus" ? "animate-spin" : ""}`} />
     </button>
   );
 }

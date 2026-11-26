@@ -3,6 +3,7 @@
 import { formatJadwal, STATUS_LABEL } from "@/lib/jadwal-format";
 import { eventLabel } from "@/lib/event";
 import EventSelect from "@/components/EventSelect";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { afiliasiLabel, type AfiliasiInfo } from "@/lib/afiliasi-info";
 import { formatPosisi, POSISI_OPSI, posisiLabel } from "@/lib/posisi";
 import { Suspense, useEffect, useRef, useState, useCallback } from "react";
@@ -297,6 +298,10 @@ function PendaftaranList() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [aksesBusy, setAksesBusy] = useState(false);
+  const [konfirmAkses, setKonfirmAkses] = useState<
+    { mode: "row"; row: PendaftarRow } | { mode: "massal"; aksi: "aktifkan" | "cabut" } | null
+  >(null);
+  const [konfirmHapus, setKonfirmHapus] = useState<{ id: number; nama: string } | "massal" | null>(null);
   const [aksesRow, setAksesRow] = useState<number | null>(null);
   // Password plain hanya ada sekali (di DB berupa hash); simpan agar PDF bisa diunduh ulang.
   const [akunBaru, setAkunBaru] = useState<AkunBaru[]>([]);
@@ -444,12 +449,16 @@ function PendaftaranList() {
     }
   }
 
-  async function handleDelete(id: number, nama: string) {
-    if (!confirm(`Yakin hapus pendaftaran "${nama}"?`)) return;
+  function handleDelete(id: number, nama: string) {
+    setKonfirmHapus({ id, nama });
+  }
+
+  async function prosesHapusSatu(id: number) {
     setDeleting(id);
     try {
       const res = await fetch(`/api/pendaftaran/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Gagal menghapus");
+      setKonfirmHapus(null);
       fetchData();
     } catch {
       alert("Gagal menghapus data. Coba lagi.");
@@ -569,8 +578,11 @@ function PendaftaranList() {
     buildCsv(data.filter((r) => selected.has(r.id)));
   }
 
-  async function handleDeleteSelected() {
-    if (!confirm(`Yakin hapus ${selected.size} pendaftaran terpilih?`)) return;
+  function handleDeleteSelected() {
+    setKonfirmHapus("massal");
+  }
+
+  async function prosesHapusTerpilih() {
     setBulkDeleting(true);
     try {
       const results = await Promise.all(
@@ -578,6 +590,7 @@ function PendaftaranList() {
       );
       if (results.some((r) => !r.ok)) alert("Sebagian data gagal dihapus.");
       setSelected(new Set());
+      setKonfirmHapus(null);
       fetchData();
     } catch {
       alert("Gagal menghapus data. Coba lagi.");
@@ -633,10 +646,6 @@ function PendaftaranList() {
   // Aktifkan / cabut akses satu peserta langsung dari tabel (tanpa ke halaman detail).
   async function handleAksesRow(r: PendaftarRow) {
     const aktif = !!r.aksesAktifAt;
-    const pesan = aktif
-      ? `Cabut akses "${r.nama}"? Progresnya tetap tersimpan.`
-      : `Aktifkan akses "${r.nama}" tanpa pembayaran?`;
-    if (!confirm(pesan)) return;
     setAksesRow(r.id);
     try {
       const res = await fetch("/api/admin/pendaftaran/akses", {
@@ -657,6 +666,7 @@ function PendaftaranList() {
             : x,
         ),
       );
+      setKonfirmAkses(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Gagal memproses.");
     } finally {
@@ -665,12 +675,6 @@ function PendaftaranList() {
   }
 
   async function handleAksesSelected(aksi: "aktifkan" | "cabut") {
-    const n = selected.size;
-    const pesan =
-      aksi === "aktifkan"
-        ? `Aktifkan akses ${n} peserta terpilih tanpa pembayaran?`
-        : `Cabut akses ${n} peserta terpilih? Progres mereka tetap tersimpan.`;
-    if (!confirm(pesan)) return;
     setAksesBusy(true);
     try {
       const res = await fetch("/api/admin/pendaftaran/akses", {
@@ -686,6 +690,7 @@ function PendaftaranList() {
           ".",
       );
       setSelected(new Set());
+      setKonfirmAkses(null);
       fetchData();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Gagal memproses.");
@@ -1214,7 +1219,7 @@ function PendaftaranList() {
                       >
                         <div className="flex items-center justify-end gap-1">
                           <IconAction
-                            onClick={() => handleAksesRow(r)}
+                            onClick={() => setKonfirmAkses({ mode: "row", row: r })}
                             disabled={aksesRow === r.id}
                             icon={aksesRow === r.id ? Loader2 : r.aksesAktifAt ? ShieldOff : ShieldCheck}
                             label={r.aksesAktifAt ? "Cabut akses" : "Aktifkan akses"}
@@ -1295,6 +1300,57 @@ function PendaftaranList() {
         )}
       </div>
 
+      <ConfirmDialog
+        open={konfirmHapus !== null}
+        title={konfirmHapus === "massal" ? `Hapus ${selected.size} pendaftar?` : "Hapus pendaftar?"}
+        description={
+          konfirmHapus === "massal"
+            ? "Semua data pendaftar terpilih beserta jadwal dan pembayarannya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan."
+            : "Data pendaftar beserta jadwal dan pembayarannya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan."
+        }
+        detail={konfirmHapus && konfirmHapus !== "massal" ? konfirmHapus.nama : undefined}
+        confirmLabel={konfirmHapus === "massal" ? `Hapus ${selected.size} data` : "Ya, hapus"}
+        loading={konfirmHapus === "massal" ? bulkDeleting : deleting !== null}
+        onCancel={() => setKonfirmHapus(null)}
+        onConfirm={() => {
+          if (konfirmHapus === "massal") void prosesHapusTerpilih();
+          else if (konfirmHapus) void prosesHapusSatu(konfirmHapus.id);
+        }}
+      />
+
+      {(() => {
+        const k = konfirmAkses;
+        const aktifkan = k ? (k.mode === "row" ? !k.row.aksesAktifAt : k.aksi === "aktifkan") : true;
+        const massal = k?.mode === "massal";
+        return (
+          <ConfirmDialog
+            open={k !== null}
+            tone={aktifkan ? "success" : "warn"}
+            title={
+              massal
+                ? `${aktifkan ? "Aktifkan" : "Cabut"} akses ${selected.size} peserta?`
+                : aktifkan
+                  ? "Aktifkan akses peserta?"
+                  : "Cabut akses peserta?"
+            }
+            description={
+              aktifkan
+                ? "Peserta langsung bisa masuk ke ruang member tanpa pembayaran, dan akan menerima email pemberitahuan. Bukti transfer yang masih menunggu dibatalkan otomatis."
+                : "Peserta tidak bisa lagi mengakses ruang member. Progres mereka (video, posisi, jadwal) tetap tersimpan."
+            }
+            detail={k && k.mode === "row" ? k.row.nama : undefined}
+            confirmLabel={aktifkan ? "Ya, aktifkan" : "Ya, cabut"}
+            loading={massal ? aksesBusy : aksesRow !== null}
+            onCancel={() => setKonfirmAkses(null)}
+            onConfirm={() => {
+              if (!k) return;
+              if (k.mode === "row") void handleAksesRow(k.row);
+              else void handleAksesSelected(k.aksi);
+            }}
+          />
+        );
+      })()}
+
       {/* Bar aksi melayang saat ada yang dipilih */}
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 z-50 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-white shadow-2xl">
@@ -1310,7 +1366,7 @@ function PendaftaranList() {
           </span>
           <span className="mr-2 hidden text-sm sm:inline">dipilih</span>
           <button
-            onClick={() => handleAksesSelected("aktifkan")}
+            onClick={() => setKonfirmAkses({ mode: "massal", aksi: "aktifkan" })}
             disabled={aksesBusy}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-emerald-500 px-4 text-sm font-semibold hover:bg-emerald-600 disabled:opacity-60"
           >
@@ -1318,7 +1374,7 @@ function PendaftaranList() {
             Aktifkan akses
           </button>
           <button
-            onClick={() => handleAksesSelected("cabut")}
+            onClick={() => setKonfirmAkses({ mode: "massal", aksi: "cabut" })}
             disabled={aksesBusy}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-sm font-semibold hover:bg-white/20 disabled:opacity-60"
           >
